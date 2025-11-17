@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Movie;
 use App\Models\Promotion;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class PromotionController extends Controller
@@ -58,7 +57,13 @@ class PromotionController extends Controller
 
         $data['is_active'] = $request->boolean('is_active', true);
         $data['movie_id'] = $data['category'] === 'movie' ? $data['movie_id'] : null;
-        $data['image_path'] = $request->file('image')->store('promotions', 'public');
+        
+        // Encode ảnh thành Base64
+        $imageFile = $request->file('image');
+        $imageData = file_get_contents($imageFile->getRealPath());
+        $imageBase64 = base64_encode($imageData);
+        $mimeType = $imageFile->getMimeType();
+        $data['image_path'] = 'data:' . $mimeType . ';base64,' . $imageBase64;
 
         Promotion::create($data);
 
@@ -103,10 +108,12 @@ class PromotionController extends Controller
         $data['movie_id'] = $data['category'] === 'movie' ? $data['movie_id'] : null;
 
         if ($request->hasFile('image')) {
-            if ($promotion->image_path) {
-                Storage::disk('public')->delete($promotion->image_path);
-            }
-            $data['image_path'] = $request->file('image')->store('promotions', 'public');
+            // Encode ảnh thành Base64
+            $imageFile = $request->file('image');
+            $imageData = file_get_contents($imageFile->getRealPath());
+            $imageBase64 = base64_encode($imageData);
+            $mimeType = $imageFile->getMimeType();
+            $data['image_path'] = 'data:' . $mimeType . ';base64,' . $imageBase64;
         }
 
         $promotion->update($data);
@@ -120,10 +127,7 @@ class PromotionController extends Controller
      */
     public function destroy(Promotion $promotion)
     {
-        if ($promotion->image_path) {
-            Storage::disk('public')->delete($promotion->image_path);
-        }
-
+        // Không cần xóa file vì ảnh được lưu trực tiếp trong database
         $promotion->delete();
 
         return redirect()->route('admin.promotions.index')

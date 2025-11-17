@@ -32,7 +32,7 @@
                         @endphp
                         <div class="carousel-item {{ $loop->first ? 'active' : '' }}">
                             <a href="{{ $targetUrl ?? '#' }}" class="{{ $targetUrl ? '' : 'disabled-link' }}">
-                                <img src="{{ asset('storage/' . $promotion->image_path) }}" class="d-block w-100 promotion-slide-image" alt="{{ $promotion->title }}">
+                                <img src="{{ $promotion->image_url }}" class="d-block w-100 promotion-slide-image" alt="{{ $promotion->title }}">
                             </a>
                         </div>
                     @endforeach

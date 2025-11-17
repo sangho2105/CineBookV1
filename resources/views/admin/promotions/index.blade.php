@@ -34,7 +34,7 @@
                     @foreach($promotions as $promotion)
                         <tr>
                             <td style="width: 120px">
-                                <img src="{{ asset('storage/' . $promotion->image_path) }}" alt="{{ $promotion->title }}" class="img-fluid rounded">
+                                <img src="{{ $promotion->image_url }}" alt="{{ $promotion->title }}" class="img-fluid rounded">
                             </td>
                             <td>
                                 <strong>{{ $promotion->title }}</strong>

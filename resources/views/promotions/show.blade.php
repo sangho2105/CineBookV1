@@ -7,7 +7,7 @@
     <div class="row justify-content-center">
         <div class="col-lg-10">
             <div class="card shadow-sm mb-4">
-                <img src="{{ asset('storage/' . $promotion->image_path) }}" class="card-img-top" alt="{{ $promotion->title }}">
+                <img src="{{ $promotion->image_url }}" class="card-img-top" alt="{{ $promotion->title }}">
                 <div class="card-body">
                     <span class="badge bg-primary mb-3">{{ $promotion->category_label }}</span>
                     <h1 class="card-title h3">{{ $promotion->title }}</h1>

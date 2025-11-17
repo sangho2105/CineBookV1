@@ -73,5 +73,23 @@ class Promotion extends Model
     {
         return $this->belongsTo(Movie::class);
     }
+
+    /**
+     * Lấy URL ảnh banner (hỗ trợ cả Base64 và đường dẫn cũ).
+     */
+    public function getImageUrlAttribute(): ?string
+    {
+        if (empty($this->image_path)) {
+            return null;
+        }
+
+        // Nếu là Base64 data URI, trả về trực tiếp
+        if (str_starts_with($this->image_path, 'data:')) {
+            return $this->image_path;
+        }
+
+        // Nếu là đường dẫn cũ, trả về asset URL
+        return asset('storage/' . $this->image_path);
+    }
 }
 

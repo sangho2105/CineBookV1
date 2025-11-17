@@ -19,7 +19,7 @@
                 <div class="col-md-6 col-lg-4">
                     <div class="card h-100 shadow-sm border-0">
                         <a href="{{ route('promotion.show', $promotion) }}" class="text-decoration-none">
-                            <img src="{{ asset('storage/' . $promotion->image_path) }}" class="card-img-top" alt="{{ $promotion->title }}">
+                            <img src="{{ $promotion->image_url }}" class="card-img-top" alt="{{ $promotion->title }}">
                         </a>
                         <div class="card-body d-flex flex-column">
                             <span class="badge bg-primary align-self-start mb-2">{{ $promotion->category_label }}</span>

@@ -71,16 +71,22 @@
 
 <div class="mb-3 mt-3">
     <label for="image" class="form-label">Ảnh banner</label>
-    <input class="form-control" type="file" id="image" name="image" {{ isset($promotion) ? '' : 'required' }}>
+    <input class="form-control" type="file" id="image" name="image" {{ isset($promotion) ? '' : 'required' }} accept="image/jpeg,image/png,image/webp">
     <small class="text-muted">Chấp nhận ảnh JPG, PNG, WEBP tối đa 4MB.</small>
+    <div id="image-preview" class="mt-2" style="display: none;">
+        <label class="form-label">Xem trước ảnh mới:</label>
+        <div>
+            <img id="preview-img" src="" alt="Preview" class="img-fluid rounded" style="max-height: 200px;">
+        </div>
+    </div>
 </div>
 
 @isset($promotion)
-    @if($promotion->image_path)
-        <div class="mb-3">
+    @if($promotion->image_url)
+        <div class="mb-3" id="current-image-wrapper">
             <label class="form-label">Ảnh hiện tại</label>
             <div>
-                <img src="{{ asset('storage/' . $promotion->image_path) }}" alt="{{ $promotion->title }}" class="img-fluid rounded" style="max-height: 200px;">
+                <img src="{{ $promotion->image_url }}" alt="{{ $promotion->title }}" class="img-fluid rounded" style="max-height: 200px;">
             </div>
         </div>
     @endif
@@ -102,22 +108,72 @@ document.addEventListener('DOMContentLoaded', function () {
     const categorySelect = document.getElementById('category');
     const movieWrapper = document.getElementById('movie-select-wrapper');
     const movieSelect = document.getElementById('movie_id');
+    const imageInput = document.getElementById('image');
+    const imagePreview = document.getElementById('image-preview');
+    const previewImg = document.getElementById('preview-img');
+    const currentImageWrapper = document.getElementById('current-image-wrapper');
 
-    if (!categorySelect || !movieWrapper) {
-        return;
+    // Xử lý category select
+    if (categorySelect && movieWrapper) {
+        const toggleMovieSelect = () => {
+            const isMovie = categorySelect.value === 'movie';
+            movieWrapper.classList.toggle('d-none', !isMovie);
+
+            if (!isMovie && movieSelect) {
+                movieSelect.value = '';
+            }
+        };
+
+        categorySelect.addEventListener('change', toggleMovieSelect);
+        toggleMovieSelect();
     }
 
-    const toggleMovieSelect = () => {
-        const isMovie = categorySelect.value === 'movie';
-        movieWrapper.classList.toggle('d-none', !isMovie);
+    // Xử lý preview ảnh khi upload
+    if (imageInput && imagePreview && previewImg) {
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            
+            if (file) {
+                // Kiểm tra kích thước file (4MB)
+                if (file.size > 4 * 1024 * 1024) {
+                    alert('Kích thước ảnh không được vượt quá 4MB.');
+                    imageInput.value = '';
+                    imagePreview.style.display = 'none';
+                    if (currentImageWrapper) {
+                        currentImageWrapper.style.display = 'block';
+                    }
+                    return;
+                }
 
-        if (!isMovie && movieSelect) {
-            movieSelect.value = '';
-        }
-    };
+                // Kiểm tra loại file
+                if (!file.type.match('image/(jpeg|png|webp)')) {
+                    alert('Chỉ chấp nhận ảnh định dạng JPG, PNG hoặc WEBP.');
+                    imageInput.value = '';
+                    imagePreview.style.display = 'none';
+                    if (currentImageWrapper) {
+                        currentImageWrapper.style.display = 'block';
+                    }
+                    return;
+                }
 
-    categorySelect.addEventListener('change', toggleMovieSelect);
-    toggleMovieSelect();
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    // Ẩn ảnh hiện tại nếu có
+                    if (currentImageWrapper) {
+                        currentImageWrapper.style.display = 'none';
+                    }
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imagePreview.style.display = 'none';
+                if (currentImageWrapper) {
+                    currentImageWrapper.style.display = 'block';
+                }
+            }
+        });
+    }
 });
 </script>
 @endpush
