@@ -1,0 +1,71 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\MovieController;
+use App\Http\Controllers\Admin\PromotionController;
+use App\Http\Controllers\Admin\TheaterController as AdminTheaterController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PromotionDisplayController;
+use App\Http\Controllers\SearchController;
+
+
+// Authentication Routes
+Route::get('/register', [App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])->name('register');
+Route::post('/register', [App\Http\Controllers\Auth\RegisterController::class, 'register'])->name('register.post');
+
+Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [App\Http\Controllers\Auth\LoginController::class, 'login'])->name('login.post');
+
+Route::post('/logout', [App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
+Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+
+// Search Routes (Public)
+Route::get('/search', [SearchController::class, 'index'])->name('search');
+Route::get('/search/theaters-by-city', [SearchController::class, 'getTheatersByCity'])->name('search.theaters-by-city');
+Route::get('/search/autocomplete', [SearchController::class, 'autocomplete'])->name('search.autocomplete');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'index'])->name('profile.index');
+    Route::get('/profile/edit', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    
+    // Movies Routes (only for authenticated users)
+    Route::resource('movies', App\Http\Controllers\MovieController::class);
+    
+    // Booking Routes
+    Route::get('/showtimes/{showtime}/select-seats', [App\Http\Controllers\BookingController::class, 'selectSeats'])->name('bookings.select-seats');
+    Route::post('/showtimes/{showtime}/bookings', [App\Http\Controllers\BookingController::class, 'store'])->name('bookings.store');
+    Route::get('/bookings/{booking}/payment', [App\Http\Controllers\BookingController::class, 'payment'])->name('bookings.payment');
+    Route::post('/bookings/{booking}/pay', [App\Http\Controllers\BookingController::class, 'pay'])->name('bookings.pay');
+    // PayPal endpoints
+    Route::post('/bookings/{booking}/paypal/create-order', [App\Http\Controllers\BookingController::class, 'paypalCreateOrder'])->name('bookings.paypal.create');
+    Route::post('/bookings/{booking}/paypal/capture', [App\Http\Controllers\BookingController::class, 'paypalCapture'])->name('bookings.paypal.capture');
+    Route::get('/bookings/{booking}/paypal/return', [App\Http\Controllers\BookingController::class, 'paypalReturn'])->name('bookings.paypal.return');
+});
+// Route này sẽ xử lý các URL như /movie/1, /movie/2, ...
+Route::get('/movie/{movie}', [HomeController::class, 'show'])->name('movie.show');
+Route::get('/promotions', [PromotionDisplayController::class, 'index'])->name('promotions.index');
+Route::get('/promotions/{promotion}', [PromotionDisplayController::class, 'show'])->name('promotion.show');
+
+// Movie feedback (comments & ratings)
+Route::middleware('auth')->group(function () {
+    Route::post('/movie/{movie}/comments', [\App\Http\Controllers\MovieFeedbackController::class, 'storeComment'])->name('movie.comment.store');
+    Route::post('/movie/{movie}/rating', [\App\Http\Controllers\MovieFeedbackController::class, 'storeRating'])->name('movie.rating.store');
+    Route::put('/movie/{movie}/comments/{comment}', [\App\Http\Controllers\MovieFeedbackController::class, 'updateComment'])->name('movie.comment.update');
+    Route::delete('/movie/{movie}/comments/{comment}', [\App\Http\Controllers\MovieFeedbackController::class, 'deleteComment'])->name('movie.comment.delete');
+});
+
+// Nhóm các route cho admin
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    // Route cho quản lý Phim (CRUD)
+    Route::resource('movies', MovieController::class);
+    
+    // Route cho quản lý Rạp chiếu (CRUD)
+    Route::resource('theaters', AdminTheaterController::class);
+
+    // Route cho quản lý Khuyến mãi & Sự kiện
+    Route::resource('promotions', PromotionController::class)->except(['show']);
+
+    // Route cho quản lý Suất chiếu (Showtimes)
+    Route::resource('showtimes', \App\Http\Controllers\ShowtimeController::class);
+});
