@@ -167,6 +167,17 @@ class SearchController extends Controller
             ->limit(10)
             ->get(['id', 'title', 'genre', 'poster_url']);
 
+        // Map để thêm poster_image_url (accessor)
+        $movies = $movies->map(function ($movie) {
+            return [
+                'id' => $movie->id,
+                'title' => $movie->title,
+                'genre' => $movie->genre,
+                'poster_url' => $movie->poster_url,
+                'poster_image_url' => $movie->poster_image_url,
+            ];
+        });
+
         return response()->json($movies);
     }
 }

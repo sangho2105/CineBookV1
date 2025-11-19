@@ -8,7 +8,7 @@
     <div class="row">
         {{-- Cột Poster --}}
         <div class="col-md-4">
-            <img src="{{ $movie->poster_url ?? 'https://placehold.co/300x450?text=No+Poster' }}" 
+            <img src="{{ $movie->poster_image_url ?? 'https://placehold.co/300x450?text=No+Poster' }}" 
                  class="img-fluid rounded shadow-sm" 
                  alt="{{ $movie->title }}">
         </div>

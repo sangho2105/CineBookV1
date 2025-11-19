@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Movie; // Import model Movie
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class MovieController extends Controller
 {
@@ -39,7 +40,8 @@ class MovieController extends Controller
     {
         $validatedData = $request->validate([
             'title' => 'required',
-            'poster_url' => 'required',
+            'poster' => ['nullable', 'image', 'max:4096'],
+            'poster_url' => ['nullable', 'url'],
             'genre' => 'required',
             'director' => 'nullable|string|max:255',
             'cast' => 'nullable|string',
@@ -51,6 +53,18 @@ class MovieController extends Controller
             'rating_average' => 'required|numeric',
             'status' => 'required|in:upcoming,now_showing,ended',
         ]);
+
+        // Xử lý poster: ưu tiên file upload, nếu không có thì dùng URL
+        if ($request->hasFile('poster')) {
+            $validatedData['poster_url'] = $request->file('poster')->store('movies', 'public');
+        } elseif (empty($validatedData['poster_url'])) {
+            return back()
+                ->withErrors(['poster' => 'Vui lòng chọn ảnh poster hoặc nhập URL ảnh poster.'])
+                ->withInput();
+        }
+
+        // Xóa key poster vì đã chuyển thành poster_url
+        unset($validatedData['poster']);
 
         Movie::create($validatedData);
 
@@ -92,7 +106,8 @@ class MovieController extends Controller
     {
         $validatedData = $request->validate([
             'title' => 'required',
-            'poster_url' => 'required',
+            'poster' => ['nullable', 'image', 'max:4096'],
+            'poster_url' => ['nullable', 'url'],
             'genre' => 'required',
             'director' => 'nullable|string|max:255',
             'cast' => 'nullable|string',
@@ -106,6 +121,26 @@ class MovieController extends Controller
         ]);
 
         $movie = Movie::findOrFail($id);
+
+        // Xử lý poster: ưu tiên file upload
+        if ($request->hasFile('poster')) {
+            // Xóa ảnh cũ nếu là file trong storage
+            if ($movie->poster_url && !filter_var($movie->poster_url, FILTER_VALIDATE_URL)) {
+                Storage::disk('public')->delete($movie->poster_url);
+            }
+            $validatedData['poster_url'] = $request->file('poster')->store('movies', 'public');
+        } elseif (empty($validatedData['poster_url']) && empty($movie->poster_url)) {
+            return back()
+                ->withErrors(['poster' => 'Vui lòng chọn ảnh poster hoặc nhập URL ảnh poster.'])
+                ->withInput();
+        } elseif (empty($validatedData['poster_url'])) {
+            // Giữ nguyên poster_url hiện tại nếu không upload file mới và không nhập URL mới
+            $validatedData['poster_url'] = $movie->poster_url;
+        }
+
+        // Xóa key poster vì đã chuyển thành poster_url
+        unset($validatedData['poster']);
+
         $movie->update($validatedData);
 
         return redirect()->route('admin.movies.index')->with('success', 'Phim đã được cập nhật thành công!');
@@ -120,6 +155,12 @@ class MovieController extends Controller
     public function destroy($id)
     {
         $movie = Movie::findOrFail($id);
+        
+        // Xóa poster khỏi storage nếu là file (không phải URL)
+        if ($movie->poster_url && !filter_var($movie->poster_url, FILTER_VALIDATE_URL)) {
+            Storage::disk('public')->delete($movie->poster_url);
+        }
+
         $movie->delete();
 
         return redirect()->route('admin.movies.index')->with('success', 'Phim đã được xóa thành công!');

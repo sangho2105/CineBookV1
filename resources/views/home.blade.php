@@ -94,7 +94,7 @@
                     
                     {{-- Poster có link đến Trailer --}}
                     <a href="{{ $movie->trailer_url }}" target="_blank">
-                        <img src="{{ $movie->poster_url ?? 'https://placehold.co/300x450?text=No+Poster' }}" class="card-img-top" alt="{{ $movie->title }}">
+                        <img src="{{ $movie->poster_image_url ?? 'https://placehold.co/300x450?text=No+Poster' }}" class="card-img-top" alt="{{ $movie->title }}">
                     </a>
                     
                     <div class="card-body d-flex flex-column"> {{-- Thêm flex-column --}}
@@ -143,7 +143,7 @@
                     
                     {{-- Poster có link đến Trailer --}}
                     <a href="{{ $movie->trailer_url }}" target="_blank">
-                        <img src="{{ $movie->poster_url ?? 'https://placehold.co/300x450?text=No+Poster' }}" class="card-img-top" alt="{{ $movie->title }}">
+                        <img src="{{ $movie->poster_image_url ?? 'https://placehold.co/300x450?text=No+Poster' }}" class="card-img-top" alt="{{ $movie->title }}">
                     </a>
                     
                     <div class="card-body d-flex flex-column">

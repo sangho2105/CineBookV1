@@ -16,8 +16,8 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4">
-                        @if($movie->poster)
-                            <img src="{{ $movie->poster }}" alt="{{ $movie->title }}" class="img-fluid rounded mb-3">
+                        @if($movie->poster_image_url)
+                            <img src="{{ $movie->poster_image_url }}" alt="{{ $movie->title }}" class="img-fluid rounded mb-3">
                         @else
                             <div class="bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
                                 <span class="text-muted">No poster available</span>

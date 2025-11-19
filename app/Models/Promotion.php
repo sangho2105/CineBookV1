@@ -75,7 +75,7 @@ class Promotion extends Model
     }
 
     /**
-     * Lấy URL ảnh banner (hỗ trợ cả Base64 và đường dẫn cũ).
+     * Lấy URL ảnh banner từ storage.
      */
     public function getImageUrlAttribute(): ?string
     {
@@ -83,12 +83,13 @@ class Promotion extends Model
             return null;
         }
 
-        // Nếu là Base64 data URI, trả về trực tiếp
+        // Hỗ trợ cả Base64 (dữ liệu cũ) và đường dẫn storage (dữ liệu mới)
         if (str_starts_with($this->image_path, 'data:')) {
+            // Nếu là Base64 data URI (dữ liệu cũ), trả về trực tiếp
             return $this->image_path;
         }
 
-        // Nếu là đường dẫn cũ, trả về asset URL
+        // Trả về asset URL từ storage
         return asset('storage/' . $this->image_path);
     }
 }

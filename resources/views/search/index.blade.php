@@ -188,7 +188,7 @@
                     {{-- Movie Poster --}}
                     <a href="{{ route('movie.show', $movie->id) }}">
                         <img 
-                            src="{{ $movie->poster_url ?? 'https://placehold.co/300x450?text=No+Poster' }}" 
+                            src="{{ $movie->poster_image_url ?? 'https://placehold.co/300x450?text=No+Poster' }}" 
                             class="card-img-top" 
                             alt="{{ $movie->title }}"
                             style="height: 400px; object-fit: cover;"
@@ -346,7 +346,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             item.className = 'list-group-item list-group-item-action autocomplete-item';
                             item.innerHTML = `
                                 <div class="d-flex align-items-center">
-                                    <img src="${movie.poster_url || 'https://placehold.co/50x75?text=No+Image'}" 
+                                    <img src="${movie.poster_image_url || 'https://placehold.co/50x75?text=No+Image'}" 
                                          alt="${movie.title}" 
                                          style="width: 40px; height: 60px; object-fit: cover; margin-right: 10px;">
                                     <div>

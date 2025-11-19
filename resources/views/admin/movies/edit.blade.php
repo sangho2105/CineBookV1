@@ -15,7 +15,7 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.movies.update', $movie->id) }}" method="POST">
+    <form action="{{ route('admin.movies.update', $movie->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
         
@@ -28,11 +28,41 @@
         </div>
         
         <div class="mb-3">
-            <label for="poster_url" class="form-label">Link ảnh Poster <span class="text-danger">*</span></label>
-            <input type="url" class="form-control @error('poster_url') is-invalid @enderror" id="poster_url" name="poster_url" value="{{ old('poster_url', $movie->poster_url) }}" required>
-            @error('poster_url')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
+            <label class="form-label">Ảnh Poster <span class="text-danger">*</span></label>
+            
+            @if($movie->poster_image_url)
+                <div class="mb-3" id="current-poster-wrapper">
+                    <label class="form-label">Ảnh hiện tại:</label>
+                    <div>
+                        <img src="{{ $movie->poster_image_url }}" alt="{{ $movie->title }}" class="img-fluid rounded" style="max-height: 300px;">
+                    </div>
+                </div>
+            @endif
+
+            <div class="mb-2">
+                <label for="poster" class="form-label">Chọn ảnh mới từ máy tính:</label>
+                <input type="file" class="form-control @error('poster') is-invalid @enderror" id="poster" name="poster" accept="image/jpeg,image/png,image/webp">
+                <small class="text-muted">Chấp nhận ảnh JPG, PNG, WEBP tối đa 4MB.</small>
+                @error('poster')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+            <div class="text-center my-2">
+                <span class="text-muted">hoặc</span>
+            </div>
+            <div>
+                <label for="poster_url" class="form-label">Nhập URL ảnh mới:</label>
+                <input type="url" class="form-control @error('poster_url') is-invalid @enderror" id="poster_url" name="poster_url" value="{{ old('poster_url', filter_var($movie->poster_url, FILTER_VALIDATE_URL) ? $movie->poster_url : '') }}" placeholder="https://example.com/poster.jpg">
+                @error('poster_url')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+            <div id="poster-preview" class="mt-2" style="display: none;">
+                <label class="form-label">Xem trước ảnh mới:</label>
+                <div>
+                    <img id="preview-poster-img" src="" alt="Preview" class="img-fluid rounded" style="max-height: 300px;">
+                </div>
+            </div>
         </div>
         
         <div class="row">
@@ -130,4 +160,86 @@
         <a href="{{ route('admin.movies.index') }}" class="btn btn-secondary">Hủy</a>
     </form>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const posterInput = document.getElementById('poster');
+    const posterUrlInput = document.getElementById('poster_url');
+    const posterPreview = document.getElementById('poster-preview');
+    const previewPosterImg = document.getElementById('preview-poster-img');
+    const currentPosterWrapper = document.getElementById('current-poster-wrapper');
+
+    if (posterInput && posterPreview && previewPosterImg) {
+        // Xử lý preview khi chọn file
+        posterInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            
+            if (file) {
+                // Kiểm tra kích thước file (4MB)
+                if (file.size > 4 * 1024 * 1024) {
+                    alert('Kích thước ảnh không được vượt quá 4MB.');
+                    posterInput.value = '';
+                    posterPreview.style.display = 'none';
+                    if (currentPosterWrapper) {
+                        currentPosterWrapper.style.display = 'block';
+                    }
+                    return;
+                }
+
+                // Kiểm tra loại file
+                if (!file.type.match('image/(jpeg|png|webp)')) {
+                    alert('Chỉ chấp nhận ảnh định dạng JPG, PNG hoặc WEBP.');
+                    posterInput.value = '';
+                    posterPreview.style.display = 'none';
+                    if (currentPosterWrapper) {
+                        currentPosterWrapper.style.display = 'block';
+                    }
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewPosterImg.src = e.target.result;
+                    posterPreview.style.display = 'block';
+                    // Ẩn ảnh hiện tại
+                    if (currentPosterWrapper) {
+                        currentPosterWrapper.style.display = 'none';
+                    }
+                    // Xóa URL input khi có file
+                    if (posterUrlInput) {
+                        posterUrlInput.value = '';
+                    }
+                };
+                reader.readAsDataURL(file);
+            } else {
+                posterPreview.style.display = 'none';
+                if (currentPosterWrapper) {
+                    currentPosterWrapper.style.display = 'block';
+                }
+            }
+        });
+
+        // Ẩn preview khi nhập URL
+        if (posterUrlInput) {
+            posterUrlInput.addEventListener('input', function() {
+                if (this.value.trim() !== '') {
+                    posterPreview.style.display = 'none';
+                    if (currentPosterWrapper) {
+                        currentPosterWrapper.style.display = 'none';
+                    }
+                    if (posterInput) {
+                        posterInput.value = '';
+                    }
+                } else {
+                    if (currentPosterWrapper) {
+                        currentPosterWrapper.style.display = 'block';
+                    }
+                }
+            });
+        }
+    }
+});
+</script>
+@endpush
 @endsection

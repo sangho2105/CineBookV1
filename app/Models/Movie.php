@@ -66,4 +66,22 @@ class Movie extends Model
             ->whereDate('release_date', '<=', Carbon::today())
             ->update(['status' => 'now_showing']);
     }
+
+    /**
+     * Lấy URL poster (hỗ trợ cả file storage và URL ngoài).
+     */
+    public function getPosterImageUrlAttribute(): ?string
+    {
+        if (empty($this->poster_url)) {
+            return null;
+        }
+
+        // Nếu là URL (bắt đầu bằng http/https), trả về trực tiếp
+        if (filter_var($this->poster_url, FILTER_VALIDATE_URL)) {
+            return $this->poster_url;
+        }
+
+        // Nếu là đường dẫn file trong storage, trả về asset URL
+        return asset('storage/' . $this->poster_url);
+    }
 }
