@@ -7,6 +7,88 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Hướng dẫn Setup cho Team Members
+
+### Yêu cầu hệ thống:
+- PHP >= 8.0.2
+- Composer
+- Node.js & NPM (nếu cần build frontend assets)
+- MySQL/PostgreSQL/SQLite
+
+### Các bước setup sau khi clone/pull code:
+
+1. **Cài đặt PHP dependencies:**
+   ```bash
+   composer install
+   ```
+   > **Lưu ý:** Lệnh này sẽ tự động tạo symlink `storage` (không cần chạy `php artisan storage:link` riêng)
+
+2. **Cài đặt Node dependencies (nếu cần build frontend):**
+   ```bash
+   npm install
+   ```
+
+3. **Tạo file .env và cấu hình:**
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+   
+   Sau đó, chỉnh sửa file `.env` và cấu hình database:
+   ```env
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=ten_database
+   DB_USERNAME=ten_user
+   DB_PASSWORD=mat_khau
+   ```
+
+4. **Chạy migrations:**
+   ```bash
+   php artisan migrate
+   ```
+
+5. **Seed dữ liệu mẫu (tùy chọn):**
+   ```bash
+   php artisan db:seed
+   ```
+
+6. **Build frontend assets (nếu cần):**
+   ```bash
+   npm run build
+   # hoặc chạy dev server:
+   npm run dev
+   ```
+
+### Tóm tắt nhanh (cho lần đầu setup):
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
+# Chỉnh sửa .env với thông tin database
+php artisan migrate
+php artisan db:seed  # (tùy chọn)
+```
+
+### Sau khi pull code mới (không phải lần đầu):
+```bash
+composer install  # Tự động tạo symlink storage
+php artisan migrate  # Nếu có migration mới
+```
+
+### Vấn đề về ảnh bị mất:
+
+- **Nguyên nhân:** Các file ảnh trong `storage/app/public/movies` không được commit vào git (đúng như vậy, vì chúng là files được upload).
+- **Giải pháp:**
+  - Đảm bảo đã chạy `php artisan storage:link` để tạo symlink
+  - Nếu cần ảnh để test, bạn có thể:
+    - Upload ảnh mới qua admin panel
+    - Hoặc sử dụng URL ảnh từ internet khi tạo phim mới
+    - Hoặc tải ảnh từ server production (nếu có quyền truy cập)
+
+---
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

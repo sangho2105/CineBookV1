@@ -1,2 +1,6 @@
 *
 !.gitignore
+!movies/
+!promotions/
+!movies/.gitkeep
+!promotions/.gitkeep
