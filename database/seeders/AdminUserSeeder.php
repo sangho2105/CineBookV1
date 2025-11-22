@@ -10,16 +10,32 @@ class AdminUserSeeder extends Seeder
 {
     public function run()
     {
-        DB::table('users')->insert([
-            [
-                'name' => 'Admin',
-                'email' => 'admin@cinebook.com',
-                'password' => Hash::make('admin123'),
-                'role' => 'admin',
-                'email_verified_at' => now(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ]);
+        // Kiểm tra xem admin đã tồn tại chưa
+        $adminExists = DB::table('users')->where('email', 'admin@cinebook.com')->exists();
+        
+        if (!$adminExists) {
+            DB::table('users')->insert([
+                [
+                    'name' => 'Admin',
+                    'email' => 'admin@cinebook.com',
+                    'password' => Hash::make('admin123'),
+                    'role' => 'admin',
+                    'email_verified_at' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+            ]);
+            $this->command->info('Tài khoản admin đã được tạo thành công!');
+        } else {
+            // Nếu đã tồn tại, cập nhật lại password
+            DB::table('users')
+                ->where('email', 'admin@cinebook.com')
+                ->update([
+                    'password' => Hash::make('admin123'),
+                    'role' => 'admin',
+                    'updated_at' => now(),
+                ]);
+            $this->command->info('Tài khoản admin đã được cập nhật lại!');
+        }
     }
 }

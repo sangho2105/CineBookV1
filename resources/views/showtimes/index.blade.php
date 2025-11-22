@@ -3,78 +3,73 @@
 @section('title', 'List Showtimes')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>List Showtimes</h2>
-    <a href="{{ route('admin.showtimes.create') }}" class="btn btn-primary">Add Showtime</a>
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Quản lý Suất chiếu</h1>
+    <div class="d-flex gap-2 align-items-center">
+        <form method="GET" action="{{ route('admin.showtimes.index') }}" class="d-flex gap-2 align-items-center">
+            <div class="position-relative">
+                <input type="text" 
+                       class="form-control" 
+                       name="search" 
+                       placeholder="Tìm kiếm theo tên phim..." 
+                       value="{{ request('search') }}"
+                       style="width: 250px; padding-right: 35px;">
+                <i class="bi bi-search position-absolute" style="right: 10px; top: 50%; transform: translateY(-50%); color: #6c757d; pointer-events: none;"></i>
+            </div>
+            @if(request('search'))
+            <a href="{{ route('admin.showtimes.index') }}" class="btn btn-sm btn-outline-secondary" title="Xóa bộ lọc">
+                <i class="bi bi-x-circle"></i>
+            </a>
+            @endif
+        </form>
+        <a href="{{ route('admin.showtimes.create') }}" class="btn btn-primary">Thêm Suất chiếu</a>
+    </div>
 </div>
 
 <div class="table-responsive">
-    <table class="table table-striped">
+    <table class="table table-striped align-middle">
         <thead>
             <tr>
-                <th>ID</th>
+                <th style="width: 80px;">STT</th>
                 <th>Movie</th>
-                <th>Theater</th>
+                <th>Phòng chiếu</th>
                 <th>Date</th>
                 <th>Show Time</th>
-                <th>Gold Price</th>
-                <th>Platinum Price</th>
-                <th>Box Price</th>
-                <th>Peak Hour</th>
-                <th>Booked Seats</th>
-                <th>Combos</th>
                 <th>Action</th>
             </tr>
         </thead>
         <tbody>
             @forelse($showtimes as $showtime)
             <tr>
-                <td>{{ $showtime->id }}</td>
+                <td>{{ $loop->iteration }}</td>
                 <td>{{ $showtime->movie->title }}</td>
-                <td>{{ $showtime->theater->name }}</td>
+                <td>{{ $showtime->room ? $showtime->room->name . ' (' . $showtime->room->total_seats . ' ghế)' : ($showtime->theater ? $showtime->theater->name : 'N/A') }}</td>
                 <td>{{ $showtime->show_date->format('d/m/Y') }}</td>
                 <td>{{ date('H:i', strtotime($showtime->show_time)) }}</td>
-                <td>{{ number_format($showtime->gold_price, 0, ',', '.') }} đ</td>
-                <td>{{ number_format($showtime->platinum_price, 0, ',', '.') }} đ</td>
-                <td>{{ number_format($showtime->box_price, 0, ',', '.') }} đ</td>
-                <td>{{ $showtime->is_peak_hour ? 'Yes' : 'No' }}</td>
                 <td>
-                    {{ $showtime->stats['seat_count'] ?? 0 }}
-                    @php $cat = $showtime->stats['by_category'] ?? []; @endphp
-                    <div class="small text-muted">
-                        Gold: {{ $cat['Gold'] ?? 0 }}, Platinum: {{ $cat['Platinum'] ?? 0 }}, Box: {{ $cat['Box'] ?? 0 }}
-                    </div>
-                </td>
-                <td>
-                    @php $combos = $showtime->stats['combos'] ?? []; @endphp
-                    @if(empty($combos))
-                        <span class="text-muted small">0</span>
-                    @else
-                        <div class="small">
-                            @foreach($combos as $name => $qty)
-                                <div>{{ $name }}: x{{ $qty }}</div>
-                            @endforeach
-                        </div>
-                    @endif
-                </td>
-                <td>
-                    <a href="{{ route('bookings.select-seats', $showtime) }}" class="btn btn-sm btn-success">Đặt vé</a>
-                    <a href="{{ route('admin.showtimes.show', $showtime) }}" class="btn btn-sm btn-info">View</a>
-                    <a href="{{ route('admin.showtimes.edit', $showtime) }}" class="btn btn-sm btn-warning">Edit</a>
+                    <a href="{{ route('admin.showtimes.show', $showtime) }}" class="btn btn-sm btn-info" title="View">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="{{ route('admin.showtimes.edit', $showtime) }}" class="btn btn-sm btn-warning" title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </a>
                     <form action="{{ route('admin.showtimes.destroy', $showtime) }}" method="POST" class="d-inline">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete?')">Delete</button>
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete?')" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
                     </form>
                 </td>
-
             </tr>
             @empty
             <tr>
-                <td colspan="10" class="text-center">No showtimes found</td>
+                <td colspan="6" class="text-center">No showtimes found</td>
             </tr>
             @endforelse
         </tbody>
     </table>
+</div>
 </div>
 @endsection

@@ -3,7 +3,7 @@
 @section('title', 'Trang chủ - CineBook')
 
 @push('css')
-    <link rel="stylesheet" href="{{ asset('public/css/home.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/home.css') }}">
 @endpush
 
 @section('content')
@@ -55,181 +55,268 @@
         @endif
     </div>
 
-    {{-- Quick Search Widget - Compact Version --}}
-    <div class="d-flex justify-content-end mb-4">
-        <div class="quick-search-wrapper position-relative">
-            <form action="{{ route('search') }}" method="GET">
-                <div class="input-group quick-search-group">
-                    <input 
-                        type="text" 
-                        class="form-control quick-search-input" 
-                        name="keyword" 
-                        placeholder="Tìm kiếm phim..."
-                        autocomplete="off"
-                        id="quick-search-input"
-                    >
-                    <button type="submit" class="btn btn-primary quick-search-btn">
-                        <i class="bi bi-search"></i>
-                    </button>
-                </div>
-                <div id="quick-search-results" class="list-group quick-search-results d-none"></div>
-                <div class="text-end mt-2">
-                    <a href="{{ route('search') }}" class="text-decoration-none small quick-search-advanced">
-                        <i class="bi bi-funnel"></i> Tìm kiếm nâng cao
-                    </a>
-                </div>
-            </form>
+    {{-- Now Showing Section - CGV Style --}}
+</div>
+<div class="home-movie-selection my-5">
+        <div class="movie-selection-header">
+            <div class="header-dots"></div>
+            <h2 class="movie-selection-title">MOVIE SELECTION</h2>
+            <div class="header-dots"></div>
         </div>
+        @if($nowShowingMovies->isNotEmpty())
+            <div class="slideshow-containe-movier feature_slide_show_480_767">
+                <ul class="feature_slide_show">
+                    <div class="cycle-carousel-wrap">
+                        @foreach($nowShowingMovies as $movie)
+                            @php
+                                // Xác định rating badge
+                                $rating = $movie->rating_average ?? 0;
+                                $ratingClass = 'nmovie-rating-p';
+                                $ratingText = 'P';
+                                if ($rating >= 18) {
+                                    $ratingClass = 'nmovie-rating-t18';
+                                    $ratingText = 'T18';
+                                } elseif ($rating >= 16) {
+                                    $ratingClass = 'nmovie-rating-t16';
+                                    $ratingText = 'T16';
+                                } elseif ($rating >= 13) {
+                                    $ratingClass = 'nmovie-rating-t13';
+                                    $ratingText = 'T13';
+                                } elseif ($rating > 0) {
+                                    $ratingClass = 'nmovie-rating-k';
+                                    $ratingText = 'K';
+                                }
+                            @endphp
+                            <li class="poster-film film-lists item cycle-slide">
+                                <img class="product-img" src="{{ $movie->poster_image_url ?? 'https://placehold.co/240x388?text=No+Poster' }}" alt="{{ $movie->title }}">
+                                <input type="hidden" value="{{ $movie->trailer_url ?? '' }}">
+                                
+                                <div class="feature_film_content">
+                                    <h3>{{ $movie->title }}</h3>
+                                    <a title="Xem chi tiết" class="button" href="{{ route('movie.show', $movie->id) }}">Xem chi tiết</a>
+                                    @guest
+                                        <a title="Đặt vé" class="button btn-booking" href="{{ route('login') }}">Đặt Vé</a>
+                                    @else
+                                        @if($movie->showtimes->isNotEmpty())
+                                            <button type="button" title="Đặt vé" class="button btn-booking" data-booking-movie-id="{{ $movie->id }}" data-bs-toggle="modal" data-bs-target="#bookingModal">Đặt Vé</button>
+                                        @else
+                                            <button type="button" title="Đặt vé" class="button btn-booking" disabled>Đặt Vé</button>
+                                        @endif
+                                    @endguest
+                                </div>
+                                
+                                @if($movie->trailer_url)
+                                    <div class="play-button">
+                                        <span><span>Play</span></span>
+                                        <div style="display:none">
+                                            <span class="movie-trailer">{{ $movie->trailer_url }}</span>
+                                        </div>
+                                    </div>
+                                @endif
+                            </li>
+                        @endforeach
+                    </div>
+                </ul>
+                <span class="feature_slide_show_prev disabled">&lt;&lt;</span>
+                <span class="feature_slide_show_next">&gt;&gt;</span>
+            </div>
+        @else
+            <div class="col-12">
+                <p class="text-center">Hiện chưa có phim nào đang chiếu.</p>
+            </div>
+        @endif
     </div>
 
-    {{-- Now Showing Section --}}
-    <div class="now-showing my-5">
-        <h2 class="text-center mb-4">Đang Chiếu</h2>
-        <div class="row">
-            
-            {{-- Bắt đầu vòng lặp Phim Đang Chiếu --}}
-            @forelse($nowShowingMovies as $movie)
-            <div class="col-md-4 col-lg-3 mb-4">
-                <div class="card h-100"> {{-- Thêm h-100 để các card bằng nhau --}}
-                    
-                    {{-- Poster có link đến Trailer --}}
-                    <a href="{{ $movie->trailer_url }}" target="_blank">
-                        <img src="{{ $movie->poster_image_url ?? 'https://placehold.co/300x450?text=No+Poster' }}" class="card-img-top" alt="{{ $movie->title }}">
-                    </a>
-                    
-                    <div class="card-body d-flex flex-column"> {{-- Thêm flex-column --}}
-                                                {{-- 
-                        Thay đổi ở đây: 
-                        Bọc tên phim bằng thẻ <a> trỏ đến route 'movie.show'
-                        --}}
-                        <h5 class="card-title">
-                            <a href="{{ route('movie.show', $movie->id) }}" class="text-decoration-none text-dark">
-                                {{ $movie->title }}
-                            </a>
-                        </h5>
-                        <p class="card-text">{{ Str::limit($movie->synopsis ?? 'Chưa có thông tin', 70) }}</p>
-                        
-                        {{-- Đẩy nút xuống dưới cùng --}}
-                        <div class="mt-auto">
-                            @guest
-                                <a href="{{ route('login') }}" class="btn btn-primary w-100 mb-2">Đặt Vé</a>
-                            @else
-                                <a href="{{ route('movie.show', $movie->id) }}" class="btn btn-primary w-100 mb-2">Đặt Vé</a>
-                            @endguest
-                            <a href="{{ $movie->trailer_url }}" class="btn btn-outline-secondary w-100" target="_blank">Xem Trailer</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            @empty
-                <div class="col-12">
-                    <p class="text-center">Hiện chưa có phim nào đang chiếu.</p>
-                </div>
-            @endforelse
-            {{-- Kết thúc vòng lặp --}}
-
+<div class="container">
+    {{-- Coming Soon Section - CGV Style --}}
+    <div class="home-movie-selection my-5">
+        <div class="movie-selection-header">
+            <div class="header-dots"></div>
+            <h2 class="movie-selection-title">Sắp Chiếu</h2>
+            <div class="header-dots"></div>
         </div>
-    </div>
-
-    {{-- Coming Soon Section --}}
-    <div class="coming-soon my-5">
-        <h2 class="text-center mb-4">Sắp Chiếu</h2>
-        <div class="row">
-            
-            {{-- Bắt đầu vòng lặp Phim Sắp Chiếu --}}
-            @forelse($comingSoonMovies as $movie)
-            <div class="col-md-4 col-lg-3 mb-4">
-                <div class="card h-100">
-                    
-                    {{-- Poster có link đến Trailer --}}
-                    <a href="{{ $movie->trailer_url }}" target="_blank">
-                        <img src="{{ $movie->poster_image_url ?? 'https://placehold.co/300x450?text=No+Poster' }}" class="card-img-top" alt="{{ $movie->title }}">
-                    </a>
-                    
-                    <div class="card-body d-flex flex-column">
-                        {{-- 
-                        Thay đổi ở đây: 
-                        Bọc tên phim bằng thẻ <a> trỏ đến route 'movie.show'
-                        --}}
-                        <h5 class="card-title">
-                            <a href="{{ route('movie.show', $movie->id) }}" class="text-decoration-none text-dark">
-                                {{ $movie->title }}
-                            </a>
-                        </h5>
-                        {{-- Hiển thị ngày dự kiến chiếu --}}
-                        <p class="card-text">Dự kiến: <strong>{{ \Carbon\Carbon::parse($movie->release_date)->format('d/m/Y') }}</strong></p>
-                        
-                        <div class="mt-auto">
-                            <a href="#" class="btn btn-secondary w-100 disabled" tabindex="-1" aria-disabled="true">Sắp chiếu</a>
-                        </div>
+        @if($comingSoonMovies->isNotEmpty())
+            <div class="slideshow-containe-movier feature_slide_show_480_767">
+                <ul class="feature_slide_show">
+                    <div class="cycle-carousel-wrap">
+                        @foreach($comingSoonMovies as $movie)
+                            @php
+                                // Xác định rating badge
+                                $rating = $movie->rating_average ?? 0;
+                                $ratingClass = 'nmovie-rating-p';
+                                $ratingText = 'P';
+                                if ($rating >= 18) {
+                                    $ratingClass = 'nmovie-rating-t18';
+                                    $ratingText = 'T18';
+                                } elseif ($rating >= 16) {
+                                    $ratingClass = 'nmovie-rating-t16';
+                                    $ratingText = 'T16';
+                                } elseif ($rating >= 13) {
+                                    $ratingClass = 'nmovie-rating-t13';
+                                    $ratingText = 'T13';
+                                } elseif ($rating > 0) {
+                                    $ratingClass = 'nmovie-rating-k';
+                                    $ratingText = 'K';
+                                }
+                            @endphp
+                            <li class="poster-film film-lists item cycle-slide">
+                                <img class="product-img" src="{{ $movie->poster_image_url ?? 'https://placehold.co/240x388?text=No+Poster' }}" alt="{{ $movie->title }}">
+                                <input type="hidden" value="{{ $movie->trailer_url ?? '' }}">
+                                
+                                <div class="feature_film_content">
+                                    <h3>{{ $movie->title }}</h3>
+                                    <a title="Xem chi tiết" class="button" href="{{ route('movie.show', $movie->id) }}">Xem chi tiết</a>
+                                    <button type="button" title="Sắp chiếu" class="button btn-booking" disabled>Sắp chiếu</button>
+                                </div>
+                                
+                                @if($movie->trailer_url)
+                                    <div class="play-button">
+                                        <span><span>Play</span></span>
+                                        <div style="display:none">
+                                            <span class="movie-trailer">{{ $movie->trailer_url }}</span>
+                                        </div>
+                                    </div>
+                                @endif
+                            </li>
+                        @endforeach
                     </div>
-                </div>
+                </ul>
+                <span class="feature_slide_show_prev disabled">&lt;&lt;</span>
+                <span class="feature_slide_show_next">&gt;&gt;</span>
             </div>
-            @empty
-                <div class="col-12">
-                    <p class="text-center">Chưa có thông tin phim sắp chiếu.</p>
-                </div>
-            @endforelse
-            {{-- Kết thúc vòng lặp --}}
-            
-        </div>
+        @else
+            <div class="col-12">
+                <p class="text-center">Chưa có thông tin phim sắp chiếu.</p>
+            </div>
+        @endif
     </div>
 </div>
 
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Quick Search
     const input = document.getElementById('quick-search-input');
     const resultsBox = document.getElementById('quick-search-results');
     let debounceTimer;
 
-    if (!input || !resultsBox) {
-        return;
+    if (input && resultsBox) {
+        const hideResults = () => {
+            resultsBox.classList.add('d-none');
+            resultsBox.innerHTML = '';
+        };
+
+        input.addEventListener('input', function() {
+            const keyword = this.value.trim();
+            clearTimeout(debounceTimer);
+
+            if (keyword.length < 2) {
+                hideResults();
+                return;
+            }
+
+            debounceTimer = setTimeout(() => {
+                fetch(`/search/autocomplete?keyword=${encodeURIComponent(keyword)}`)
+                    .then(response => response.json())
+                    .then(movies => {
+                        if (!Array.isArray(movies) || movies.length === 0) {
+                            hideResults();
+                            return;
+                        }
+
+                        resultsBox.innerHTML = '';
+                        movies.forEach(movie => {
+                            const item = document.createElement('a');
+                            item.href = `/movie/${movie.id}`;
+                            item.className = 'list-group-item list-group-item-action';
+                            item.textContent = movie.title;
+                            resultsBox.appendChild(item);
+                        });
+                        resultsBox.classList.remove('d-none');
+                    })
+                    .catch(() => {
+                        hideResults();
+                    });
+            }, 300);
+        });
+
+        document.addEventListener('click', function(event) {
+            if (!resultsBox.contains(event.target) && event.target !== input) {
+                hideResults();
+            }
+        });
     }
 
-    const hideResults = () => {
-        resultsBox.classList.add('d-none');
-        resultsBox.innerHTML = '';
-    };
-
-    input.addEventListener('input', function() {
-        const keyword = this.value.trim();
-        clearTimeout(debounceTimer);
-
-        if (keyword.length < 2) {
-            hideResults();
+    // Movie Carousel - CGV Style
+    const carouselContainers = document.querySelectorAll('.slideshow-containe-movier');
+    
+    carouselContainers.forEach(container => {
+        const carouselWrap = container.querySelector('.cycle-carousel-wrap');
+        const prevBtn = container.querySelector('.feature_slide_show_prev');
+        const nextBtn = container.querySelector('.feature_slide_show_next');
+        const posters = container.querySelectorAll('.poster-film');
+        
+        if (!carouselWrap || !prevBtn || !nextBtn || posters.length === 0) {
+            console.log('Carousel elements not found', { carouselWrap, prevBtn, nextBtn, posters: posters.length });
             return;
         }
 
-        debounceTimer = setTimeout(() => {
-            fetch(`/search/autocomplete?keyword=${encodeURIComponent(keyword)}`)
-                .then(response => response.json())
-                .then(movies => {
-                    if (!Array.isArray(movies) || movies.length === 0) {
-                        hideResults();
-                        return;
-                    }
+        let currentPosition = 0;
+        const posterWidth = 240; // Width of each poster
+        const gap = 15; // Gap between posters
+        const visibleCount = 4; // Number of posters visible at once
+        const scrollAmount = (posterWidth + gap) * visibleCount;
+        const maxPosition = Math.max(0, (posters.length - visibleCount) * (posterWidth + gap));
 
-                    resultsBox.innerHTML = '';
-                    movies.forEach(movie => {
-                        const item = document.createElement('a');
-                        item.href = `/movie/${movie.id}`;
-                        item.className = 'list-group-item list-group-item-action';
-                        item.textContent = movie.title;
-                        resultsBox.appendChild(item);
-                    });
-                    resultsBox.classList.remove('d-none');
-                })
-                .catch(() => {
-                    hideResults();
-                });
-        }, 300);
-    });
+        const updateButtons = () => {
+            if (currentPosition <= 0) {
+                prevBtn.classList.add('disabled');
+            } else {
+                prevBtn.classList.remove('disabled');
+            }
+            
+            if (currentPosition >= maxPosition) {
+                nextBtn.classList.add('disabled');
+            } else {
+                nextBtn.classList.remove('disabled');
+            }
+        };
 
-    document.addEventListener('click', function(event) {
-        if (!resultsBox.contains(event.target) && event.target !== input) {
-            hideResults();
-        }
+        const moveCarousel = () => {
+            carouselWrap.style.transform = `translateX(-${currentPosition}px)`;
+            updateButtons();
+        };
+
+        prevBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!prevBtn.classList.contains('disabled')) {
+                currentPosition = Math.max(0, currentPosition - scrollAmount);
+                moveCarousel();
+            }
+        });
+
+        nextBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!nextBtn.classList.contains('disabled')) {
+                currentPosition = Math.min(maxPosition, currentPosition + scrollAmount);
+                moveCarousel();
+            }
+        });
+
+        // Play button click handler
+        container.querySelectorAll('.play-button').forEach(playBtn => {
+            playBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const trailerUrl = this.querySelector('.movie-trailer')?.textContent;
+                if (trailerUrl) {
+                    window.open(trailerUrl, '_blank');
+                }
+            });
+        });
+
+        updateButtons();
     });
 });
 </script>

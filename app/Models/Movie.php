@@ -24,6 +24,7 @@ class Movie extends Model
         'synopsis',
         'release_date',
         'rating_average',
+        'rated',
         'status',
     ];
 
@@ -68,12 +69,17 @@ class Movie extends Model
     }
 
     /**
-     * Lấy URL poster (hỗ trợ cả file storage và URL ngoài).
+     * Lấy URL poster (hỗ trợ cả file storage, URL ngoài và Base64).
      */
     public function getPosterImageUrlAttribute(): ?string
     {
         if (empty($this->poster_url)) {
             return null;
+        }
+
+        // Hỗ trợ Base64 data URI (dữ liệu cũ)
+        if (str_starts_with($this->poster_url, 'data:')) {
+            return $this->poster_url;
         }
 
         // Nếu là URL (bắt đầu bằng http/https), trả về trực tiếp

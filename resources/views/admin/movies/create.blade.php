@@ -100,9 +100,9 @@
             </div>
             
             <div class="col-md-4 mb-3">
-                <label for="rating_average" class="form-label">Đánh giá (0-5) <span class="text-danger">*</span></label>
-                <input type="number" step="0.1" class="form-control @error('rating_average') is-invalid @enderror" id="rating_average" name="rating_average" value="{{ old('rating_average', 0) }}" min="0" max="5" required>
-                @error('rating_average')
+                <label for="release_date" class="form-label">Ngày phát hành <span class="text-danger">*</span></label>
+                <input type="date" class="form-control @error('release_date') is-invalid @enderror" id="release_date" name="release_date" value="{{ old('release_date') }}" required>
+                @error('release_date')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
@@ -122,9 +122,16 @@
         </div>
         
         <div class="mb-3">
-            <label for="release_date" class="form-label">Ngày phát hành <span class="text-danger">*</span></label>
-            <input type="date" class="form-control @error('release_date') is-invalid @enderror" id="release_date" name="release_date" value="{{ old('release_date') }}" required>
-            @error('release_date')
+            <label for="rated" class="form-label">Rated</label>
+            <select class="form-select @error('rated') is-invalid @enderror" id="rated" name="rated">
+                <option value="">-- Chọn Rated --</option>
+                <option value="K" {{ old('rated') == 'K' ? 'selected' : '' }}>K - PHIM ĐƯỢC PHỔ BIẾN ĐẾN NGƯỜI XEM DƯỚI 13 TUỔI VÀ CÓ NGƯỜI BẢO HỘ ĐI KÈM</option>
+                <option value="T13" {{ old('rated') == 'T13' ? 'selected' : '' }}>T13 - PHIM DÀNH CHO NGƯỜI XEM TỪ 13 TUỔI TRỞ LÊN</option>
+                <option value="T16" {{ old('rated') == 'T16' ? 'selected' : '' }}>T16 - PHIM DÀNH CHO NGƯỜI XEM TỪ 16 TUỔI TRỞ LÊN</option>
+                <option value="T18" {{ old('rated') == 'T18' ? 'selected' : '' }}>T18 - PHIM DÀNH CHO NGƯỜI XEM TỪ 18 TUỔI TRỞ LÊN</option>
+                <option value="P" {{ old('rated') == 'P' ? 'selected' : '' }}>P - PHIM DÀNH CHO MỌI ĐỐI TƯỢNG</option>
+            </select>
+            @error('rated')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>

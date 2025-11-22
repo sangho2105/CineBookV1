@@ -53,7 +53,7 @@
 
                 <div class="mt-3 text-center">
                     <p>Don't have an account? <a href="{{ route('register') }}">Register</a></p>
-                    {{-- Password reset functionality will be implemented later --}}
+                    <p><a href="{{ route('password.forgot') }}">Quên mật khẩu?</a></p>
                 </div>
             </div>
         </div>

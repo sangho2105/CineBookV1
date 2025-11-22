@@ -23,6 +23,7 @@ class HomeController extends Controller
                                 
         // 2. Lấy 12 phim "Đang chiếu"
         $nowShowingMovies = Movie::where('release_date', '<=', $today)
+                                  ->with('showtimes')
                                   ->orderBy('release_date', 'desc')
                                   ->take(12)
                                   ->get();

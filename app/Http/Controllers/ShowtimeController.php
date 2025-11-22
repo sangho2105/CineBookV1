@@ -5,14 +5,107 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Movie;
 use App\Models\Theater;
+use App\Models\Room;
 use App\Models\Showtime;
+use Carbon\Carbon;
+use Illuminate\Validation\ValidationException;
 class ShowtimeController extends Controller
 {
-   
-    public function index()
+    /**
+     * Kiểm tra xung đột thời gian với các suất chiếu khác
+     */
+    private function checkTimeConflict($roomId, $showDate, $showTime, $movieDuration, $excludeId = null)
     {
-        $showtimes = Showtime::with(['movie', 'theater', 'bookings.seats', 'bookings.combos'])
-            ->latest()
+        // Parse show_time - có thể là "H:i" hoặc "H:i:s"
+        $timeStr = is_string($showTime) ? $showTime : (is_object($showTime) ? $showTime->format('H:i') : $showTime);
+        if (strlen($timeStr) > 5) {
+            $timeStr = substr($timeStr, 0, 5); // Chỉ lấy H:i
+        }
+        
+        // Tạo datetime cho suất chiếu mới
+        $newStartDateTime = Carbon::createFromFormat('Y-m-d H:i', $showDate . ' ' . $timeStr);
+        $newEndDateTime = $newStartDateTime->copy()->addMinutes($movieDuration);
+
+        // Lấy tất cả suất chiếu trong cùng phòng và cùng ngày
+        $query = Showtime::where('room_id', $roomId)
+            ->whereDate('show_date', $showDate);
+
+        // Nếu đang edit, loại trừ showtime hiện tại
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        $existingShowtimes = $query->with('movie')->get();
+
+        foreach ($existingShowtimes as $existing) {
+            // Lấy thời gian bắt đầu và kết thúc của suất chiếu hiện có
+            $existingDate = $existing->show_date instanceof Carbon 
+                ? $existing->show_date->format('Y-m-d')
+                : Carbon::parse($existing->show_date)->format('Y-m-d');
+            
+            $existingTime = $existing->show_time instanceof Carbon
+                ? $existing->show_time->format('H:i')
+                : date('H:i', strtotime($existing->show_time));
+            
+            $existingStartDateTime = Carbon::createFromFormat('Y-m-d H:i', $existingDate . ' ' . $existingTime);
+            $existingDuration = $existing->movie->duration_minutes ?? 0;
+            $existingEndDateTime = $existingStartDateTime->copy()->addMinutes($existingDuration);
+
+            // Kiểm tra xung đột: thời gian bắt đầu mới nằm trong khoảng thời gian phim cũ đang chiếu
+            if ($newStartDateTime->between($existingStartDateTime, $existingEndDateTime, false)) {
+                throw ValidationException::withMessages([
+                    'show_time' => "Thời gian này xung đột với suất chiếu khác đang diễn ra trong phòng. Suất chiếu hiện có: {$existingStartDateTime->format('H:i')} - {$existingEndDateTime->format('H:i')}",
+                ]);
+            }
+
+            // Kiểm tra xung đột: thời gian kết thúc mới nằm trong khoảng thời gian phim cũ đang chiếu
+            if ($newEndDateTime->between($existingStartDateTime, $existingEndDateTime, false)) {
+                throw ValidationException::withMessages([
+                    'show_time' => "Thời gian này xung đột với suất chiếu khác đang diễn ra trong phòng. Suất chiếu hiện có: {$existingStartDateTime->format('H:i')} - {$existingEndDateTime->format('H:i')}",
+                ]);
+            }
+
+            // Kiểm tra xung đột: phim cũ bao trùm phim mới
+            if ($newStartDateTime->lt($existingStartDateTime) && $newEndDateTime->gt($existingEndDateTime)) {
+                throw ValidationException::withMessages([
+                    'show_time' => "Thời gian này xung đột với suất chiếu khác đang diễn ra trong phòng. Suất chiếu hiện có: {$existingStartDateTime->format('H:i')} - {$existingEndDateTime->format('H:i')}",
+                ]);
+            }
+
+            // Kiểm tra xung đột: phim cũ bắt đầu trong khoảng thời gian phim mới đang chiếu
+            if ($existingStartDateTime->between($newStartDateTime, $newEndDateTime, false)) {
+                throw ValidationException::withMessages([
+                    'show_time' => "Thời gian này xung đột với suất chiếu khác đang diễn ra trong phòng. Suất chiếu hiện có: {$existingStartDateTime->format('H:i')} - {$existingEndDateTime->format('H:i')}",
+                ]);
+            }
+
+            // Kiểm tra: nếu suất chiếu hiện có kết thúc trước thời gian bắt đầu mới, phải cách ít nhất 20 phút
+            if ($existingEndDateTime->lt($newStartDateTime)) {
+                $requiredStartTime = $existingEndDateTime->copy()->addMinutes(20);
+                if ($newStartDateTime->lt($requiredStartTime)) {
+                    throw ValidationException::withMessages([
+                        'show_time' => "Thời gian này quá gần với suất chiếu trước đó. Suất chiếu trước kết thúc lúc {$existingEndDateTime->format('H:i')}. Bạn phải đặt lịch chiếu sau {$requiredStartTime->format('H:i')} (cách ít nhất 20 phút).",
+                    ]);
+                }
+            }
+        }
+
+        return true;
+    }
+   
+    public function index(Request $request)
+    {
+        $query = Showtime::with(['movie', 'room', 'theater', 'bookings.seats', 'bookings.combos']);
+        
+        // Lọc theo tên phim
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('movie', function($q) use ($search) {
+                $q->where('title', 'like', '%' . $search . '%');
+            });
+        }
+        
+        $showtimes = $query->latest()
             ->get()
             ->map(function ($showtime) {
                 $completedBookings = $showtime->bookings->where('payment_status', 'completed');
@@ -44,14 +137,19 @@ class ShowtimeController extends Controller
 public function create()
 {
     $movies = Movie::all();
-    $theaters = Theater::all();
-    return view('showtimes.create', compact('movies', 'theaters'));
+    $rooms = Room::orderBy('room_number')->get();
+    return view('showtimes.create', compact('movies', 'rooms'));
 }
 public function store(Request $request)
 {
+    // Merge giá trị mặc định cho checkbox trước khi validate
+    $request->merge([
+        'is_peak_hour' => $request->has('is_peak_hour') ? 1 : 0
+    ]);
+
     $validated = $request->validate([
         'movie_id' => 'required|exists:movies,id',
-        'theater_id' => 'required|exists:theaters,id',
+        'room_id' => 'required|exists:rooms,id',
         'show_date' => 'required|date',
         'show_time' => 'required',
         'gold_price' => 'required|numeric|min:1|max:1000',
@@ -59,6 +157,18 @@ public function store(Request $request)
         'box_price' => 'required|numeric|min:1|max:1000',
         'is_peak_hour' => 'boolean',
     ]);
+
+    // Lấy thông tin phim để biết thời lượng
+    $movie = Movie::findOrFail($validated['movie_id']);
+    $movieDuration = $movie->duration_minutes ?? 0;
+
+    // Kiểm tra xung đột thời gian
+    $this->checkTimeConflict(
+        $validated['room_id'],
+        $validated['show_date'],
+        $validated['show_time'],
+        $movieDuration
+    );
 
     Showtime::create($validated);
 
@@ -67,20 +177,59 @@ public function store(Request $request)
 }
 public function show(Showtime $showtime)
 {
-    $showtime->load(['movie', 'theater']);
-    return view('showtimes.show', compact('showtime'));
+    $showtime->load(['movie', 'room', 'theater']);
+    
+    // Lấy thông tin ghế và bookings
+    $room = $showtime->room;
+    $seats = collect();
+    $bookedSeatIds = [];
+    $coupleRows = [];
+    
+    if ($room) {
+        // Lấy tất cả ghế của phòng
+        $seats = \App\Models\Seat::where('room_id', $room->id)
+            ->orderBy('row_number')
+            ->orderBy('seat_number')
+            ->get();
+        
+        // Lấy các ghế đã được đặt cho showtime này (chỉ completed bookings)
+        $bookedSeatIds = \App\Models\Booking::where('showtime_id', $showtime->id)
+            ->where('payment_status', 'completed')
+            ->with('seats')
+            ->get()
+            ->pluck('seats')
+            ->flatten()
+            ->pluck('id')
+            ->toArray();
+        
+        // Xác định hàng couple
+        if ($room->layout) {
+            foreach ($room->layout as $rowData) {
+                if ($rowData['seat_type'] === 'couple') {
+                    $coupleRows[] = $rowData['row_letter'];
+                }
+            }
+        }
+    }
+    
+    return view('showtimes.show', compact('showtime', 'seats', 'bookedSeatIds', 'coupleRows'));
 }
 public function edit(Showtime $showtime)
 {
     $movies = Movie::all();
-    $theaters = Theater::all();
-    return view('showtimes.edit', compact('showtime', 'movies', 'theaters'));
+    $rooms = Room::orderBy('room_number')->get();
+    return view('showtimes.edit', compact('showtime', 'movies', 'rooms'));
 }
 public function update(Request $request, Showtime $showtime)
 {
+    // Merge giá trị mặc định cho checkbox trước khi validate
+    $request->merge([
+        'is_peak_hour' => $request->has('is_peak_hour') ? 1 : 0
+    ]);
+
     $validated = $request->validate([
         'movie_id' => 'required|exists:movies,id',
-        'theater_id' => 'required|exists:theaters,id',
+        'room_id' => 'required|exists:rooms,id',
         'show_date' => 'required|date',
         'show_time' => 'required',
         'gold_price' => 'required|numeric|min:1|max:1000',
@@ -88,6 +237,19 @@ public function update(Request $request, Showtime $showtime)
         'box_price' => 'required|numeric|min:1|max:1000',
         'is_peak_hour' => 'boolean',
     ]);
+
+    // Lấy thông tin phim để biết thời lượng
+    $movie = Movie::findOrFail($validated['movie_id']);
+    $movieDuration = $movie->duration_minutes ?? 0;
+
+    // Kiểm tra xung đột thời gian (loại trừ showtime hiện tại)
+    $this->checkTimeConflict(
+        $validated['room_id'],
+        $validated['show_date'],
+        $validated['show_time'],
+        $movieDuration,
+        $showtime->id
+    );
 
     $showtime->update($validated);
 

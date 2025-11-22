@@ -3,10 +3,28 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3">Khuyến mãi &amp; Sự kiện</h1>
-        <a href="{{ route('admin.promotions.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Thêm mới
-        </a>
+        <h1>Khuyến mãi &amp; Sự kiện</h1>
+        <div class="d-flex gap-2 align-items-center">
+            <form method="GET" action="{{ route('admin.promotions.index') }}" class="d-flex gap-2 align-items-center">
+                <div class="position-relative">
+                    <input type="text" 
+                           class="form-control" 
+                           name="search" 
+                           placeholder="Tìm kiếm theo tên khuyến mãi..." 
+                           value="{{ request('search') }}"
+                           style="width: 250px; padding-right: 35px;">
+                    <i class="bi bi-search position-absolute" style="right: 10px; top: 50%; transform: translateY(-50%); color: #6c757d; pointer-events: none;"></i>
+                </div>
+                @if(request('search'))
+                <a href="{{ route('admin.promotions.index') }}" class="btn btn-sm btn-outline-secondary" title="Xóa bộ lọc">
+                    <i class="bi bi-x-circle"></i>
+                </a>
+                @endif
+            </form>
+            <a href="{{ route('admin.promotions.create') }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Thêm mới
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
@@ -19,7 +37,7 @@
         </div>
     @else
         <div class="table-responsive">
-            <table class="table align-middle">
+            <table class="table table-striped align-middle">
                 <thead>
                     <tr>
                         <th>Ảnh</th>
@@ -62,11 +80,15 @@
                                 @endif
                             </td>
                             <td class="text-end">
-                                <a href="{{ route('admin.promotions.edit', $promotion) }}" class="btn btn-sm btn-outline-primary">Sửa</a>
+                                <a href="{{ route('admin.promotions.edit', $promotion) }}" class="btn btn-sm btn-warning" title="Sửa">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
                                 <form action="{{ route('admin.promotions.destroy', $promotion) }}" method="POST" class="d-inline" onsubmit="return confirm('Bạn chắc chắn muốn xóa khuyến mãi này?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Xóa">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
                                 </form>
                             </td>
                         </tr>

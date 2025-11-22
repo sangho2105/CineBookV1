@@ -9,7 +9,7 @@ class MovieSeeder extends Seeder
 {
     public function run()
     {
-        DB::table('movies')->insert([
+        $movies = [
             [
                 'title' => 'Avatar: The Way of Water',
                 'poster_url' => 'https://placehold.co/300x450?text=Avatar+2',
@@ -21,8 +21,6 @@ class MovieSeeder extends Seeder
                 'release_date' => '2022-12-16',
                 'rating_average' => 4.5,
                 'status' => 'ended',
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'title' => 'Spider‑Man: No Way Home',
@@ -31,12 +29,10 @@ class MovieSeeder extends Seeder
                 'language' => 'English',
                 'duration_minutes' => 148,
                 'trailer_url' => 'https://www.youtube.com/watch?v=JfVOs4VSpmA',
-                'synopsis' => 'With Spider‑Man’s identity now revealed, Peter asks Doctor Strange for help...',
+                'synopsis' => 'With Spider-Man\'s identity now revealed, Peter asks Doctor Strange for help...',
                 'release_date' => '2021-12-17',
                 'rating_average' => 4.3,
                 'status' => 'ended',
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'title' => 'Top Gun: Maverick',
@@ -45,12 +41,10 @@ class MovieSeeder extends Seeder
                 'language' => 'English',
                 'duration_minutes' => 131,
                 'trailer_url' => 'https://www.youtube.com/watch?v=giXco2jaZ_4',
-                'synopsis' => 'After more than thirty years, Pete “Maverick” Mitchell is still pushing the envelope...',
+                'synopsis' => 'After more than thirty years, Pete "Maverick" Mitchell is still pushing the envelope...',
                 'release_date' => '2022-05-27',
                 'rating_average' => 4.4,
                 'status' => 'ended',
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'title' => 'Barbie',
@@ -63,8 +57,6 @@ class MovieSeeder extends Seeder
                 'release_date' => '2023-07-21',
                 'rating_average' => 4.2,
                 'status' => 'ended',
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'title' => 'Oppenheimer',
@@ -77,8 +69,6 @@ class MovieSeeder extends Seeder
                 'release_date' => '2023-07-21',
                 'rating_average' => 4.6,
                 'status' => 'now_showing',
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'title' => 'Inside Out 2',
@@ -91,8 +81,6 @@ class MovieSeeder extends Seeder
                 'release_date' => '2024-06-14',
                 'rating_average' => 4.0,
                 'status' => 'now_showing',
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'title' => 'The Super Mario Bros. Movie',
@@ -105,8 +93,6 @@ class MovieSeeder extends Seeder
                 'release_date' => '2023-04-05',
                 'rating_average' => 4.1,
                 'status' => 'now_showing',
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'title' => 'Dune: Part Two',
@@ -119,8 +105,6 @@ class MovieSeeder extends Seeder
                 'release_date' => '2025-03-01',
                 'rating_average' => 4.5,
                 'status' => 'now_showing',
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'title' => 'Ne Zha 2',
@@ -133,8 +117,6 @@ class MovieSeeder extends Seeder
                 'release_date' => '2025-08-01',
                 'rating_average' => 4.0,
                 'status' => 'now_showing',
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'title' => 'Lilo & Stitch (2025)',
@@ -147,11 +129,7 @@ class MovieSeeder extends Seeder
                 'release_date' => '2025-06-10',
                 'rating_average' => 3.9,
                 'status' => 'now_showing',
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
-
-            // --- 4 films expected in 2026 (status = coming_soon) ---
             [
                 'title' => 'Galactic Odyssey',
                 'poster_url' => 'galactic_odyssey_2026.jpg',
@@ -163,8 +141,6 @@ class MovieSeeder extends Seeder
                 'release_date' => '2026-01-20',
                 'rating_average' => 0.0,
                 'status' => 'upcoming',
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'title' => 'The Last Horizon',
@@ -177,8 +153,6 @@ class MovieSeeder extends Seeder
                 'release_date' => '2026-01-12',
                 'rating_average' => 0.0,
                 'status' => 'upcoming',
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'title' => 'Rise of Titans',
@@ -191,8 +165,6 @@ class MovieSeeder extends Seeder
                 'release_date' => '2026-01-04',
                 'rating_average' => 0.0,
                 'status' => 'upcoming',
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'title' => 'Moonlight Sonata',
@@ -205,9 +177,26 @@ class MovieSeeder extends Seeder
                 'release_date' => '2026-01-19',
                 'rating_average' => 0.0,
                 'status' => 'upcoming',
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
-        ]);
+        ];
+
+        $created = 0;
+        $skipped = 0;
+
+        foreach ($movies as $movie) {
+            $exists = DB::table('movies')->where('title', $movie['title'])->exists();
+            
+            if (!$exists) {
+                DB::table('movies')->insert(array_merge($movie, [
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]));
+                $created++;
+            } else {
+                $skipped++;
+            }
+        }
+
+        $this->command->info("MovieSeeder: Đã tạo {$created} phim mới, bỏ qua {$skipped} phim đã tồn tại.");
     }
 }

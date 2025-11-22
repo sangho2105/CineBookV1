@@ -11,6 +11,7 @@ class Seat extends Model
     use HasFactory;
     protected $fillable = [
         'theater_id',
+        'room_id',
         'seat_number',
         'seat_category',
         'row_number',
@@ -21,10 +22,16 @@ class Seat extends Model
         'is_available' => 'boolean',
     ];
     
-    // Relationship với Theater
+    // Relationship với Theater (giữ lại để tương thích)
     public function theater()
     {
         return $this->belongsTo(Theater::class);
+    }
+
+    // Relationship với Room
+    public function room()
+    {
+        return $this->belongsTo(Room::class);
     }
     
     // Relationship với Bookings (many-to-many qua booking_seats)

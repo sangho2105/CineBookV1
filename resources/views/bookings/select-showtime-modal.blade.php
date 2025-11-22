@@ -1,0 +1,61 @@
+<div class="booking-modal-content">
+    <div class="booking-header">
+        <div class="movie-info">
+            @if($movie->poster_image_url)
+                <img src="{{ $movie->poster_image_url }}" alt="{{ $movie->title }}" class="movie-poster">
+            @endif
+            <div>
+                <h1 class="movie-title">{{ $movie->title }}</h1>
+                <p class="text-muted mb-0">{{ $movie->duration }} phút</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="date-selector">
+        <h4 class="mb-3">Chọn ngày</h4>
+        <div class="date-grid">
+            @foreach($availableDates as $date)
+                @php
+                    $isActive = $date->format('Y-m-d') === $selectedDate;
+                    $dayName = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][$date->dayOfWeek];
+                @endphp
+                <button type="button" 
+                        class="date-item {{ $isActive ? 'active' : '' }}"
+                        data-date="{{ $date->format('Y-m-d') }}"
+                        data-movie-id="{{ $movie->id }}">
+                    <div class="date-day">{{ $dayName }}</div>
+                    <div class="date-number">{{ $date->format('d') }}</div>
+                    <div class="date-day" style="font-size: 10px;">{{ $date->format('m') }}</div>
+                </button>
+            @endforeach
+        </div>
+    </div>
+
+    <div class="showtime-section">
+        <h4 class="mb-3">Chọn suất chiếu - {{ $selectedDateCarbon->format('d/m/Y') }}</h4>
+        
+        @if($showtimesByRoom->isEmpty())
+            <div class="no-showtimes">
+                Không có suất chiếu nào cho ngày này.
+            </div>
+        @else
+            @foreach($showtimesByRoom as $roomId => $roomShowtimes)
+                @php
+                    $room = $roomShowtimes->first()->room;
+                @endphp
+                <div class="room-name">
+                    {{ $room ? $room->name : 'Phòng chiếu' }}
+                </div>
+                <div class="showtime-grid">
+                    @foreach($roomShowtimes as $showtime)
+                        <a href="{{ route('bookings.select-seats', $showtime->id) }}" 
+                           class="showtime-btn">
+                            {{ date('H:i', strtotime($showtime->show_time)) }}
+                        </a>
+                    @endforeach
+                </div>
+            @endforeach
+        @endif
+    </div>
+</div>
+

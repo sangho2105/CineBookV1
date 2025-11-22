@@ -11,6 +11,7 @@ class Showtime extends Model
     protected $fillable = [
         'movie_id',
         'theater_id',
+        'room_id',
         'show_date',
         'show_time',
         'gold_price',
@@ -33,10 +34,16 @@ public function movie()
     return $this->belongsTo(Movie::class);
 }
 
-// Relationship với Theater
+// Relationship với Theater (giữ lại để tương thích)
 public function theater()
 {
     return $this->belongsTo(Theater::class);
+}
+
+// Relationship với Room
+public function room()
+{
+    return $this->belongsTo(Room::class);
 }
 public function bookings()
 {

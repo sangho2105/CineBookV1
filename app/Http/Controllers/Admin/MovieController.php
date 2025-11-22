@@ -14,9 +14,18 @@ class MovieController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $movies = Movie::all(); // Lấy tất cả các phim
+        $query = Movie::query();
+        
+        // Lọc theo tên phim
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where('title', 'like', '%' . $search . '%');
+        }
+        
+        // Sắp xếp theo ID tăng dần (phim nào thêm trước sẽ có STT nhỏ hơn)
+        $movies = $query->orderBy('id', 'asc')->get();
         return view('admin.movies.index', compact('movies'));
     }
 
@@ -50,7 +59,7 @@ class MovieController extends Controller
             'trailer_url' => 'nullable',
             'synopsis' => 'nullable',
             'release_date' => 'required|date',
-            'rating_average' => 'required|numeric',
+            'rated' => 'nullable|string|in:K,T13,T16,T18,P',
             'status' => 'required|in:upcoming,now_showing,ended',
         ]);
 
@@ -65,6 +74,11 @@ class MovieController extends Controller
 
         // Xóa key poster vì đã chuyển thành poster_url
         unset($validatedData['poster']);
+        
+        // Đặt giá trị mặc định cho rating_average nếu không có
+        if (!isset($validatedData['rating_average'])) {
+            $validatedData['rating_average'] = 0;
+        }
 
         Movie::create($validatedData);
 
@@ -116,11 +130,16 @@ class MovieController extends Controller
             'trailer_url' => 'nullable',
             'synopsis' => 'nullable',
             'release_date' => 'required|date',
-            'rating_average' => 'required|numeric',
+            'rated' => 'nullable|string|in:K,T13,T16,T18,P',
             'status' => 'required|in:upcoming,now_showing,ended',
         ]);
 
         $movie = Movie::findOrFail($id);
+        
+        // Giữ nguyên rating_average hiện tại nếu không cung cấp
+        if (!isset($validatedData['rating_average'])) {
+            $validatedData['rating_average'] = $movie->rating_average ?? 0;
+        }
 
         // Xử lý poster: ưu tiên file upload
         if ($request->hasFile('poster')) {

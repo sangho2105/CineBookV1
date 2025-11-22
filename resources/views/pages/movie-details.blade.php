@@ -3,104 +3,259 @@
 {{-- Lấy tên phim làm tiêu đề trang --}}
 @section('title', $movie->title . ' - CineBook')
 
+@push('css')
+<style>
+    .movie-detail-tabs {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        background-color: #dc3545;
+        padding: 12px 30px;
+        margin: 20px 0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        clip-path: polygon(
+            12px 0%,
+            calc(100% - 12px) 0%,
+            100% 50%,
+            calc(100% - 12px) 100%,
+            12px 100%,
+            0% 50%
+        );
+        -webkit-clip-path: polygon(
+            12px 0%,
+            calc(100% - 12px) 0%,
+            100% 50%,
+            calc(100% - 12px) 100%,
+            12px 100%,
+            0% 50%
+        );
+    }
+
+    .tab-btn {
+        background-color: transparent;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 8px;
+        position: relative;
+        white-space: nowrap;
+        line-height: 1.5;
+    }
+
+    .tab-btn:hover {
+        opacity: 0.9;
+    }
+
+    .tab-btn.active {
+        font-weight: 600;
+    }
+
+    /* Icon styling */
+    .tab-btn i {
+        margin-right: 6px;
+        font-size: 1.1rem;
+        opacity: 0.95;
+        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+    }
+
+    /* Separator */
+    .tab-separator {
+        color: rgba(255,255,255,0.7);
+        padding: 0 12px;
+        font-weight: 300;
+        font-size: 1.1rem;
+        vertical-align: middle;
+    }
+
+    .tab-content {
+        min-height: 200px;
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="container my-5">
+    {{-- Tiêu đề và HR --}}
+    <h2 class="mb-3" style="font-size: 2rem; font-weight: bold; color: #333;">Nội Dung Phim</h2>
+    <hr class="mb-4">
+
     <div class="row">
         {{-- Cột Poster --}}
         <div class="col-md-4">
             <img src="{{ $movie->poster_image_url ?? 'https://placehold.co/300x450?text=No+Poster' }}" 
                  class="img-fluid rounded shadow-sm" 
-                 alt="{{ $movie->title }}">
+                 alt="{{ $movie->title }}"
+                 style="max-height: 600px; width: 100%; object-fit: cover;">
         </div>
 
         {{-- Cột Thông tin --}}
         <div class="col-md-8">
-            <h1>{{ $movie->title }}</h1>
+            <h1 class="mb-4">{{ $movie->title }}</h1>
             
-            {{-- Thông tin cơ bản --}}
-            <div class="mb-3">
-                <span class="badge bg-primary">{{ $movie->genre }}</span>
-                <span class="badge bg-secondary">{{ $movie->language }}</span>
-                <span class="badge bg-info text-dark">{{ $movie->duration_minutes }} phút</span>
-                <span class="badge bg-warning text-dark">⭐ {{ number_format($ratingAverage ?? $movie->rating_average, 1) }}/5.0 ({{ $ratingCount ?? 0 }})</span>
-            </div>
-            
-            <p class="text-muted" style="font-size: 1.1rem;">
-                <strong>Ngày phát hành:</strong> {{ \Carbon\Carbon::parse($movie->release_date)->format('d/m/Y') }}
-            </p>
-            
-            <p class="text-muted" style="font-size: 1.1rem;">
-                <strong>Trạng thái:</strong> 
-                @if($movie->status === 'now_showing')
-                    <span class="badge bg-success">Đang chiếu</span>
-                @elseif($movie->status === 'upcoming')
-                    <span class="badge bg-warning text-dark">Sắp chiếu</span>
-                @else
-                    <span class="badge bg-secondary">Đã kết thúc</span>
+            {{-- Thông tin chi tiết đầy đủ --}}
+            <div class="movie-info-details mb-4">
+                <div class="mb-3">
+                    <p class="mb-2" style="font-size: 1.1rem;">
+                        <strong>Đạo diễn:</strong> 
+                        <span>{{ $movie->director ?? 'Chưa cập nhật' }}</span>
+                    </p>
+                </div>
+
+                <div class="mb-3">
+                    <p class="mb-2" style="font-size: 1.1rem;">
+                        <strong>Diễn viên:</strong> 
+                        <span>{{ $movie->cast ?? 'Chưa cập nhật' }}</span>
+                    </p>
+                </div>
+
+                <div class="mb-3">
+                    <p class="mb-2" style="font-size: 1.1rem;">
+                        <strong>Thể loại:</strong> 
+                        <span>{{ $movie->genre ?? 'Chưa cập nhật' }}</span>
+                    </p>
+                </div>
+
+                <div class="mb-3">
+                    <p class="mb-2" style="font-size: 1.1rem;">
+                        <strong>Khởi chiếu:</strong> 
+                        <span>{{ \Carbon\Carbon::parse($movie->release_date)->format('d/m/Y') }}</span>
+                    </p>
+                </div>
+
+                <div class="mb-3">
+                    <p class="mb-2" style="font-size: 1.1rem;">
+                        <strong>Thời lượng:</strong> 
+                        <span>{{ $movie->duration_minutes ?? 0 }} phút</span>
+                    </p>
+                </div>
+
+                <div class="mb-3">
+                    <p class="mb-2" style="font-size: 1.1rem;">
+                        <strong>Ngôn ngữ:</strong> 
+                        <span>{{ $movie->language ?? 'Chưa cập nhật' }}</span>
+                    </p>
+                </div>
+
+                @if($movie->rated)
+                <div class="mb-3">
+                    <p class="mb-2" style="font-size: 1.1rem;">
+                        <strong>Rated:</strong> 
+                        <span>
+                            {{ $movie->rated }} - 
+                            @if($movie->rated == 'K')
+                                PHIM ĐƯỢC PHỔ BIẾN ĐẾN NGƯỜI XEM DƯỚI 13 TUỔI VÀ CÓ NGƯỜI BẢO HỘ ĐI KÈM
+                            @elseif($movie->rated == 'T13')
+                                PHIM DÀNH CHO NGƯỜI XEM TỪ 13 TUỔI TRỞ LÊN
+                            @elseif($movie->rated == 'T16')
+                                PHIM DÀNH CHO NGƯỜI XEM TỪ 16 TUỔI TRỞ LÊN
+                            @elseif($movie->rated == 'T18')
+                                PHIM DÀNH CHO NGƯỜI XEM TỪ 18 TUỔI TRỞ LÊN
+                            @elseif($movie->rated == 'P')
+                                PHIM DÀNH CHO MỌI ĐỐI TƯỢNG
+                            @else
+                                {{ $movie->rated }}
+                            @endif
+                        </span>
+                    </p>
+                </div>
                 @endif
-            </p>
-
-            {{-- Thông tin chi tiết --}}
-            <div class="mt-3">
-                <p class="text-muted" style="font-size: 1.05rem;">
-                    <strong>Đạo diễn:</strong> {{ $movie->director ?? 'Chưa cập nhật' }}
-                </p>
-                <p class="text-muted" style="font-size: 1.05rem;">
-                    <strong>Diễn viên:</strong> {{ $movie->cast ?? 'Chưa cập nhật' }}
-                </p>
             </div>
 
-            <h4 class="mt-4">Tóm tắt nội dung</h4>
-            <p style="font-size: 1.1rem;">
-                {{ $movie->synopsis ?? 'Chưa có thông tin tóm tắt.' }}
-            </p>
-
-            {{-- Nút Đặt vé và Trailer --}}
-            <div class="mt-4">
+            {{-- Nút Đặt vé --}}
+            <div class="mt-4 mb-4">
                 @if($movie->showtimes->isNotEmpty())
-                    <a href="{{ route('bookings.select-seats', $movie->showtimes->first()->id) }}" class="btn btn-primary btn-lg">Đặt Vé</a>
+                    <button type="button" class="btn btn-danger btn-lg px-5" style="font-weight: bold; font-size: 1.1rem;" data-booking-movie-id="{{ $movie->id }}" data-bs-toggle="modal" data-bs-target="#bookingModal">MUA VÉ</button>
                 @else
-                    <button class="btn btn-primary btn-lg" disabled>Đặt Vé</button>
-                @endif
-                @if($movie->trailer_url)
-                    <a href="{{ $movie->trailer_url }}" class="btn btn-outline-secondary btn-lg" target="_blank">Xem Trailer</a>
+                    <button class="btn btn-danger btn-lg px-5" style="font-weight: bold; font-size: 1.1rem;" disabled>MUA VÉ</button>
                 @endif
             </div>
 
-            {{-- Trailer Video Embed --}}
-            @if($movie->trailer_url)
-                @php
-                    $url = $movie->trailer_url;
-                    $embedUrl = null;
-                    $isMp4 = false;
-                    if ($url) {
-                        if (preg_match('/v=([A-Za-z0-9_\\-]+)/', $url, $matches)) {
-                            $embedUrl = 'https://www.youtube.com/embed/' . $matches[1];
-                        } elseif (preg_match('#youtu\\.be/([A-Za-z0-9_\\-]+)#', $url, $matches)) {
-                            $embedUrl = 'https://www.youtube.com/embed/' . $matches[1];
-                        } elseif (\Illuminate\Support\Str::endsWith(\Illuminate\Support\Str::lower($url), '.mp4')) {
-                            $isMp4 = true;
-                        }
-                    }
-                @endphp
+            {{-- Tab Navigation - Centered --}}
+            <div class="d-flex justify-content-center my-4">
+                <div class="movie-detail-tabs">
+                    <button class="tab-btn active" data-tab="details">
+                        <i class="bi bi-hand-index"></i>Chi tiết
+                    </button>
+                    <span class="tab-separator">|</span>
+                    <button class="tab-btn" data-tab="trailer">
+                        <i class="bi bi-play-circle"></i>Trailer
+                    </button>
+                </div>
+            </div>
+
+            {{-- Tab Content: Chi tiết --}}
+            <div id="details-content" class="tab-content active">
+                <hr class="my-4">
+
+                <h4 class="mt-4 mb-3">Tóm tắt nội dung</h4>
+                <p style="font-size: 1.1rem; line-height: 1.6; color: #333;">
+                    {{ $movie->synopsis ?? 'Chưa có thông tin tóm tắt.' }}
+                </p>
+            </div>
+
+            {{-- Tab Content: Trailer --}}
+            <div id="trailer-content" class="tab-content" style="display: none;">
                 <div class="mt-4">
-                    @if($embedUrl)
-                        <div class="ratio ratio-16x9">
-                            <iframe 
-                                src="{{ $embedUrl }}" 
-                                title="Trailer {{ $movie->title }}" 
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                                allowfullscreen
-                            ></iframe>
+                    @if($movie->trailer_url)
+                        @php
+                            $url = $movie->trailer_url;
+                            $embedUrl = null;
+                            $isMp4 = false;
+                            if ($url) {
+                                if (preg_match('/v=([A-Za-z0-9_\\-]+)/', $url, $matches)) {
+                                    $embedUrl = 'https://www.youtube.com/embed/' . $matches[1];
+                                } elseif (preg_match('#youtu\\.be/([A-Za-z0-9_\\-]+)#', $url, $matches)) {
+                                    $embedUrl = 'https://www.youtube.com/embed/' . $matches[1];
+                                } elseif (\Illuminate\Support\Str::endsWith(\Illuminate\Support\Str::lower($url), '.mp4')) {
+                                    $isMp4 = true;
+                                }
+                            }
+                        @endphp
+                        @if($embedUrl)
+                            <div class="ratio ratio-16x9">
+                                <iframe 
+                                    src="{{ $embedUrl }}" 
+                                    title="Trailer {{ $movie->title }}" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                                    allowfullscreen
+                                ></iframe>
+                            </div>
+                        @elseif($isMp4)
+                            <video class="w-100 rounded shadow-sm" controls preload="metadata">
+                                <source src="{{ $url }}" type="video/mp4">
+                                Trình duyệt của bạn không hỗ trợ phát video.
+                            </video>
+                        @endif
+                    @else
+                        <div class="text-center py-5">
+                            <p class="text-muted" style="font-size: 1.1rem;">Phim này chưa có trailer.</p>
                         </div>
-                    @elseif($isMp4)
-                        <video class="w-100 rounded shadow-sm" controls preload="metadata">
-                            <source src="{{ $url }}" type="video/mp4">
-                            Trình duyệt của bạn không hỗ trợ phát video.
-                        </video>
                     @endif
                 </div>
-            @endif
+            </div>
         </div>
     </div>
     
@@ -214,4 +369,36 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const targetTab = this.getAttribute('data-tab');
+
+            // Remove active class from all buttons and contents
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+                content.style.display = 'none';
+            });
+
+            // Add active class to clicked button
+            this.classList.add('active');
+
+            // Show corresponding content
+            const targetContent = document.getElementById(targetTab + '-content');
+            if (targetContent) {
+                targetContent.classList.add('active');
+                targetContent.style.display = 'block';
+            }
+        });
+    });
+});
+</script>
+@endpush
 @endsection 

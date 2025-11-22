@@ -39,26 +39,31 @@ class ProfileController extends Controller
         $user = Auth::user();
 
         // Validate input data
-        $request->validate([
+        $validationRules = [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:20',
             'age' => 'nullable|integer|min:1|max:120',
             'preferred_language' => 'nullable|string|max:50',
             'preferred_city' => 'nullable|string|max:100',
-            'password' => 'nullable|string|min:8|confirmed',
-        ]);
+        ];
+
+        // Chỉ validate password nếu người dùng muốn thay đổi
+        if ($request->has('change_password') && $request->change_password) {
+            $validationRules['password'] = 'required|string|min:8|confirmed';
+        }
+
+        $request->validate($validationRules);
 
         // Update basic information
         $user->name = $request->name;
-        $user->email = $request->email;
+        // Email không được thay đổi (đã disable trong form)
         $user->phone = $request->phone;
         $user->age = $request->age;
         $user->preferred_language = $request->preferred_language;
         $user->preferred_city = $request->preferred_city;
 
-        // Update password only if a new one is entered
-        if ($request->filled('password')) {
+        // Update password only if user wants to change it
+        if ($request->has('change_password') && $request->change_password && $request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
 

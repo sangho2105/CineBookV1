@@ -23,7 +23,7 @@
             <div class="card mb-4">
                 <div class="card-body">
                     <h5 class="card-title mb-3">{{ $booking->showtime->movie->title }}</h5>
-                    <p class="mb-1"><strong>Rạp:</strong> {{ $booking->showtime->theater->name }}</p>
+                    <p class="mb-1"><strong>Phòng chiếu:</strong> {{ $booking->showtime->room ? $booking->showtime->room->name : ($booking->showtime->theater ? $booking->showtime->theater->name : 'N/A') }}</p>
                     <p class="mb-1"><strong>Ngày:</strong> {{ $booking->showtime->show_date->format('d/m/Y') }}</p>
                     <p class="mb-1"><strong>Giờ:</strong> {{ date('H:i', strtotime($booking->showtime->show_time)) }}</p>
                     <p class="mb-1">
@@ -32,7 +32,7 @@
                             <span class="badge bg-secondary me-1">{{ $seat->seat_number }} ({{ $seat->seat_category }})</span>
                         @endforeach
                     </p>
-                    <p class="mt-2"><strong>Tổng tiền:</strong> ${{ number_format($booking->total_amount, 0, ',', '.') }}</p>
+                    <p class="mt-2"><strong>Tổng tiền:</strong> {{ number_format($booking->total_amount, 0, ',', '.') }} đ</p>
                     <p class="mt-2">
                         <strong>Trạng thái:</strong>
                         @if($booking->payment_status === 'completed')

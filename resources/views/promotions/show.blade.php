@@ -2,6 +2,23 @@
 
 @section('title', $promotion->title . ' - CineBook')
 
+@push('css')
+<style>
+    .card-img-top {
+        width: 100%;
+        max-height: 500px;
+        object-fit: cover;
+        display: block;
+    }
+    
+    @media (max-width: 768px) {
+        .card-img-top {
+            max-height: 300px;
+        }
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="container py-5">
     <div class="row justify-content-center">

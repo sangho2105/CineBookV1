@@ -5,36 +5,146 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Showtime;
 use App\Models\Seat;
+use App\Models\Room;
+use App\Models\Movie;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class BookingController extends Controller
 {
+    // Hiển thị modal chọn ngày và giờ chiếu (AJAX)
+    public function selectShowtimeModal(Movie $movie, Request $request)
+    {
+        $movie->load(['showtimes.room']);
+        
+        // Lấy các ngày có suất chiếu (30 ngày tới)
+        $startDate = Carbon::today();
+        $endDate = Carbon::today()->addDays(30);
+        
+        // Lấy tất cả showtimes của phim trong khoảng thời gian này
+        $showtimes = $movie->showtimes()
+            ->whereBetween('show_date', [$startDate, $endDate])
+            ->where('show_date', '>=', $startDate)
+            ->orderBy('show_date')
+            ->orderBy('show_time')
+            ->get();
+        
+        // Nhóm showtimes theo ngày
+        $showtimesByDate = $showtimes->groupBy(function($showtime) {
+            return $showtime->show_date->format('Y-m-d');
+        });
+        
+        // Tạo danh sách các ngày có suất chiếu
+        $availableDates = $showtimesByDate->keys()->map(function($date) {
+            return Carbon::parse($date);
+        })->sort();
+        
+        // Ngày được chọn (mặc định là hôm nay hoặc ngày đầu tiên có suất chiếu)
+        $selectedDate = $request->get('date', $availableDates->first()?->format('Y-m-d') ?? $startDate->format('Y-m-d'));
+        $selectedDateCarbon = Carbon::parse($selectedDate);
+        
+        // Lấy showtimes của ngày được chọn
+        $selectedDateShowtimes = $showtimesByDate->get($selectedDate, collect());
+        
+        // Nhóm theo phòng
+        $showtimesByRoom = $selectedDateShowtimes->groupBy('room_id');
+        
+        return view('bookings.select-showtime-modal', compact(
+            'movie',
+            'availableDates',
+            'selectedDate',
+            'selectedDateCarbon',
+            'showtimesByRoom',
+            'showtimes'
+        ));
+    }
+    
+    // Hiển thị trang chọn ngày và giờ chiếu
+    public function selectShowtime(Movie $movie)
+    {
+        $movie->load(['showtimes.room']);
+        
+        // Lấy các ngày có suất chiếu (30 ngày tới)
+        $startDate = Carbon::today();
+        $endDate = Carbon::today()->addDays(30);
+        
+        // Lấy tất cả showtimes của phim trong khoảng thời gian này
+        $showtimes = $movie->showtimes()
+            ->whereBetween('show_date', [$startDate, $endDate])
+            ->where('show_date', '>=', $startDate)
+            ->orderBy('show_date')
+            ->orderBy('show_time')
+            ->get();
+        
+        // Nhóm showtimes theo ngày
+        $showtimesByDate = $showtimes->groupBy(function($showtime) {
+            return $showtime->show_date->format('Y-m-d');
+        });
+        
+        // Tạo danh sách các ngày có suất chiếu
+        $availableDates = $showtimesByDate->keys()->map(function($date) {
+            return Carbon::parse($date);
+        })->sort();
+        
+        // Ngày được chọn (mặc định là hôm nay hoặc ngày đầu tiên có suất chiếu)
+        $selectedDate = request('date', $availableDates->first()?->format('Y-m-d') ?? $startDate->format('Y-m-d'));
+        $selectedDateCarbon = Carbon::parse($selectedDate);
+        
+        // Lấy showtimes của ngày được chọn
+        $selectedDateShowtimes = $showtimesByDate->get($selectedDate, collect());
+        
+        // Nhóm theo phòng
+        $showtimesByRoom = $selectedDateShowtimes->groupBy('room_id');
+        
+        return view('bookings.select-showtime', compact(
+            'movie',
+            'availableDates',
+            'selectedDate',
+            'selectedDateCarbon',
+            'showtimesByRoom',
+            'showtimes'
+        ));
+    }
+    
     // Hiển thị trang chọn ghế
     public function selectSeats(Showtime $showtime)
     {
-        $showtime->load(['movie', 'theater']);
-        $theater = $showtime->theater;
+        $showtime->load(['movie', 'room']);
         
-        // Lấy tất cả ghế của rạp này
-        $seatsQuery = Seat::where('theater_id', $theater->id)
+        if (!$showtime->room) {
+            abort(404, 'Phòng chiếu không tồn tại cho suất chiếu này.');
+        }
+        
+        $room = $showtime->room;
+        
+        // Lấy tất cả ghế của phòng này
+        $seatsQuery = Seat::where('room_id', $room->id)
             ->orderBy('row_number')
-            ->orderBy('seat_number')
-            ;
+            ->orderBy('seat_number');
         $seats = $seatsQuery->get();
 
-        // Nếu rạp chưa có ghế, tự động khởi tạo sơ đồ ghế mặc định
-        if ($seats->isEmpty()) {
-            $rows = ['A','B','C','D','E','F','G','H','I','J'];
-            foreach ($rows as $row) {
-                for ($seatNum = 1; $seatNum <= 12; $seatNum++) {
-                    $category = in_array($row, ['A','B','C','D']) ? 'Gold'
-                              : (in_array($row, ['E','F','G']) ? 'Platinum' : 'Box');
+        // Nếu phòng chưa có ghế, tự động khởi tạo sơ đồ ghế từ layout
+        if ($seats->isEmpty() && $room->layout) {
+            foreach ($room->layout as $rowData) {
+                $rowLetter = $rowData['row_letter'];
+                $seatType = $rowData['seat_type'];
+                $seatCount = $rowData['seat_count'];
+                
+                // Map seat_type sang seat_category
+                $category = match($seatType) {
+                    'normal' => 'Gold',
+                    'vip' => 'Platinum',
+                    'couple' => 'Box',
+                    default => 'Gold',
+                };
+                
+                for ($seatNum = 1; $seatNum <= $seatCount; $seatNum++) {
                     Seat::create([
-                        'theater_id'    => $theater->id,
-                        'seat_number'   => $row . $seatNum,
+                        'room_id'       => $room->id,
+                        'seat_number'   => $rowLetter . $seatNum,
                         'seat_category' => $category,
-                        'row_number'    => $row,
+                        'row_number'    => $rowLetter,
                         'is_available'  => true,
                     ]);
                 }
@@ -52,7 +162,17 @@ class BookingController extends Controller
             ->pluck('id')
             ->toArray();
         
-        return view('bookings.select-seats', compact('showtime', 'seats', 'bookedSeatIds'));
+        // Tạo map để xác định hàng nào là couple (để hiển thị chiều rộng gấp đôi)
+        $coupleRows = [];
+        if ($room->layout) {
+            foreach ($room->layout as $rowData) {
+                if ($rowData['seat_type'] === 'couple') {
+                    $coupleRows[] = $rowData['row_letter'];
+                }
+            }
+        }
+        
+        return view('bookings.select-seats', compact('showtime', 'seats', 'bookedSeatIds', 'coupleRows'));
     }
 
     // Xử lý đặt vé
@@ -173,7 +293,7 @@ class BookingController extends Controller
         if ($booking->user_id !== auth()->id()) {
             abort(403);
         }
-        $booking->load(['showtime.movie', 'showtime.theater', 'seats']);
+        $booking->load(['showtime.movie', 'showtime.room', 'showtime.theater', 'seats']);
         return view('bookings.payment', compact('booking'));
     }
 

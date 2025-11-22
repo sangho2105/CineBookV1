@@ -16,6 +16,9 @@ Route::post('/register', [App\Http\Controllers\Auth\RegisterController::class, '
 Route::get('/login', [App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [App\Http\Controllers\Auth\LoginController::class, 'login'])->name('login.post');
 
+Route::get('/forgot-password', [App\Http\Controllers\Auth\PasswordResetController::class, 'showForgotPasswordForm'])->name('password.forgot');
+Route::post('/forgot-password', [App\Http\Controllers\Auth\PasswordResetController::class, 'sendResetPassword'])->name('password.forgot.post');
+
 Route::post('/logout', [App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
@@ -33,6 +36,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('movies', App\Http\Controllers\MovieController::class);
     
     // Booking Routes
+    Route::get('/movie/{movie}/book', [App\Http\Controllers\BookingController::class, 'selectShowtime'])->name('bookings.select-showtime');
+    Route::get('/movie/{movie}/book/modal', [App\Http\Controllers\BookingController::class, 'selectShowtimeModal'])->name('bookings.select-showtime-modal');
     Route::get('/showtimes/{showtime}/select-seats', [App\Http\Controllers\BookingController::class, 'selectSeats'])->name('bookings.select-seats');
     Route::post('/showtimes/{showtime}/bookings', [App\Http\Controllers\BookingController::class, 'store'])->name('bookings.store');
     Route::get('/bookings/{booking}/payment', [App\Http\Controllers\BookingController::class, 'payment'])->name('bookings.payment');
@@ -60,7 +65,12 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // Route cho quản lý Phim (CRUD)
     Route::resource('movies', MovieController::class);
     
-    // Route cho quản lý Rạp chiếu (CRUD)
+    // Route cho quản lý Phòng chiếu (chỉ xem)
+    Route::get('rooms', [\App\Http\Controllers\Admin\RoomController::class, 'index'])->name('rooms.index');
+    Route::get('rooms/{room}', [\App\Http\Controllers\Admin\RoomController::class, 'show'])->name('rooms.show');
+    Route::get('rooms/{room}/schedule', [\App\Http\Controllers\Admin\RoomController::class, 'schedule'])->name('rooms.schedule');
+    
+    // Route cho quản lý Rạp chiếu (CRUD) - giữ lại để tương thích
     Route::resource('theaters', AdminTheaterController::class);
 
     // Route cho quản lý Khuyến mãi & Sự kiện

@@ -24,36 +24,37 @@
     </div>
 
     <div class="mb-3">
-        <label for="theater_id" class="form-label">Theater <span class="text-danger">*</span></label>
-        <select name="theater_id" id="theater_id" class="form-select @error('theater_id') is-invalid @enderror" required>
-            <option value="">-- Select Theater --</option>
-            @foreach($theaters as $theater)
-            <option value="{{ $theater->id }}" {{ old('theater_id') == $theater->id ? 'selected' : '' }}>
-                {{ $theater->name }} - {{ $theater->city }}
+        <label for="room_id" class="form-label">Phòng chiếu <span class="text-danger">*</span></label>
+        <select name="room_id" id="room_id" class="form-select @error('room_id') is-invalid @enderror" required>
+            <option value="">-- Chọn Phòng chiếu --</option>
+            @foreach($rooms as $room)
+            <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }}>
+                {{ $room->name }} ({{ $room->total_seats }} ghế)
             </option>
             @endforeach
         </select>
-        @error('theater_id')
+        @error('room_id')
         <div class="invalid-feedback">{{ $message }}</div>
         @enderror
     </div>
 
-    <div class="mb-3">
-        <label for="show_date" class="form-label">Show Date <span class="text-danger">*</span></label>
-        <input type="date" name="show_date" id="show_date" class="form-control @error('show_date') is-invalid @enderror" 
-               value="{{ old('show_date') }}" required>
-        @error('show_date')
-        <div class="invalid-feedback">{{ $message }}</div>
-        @enderror
-    </div>
-
-    <div class="mb-3">
-        <label for="show_time" class="form-label">Show Time <span class="text-danger">*</span></label>
-        <input type="time" name="show_time" id="show_time" class="form-control @error('show_time') is-invalid @enderror" 
-               value="{{ old('show_time') }}" required>
-        @error('show_time')
-        <div class="invalid-feedback">{{ $message }}</div>
-        @enderror
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="show_date" class="form-label">Show Date <span class="text-danger">*</span></label>
+            <input type="date" name="show_date" id="show_date" class="form-control @error('show_date') is-invalid @enderror" 
+                   value="{{ old('show_date') }}" required>
+            @error('show_date')
+            <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
+        <div class="col-md-6">
+            <label for="show_time" class="form-label">Show Time <span class="text-danger">*</span></label>
+            <input type="time" name="show_time" id="show_time" class="form-control @error('show_time') is-invalid @enderror" 
+                   value="{{ old('show_time') }}" required>
+            @error('show_time')
+            <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
     </div>
 
     <div class="mb-3">

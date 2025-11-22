@@ -26,7 +26,8 @@
                     <div class="mb-3">
                         <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
                         <input type="email" class="form-control @error('email') is-invalid @enderror"
-                            id="email" name="email" value="{{ old('email', $user->email) }}" required>
+                            id="email" name="email" value="{{ old('email', $user->email) }}" required readonly disabled>
+                        <input type="hidden" name="email" value="{{ $user->email }}">
                         @error('email')
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -76,18 +77,29 @@
                     <hr>
 
                     <div class="mb-3">
-                        <label for="password" class="form-label">New Password (leave blank if not changing)</label>
-                        <input type="password" class="form-control @error('password') is-invalid @enderror"
-                            id="password" name="password">
-                        @error('password')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="changePasswordCheck" name="change_password">
+                            <label class="form-check-label" for="changePasswordCheck">
+                                Tôi muốn thay đổi mật khẩu
+                            </label>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="password_confirmation" class="form-label">Confirm New Password</label>
-                        <input type="password" class="form-control"
-                            id="password_confirmation" name="password_confirmation">
+                    <div id="passwordFields" style="display: none;">
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Mật khẩu mới <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control @error('password') is-invalid @enderror"
+                                id="password" name="password">
+                            @error('password')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password_confirmation" class="form-label">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control"
+                                id="password_confirmation" name="password_confirmation">
+                        </div>
                     </div>
 
                     <div class="d-flex justify-content-between">
@@ -99,4 +111,27 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const changePasswordCheck = document.getElementById('changePasswordCheck');
+    const passwordFields = document.getElementById('passwordFields');
+    const passwordInput = document.getElementById('password');
+    const passwordConfirmationInput = document.getElementById('password_confirmation');
+
+    changePasswordCheck.addEventListener('change', function() {
+        if (this.checked) {
+            passwordFields.style.display = 'block';
+            passwordInput.required = true;
+            passwordConfirmationInput.required = true;
+        } else {
+            passwordFields.style.display = 'none';
+            passwordInput.required = false;
+            passwordConfirmationInput.required = false;
+            passwordInput.value = '';
+            passwordConfirmationInput.value = '';
+        }
+    });
+});
+</script>
 @endsection

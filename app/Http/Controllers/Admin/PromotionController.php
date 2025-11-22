@@ -14,11 +14,19 @@ class PromotionController extends Controller
     /**
      * Display a listing of the promotions.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $promotions = Promotion::with('movie')
-            ->orderByDesc('created_at')
-            ->paginate(10);
+        $query = Promotion::with('movie');
+        
+        // Lọc theo tên khuyến mãi
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where('title', 'like', '%' . $search . '%');
+        }
+        
+        $promotions = $query->orderByDesc('created_at')
+            ->paginate(10)
+            ->withQueryString(); // Giữ lại query parameters khi phân trang
 
         return view('admin.promotions.index', compact('promotions'));
     }

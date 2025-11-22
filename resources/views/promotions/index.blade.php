@@ -2,6 +2,23 @@
 
 @section('title', 'Ưu đãi & Sự kiện - CineBook')
 
+@push('css')
+<style>
+    .card-img-top {
+        width: 100%;
+        height: 250px;
+        object-fit: cover;
+        display: block;
+    }
+    
+    @media (max-width: 768px) {
+        .card-img-top {
+            height: 200px;
+        }
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="container py-4">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
