@@ -121,12 +121,18 @@
             background: #5a6268;
         }
     </style>
+    @stack('styles')
 </head>
 <body>
 
     <div class="sidebar">
         <h3>Admin Panel</h3>
         <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.bookings.*') ? 'active' : '' }}" href="{{ route('admin.bookings.index') }}">
+                    🎫 Thống kê
+                </a>
+            </li>
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.movies.*') ? 'active' : '' }}" href="{{ route('admin.movies.index') }}">
                     📽️ Quản lý Phim
@@ -160,5 +166,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    @stack('scripts')
 </body>
 </html>

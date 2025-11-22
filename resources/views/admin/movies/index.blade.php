@@ -3,26 +3,28 @@
 
 @section('content')
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Quản lý Phim</h1>
-        <div class="d-flex gap-2 align-items-center">
-            <form method="GET" action="{{ route('admin.movies.index') }}" class="d-flex gap-2 align-items-center">
-                <div class="position-relative">
-                    <input type="text" 
-                           class="form-control" 
-                           name="search" 
-                           placeholder="Tìm kiếm theo tên phim..." 
-                           value="{{ request('search') }}"
-                           style="width: 250px; padding-right: 35px;">
-                    <i class="bi bi-search position-absolute" style="right: 10px; top: 50%; transform: translateY(-50%); color: #6c757d; pointer-events: none;"></i>
-                </div>
-                @if(request('search'))
-                <a href="{{ route('admin.movies.index') }}" class="btn btn-sm btn-outline-secondary" title="Xóa bộ lọc">
-                    <i class="bi bi-x-circle"></i>
-                </a>
-                @endif
-            </form>
-            <a href="{{ route('admin.movies.create') }}" class="btn btn-primary">Thêm Phim Mới</a>
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h1 class="mb-0">Quản lý Phim</h1>
+            <div class="d-flex gap-2 align-items-center flex-shrink-0">
+                <form method="GET" action="{{ route('admin.movies.index') }}" class="d-flex gap-2 align-items-center">
+                    <div class="position-relative">
+                        <input type="text" 
+                               class="form-control" 
+                               name="search" 
+                               placeholder="Tìm kiếm theo tên phim..." 
+                               value="{{ request('search') }}"
+                               style="width: 250px; padding-right: 35px;">
+                        <i class="bi bi-search position-absolute" style="right: 10px; top: 50%; transform: translateY(-50%); color: #6c757d; pointer-events: none;"></i>
+                    </div>
+                    @if(request('search'))
+                    <a href="{{ route('admin.movies.index') }}" class="btn btn-sm btn-outline-secondary" title="Xóa bộ lọc">
+                        <i class="bi bi-x-circle"></i>
+                    </a>
+                    @endif
+                </form>
+                <a href="{{ route('admin.movies.create') }}" class="btn btn-primary">Thêm Phim Mới</a>
+            </div>
         </div>
     </div>
 
@@ -39,8 +41,8 @@
             <tr>
                 <th style="width: 80px;">STT</th>
                 <th>Tên Phim</th>
-                <th>Ngày phát hành</th>
-                <th>Hành động</th>
+                <th style="width: 150px;">Ngày phát hành</th>
+                <th style="width: 180px;">Hành động</th>
             </tr>
         </thead>
         <tbody>

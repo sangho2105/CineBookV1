@@ -2,6 +2,49 @@
 
 @section('title', 'Hồ sơ của tôi')
 
+@push('css')
+<style>
+    .bookings-scroll-container {
+        max-height: 300px; /* Chiều cao để hiển thị khoảng 3 hàng */
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #6c757d #f8f9fa;
+    }
+    
+    .bookings-scroll-container::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .bookings-scroll-container::-webkit-scrollbar-track {
+        background: #f8f9fa;
+        border-radius: 4px;
+    }
+    
+    .bookings-scroll-container::-webkit-scrollbar-thumb {
+        background: #6c757d;
+        border-radius: 4px;
+    }
+    
+    .bookings-scroll-container::-webkit-scrollbar-thumb:hover {
+        background: #5a6268;
+    }
+    
+    .bookings-scroll-container .table {
+        margin-bottom: 0;
+    }
+    
+    .bookings-scroll-container thead {
+        display: none; /* Ẩn thead trong phần scroll vì đã có ở trên */
+    }
+    
+    /* Đảm bảo các cột có cùng width */
+    .bookings-scroll-container table {
+        table-layout: fixed;
+        width: 100%;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="container">
     <h1 class="mb-4">Hồ sơ của tôi</h1>
@@ -18,24 +61,44 @@
         </div>
     </div>
 
-    <h4 class="mb-3">Lịch sử đặt vé</h4>
+    <h4 class="mb-3">Lịch sử đặt vé ({{ $bookings->count() ?? 0 }} vé)</h4>
     @if(isset($bookings) && $bookings->isNotEmpty())
-        <div class="table-responsive">
-            <table class="table table-striped align-middle">
-                <thead>
-                    <tr>
-                        <th>Mã đặt vé</th>
-                        <th>Phim</th>
-                        <th>Rạp</th>
-                        <th>Ngày</th>
-                        <th>Giờ</th>
-                        <th>Ghế</th>
-                        <th>Tổng tiền</th>
-                        <th>Trạng thái</th>
-                        <th>Vé điện tử</th>
-                    </tr>
-                </thead>
-                <tbody>
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mã đặt vé</th>
+                                <th>Phim</th>
+                                <th>Rạp</th>
+                                <th>Ngày</th>
+                                <th>Giờ</th>
+                                <th>Ghế</th>
+                                <th>Tổng tiền</th>
+                                <th>Trạng thái</th>
+                                <th>Vé điện tử</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+                <div class="bookings-scroll-container">
+                    <div class="table-responsive">
+                        <table class="table table-striped align-middle mb-0">
+                            <thead style="display: none;">
+                                <tr>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
                     @foreach($bookings as $booking)
                         <tr>
                             <td><code>{{ $booking->booking_id_unique }}</code></td>
@@ -87,9 +150,12 @@
                                 </div>
                             </td>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     @else
         <div class="alert alert-info">Bạn chưa có đặt vé nào.</div>

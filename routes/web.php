@@ -78,4 +78,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
     // Route cho quản lý Suất chiếu (Showtimes)
     Route::resource('showtimes', \App\Http\Controllers\ShowtimeController::class);
+
+    // Route cho quản lý Vé (Bookings)
+    Route::get('bookings', [\App\Http\Controllers\Admin\BookingController::class, 'index'])->name('bookings.index');
+    Route::get('bookings/{booking}', [\App\Http\Controllers\Admin\BookingController::class, 'show'])->name('bookings.show');
 });
