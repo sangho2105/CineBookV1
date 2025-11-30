@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Combo;
+use App\Models\ComboItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class ComboController extends Controller
 {
@@ -19,10 +21,10 @@ class ComboController extends Controller
         // Lọc theo tên combo
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where('title', 'like', '%' . $search . '%');
+            $query->where('name', 'like', '%' . $search . '%');
         }
         
-        $combos = $query->orderBy('id', 'desc')->paginate(6)->withQueryString();
+        $combos = $query->orderBy('sort_order')->orderBy('id', 'desc')->paginate(6)->withQueryString();
         
         return view('admin.combos.index', compact('combos'));
     }
@@ -41,11 +43,17 @@ class ComboController extends Controller
     public function store(Request $request)
     {
         $validatedData = $request->validate([
-            'title' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'image' => 'required|image|max:4096',
-            'price' => 'required|numeric|min:0',
+            'image' => 'nullable|image|max:4096',
+            'price' => 'required|numeric|min:0.01',
             'is_active' => 'nullable|boolean',
+            'sort_order' => 'nullable|integer|min:0',
+            'items' => 'required|array|min:1',
+            'items.*.item_type' => 'required|string|in:popcorn,drink,food',
+            'items.*.item_name' => 'required|string|max:255',
+            'items.*.size' => 'nullable|string|max:50',
+            'items.*.quantity' => 'required|integer|min:1',
         ]);
 
         // Xử lý upload ảnh
@@ -59,7 +67,23 @@ class ComboController extends Controller
         // Xóa key image vì đã chuyển thành image_path
         unset($validatedData['image']);
 
-        Combo::create($validatedData);
+        // Lưu items
+        $items = $validatedData['items'];
+        unset($validatedData['items']);
+
+        DB::transaction(function () use ($validatedData, $items) {
+            $combo = Combo::create($validatedData);
+            
+            foreach ($items as $item) {
+                ComboItem::create([
+                    'combo_id' => $combo->id,
+                    'item_type' => $item['item_type'],
+                    'item_name' => $item['item_name'],
+                    'size' => $item['size'] ?? null,
+                    'quantity' => $item['quantity'],
+                ]);
+            }
+        });
 
         return redirect()->route('admin.combos.index')
             ->with('success', 'Combo đã được tạo thành công!');
@@ -87,11 +111,17 @@ class ComboController extends Controller
     public function update(Request $request, Combo $combo)
     {
         $validatedData = $request->validate([
-            'title' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'image' => 'nullable|image|max:4096',
-            'price' => 'required|numeric|min:0',
+            'price' => 'required|numeric|min:0.01',
             'is_active' => 'nullable|boolean',
+            'sort_order' => 'nullable|integer|min:0',
+            'items' => 'required|array|min:1',
+            'items.*.item_type' => 'required|string|in:popcorn,drink,food',
+            'items.*.item_name' => 'required|string|max:255',
+            'items.*.size' => 'nullable|string|max:50',
+            'items.*.quantity' => 'required|integer|min:1',
         ]);
 
         // Xử lý upload ảnh mới
@@ -110,7 +140,27 @@ class ComboController extends Controller
         // Xóa key image vì đã chuyển thành image_path
         unset($validatedData['image']);
 
-        $combo->update($validatedData);
+        // Lưu items
+        $items = $validatedData['items'];
+        unset($validatedData['items']);
+
+        DB::transaction(function () use ($validatedData, $items, $combo) {
+            $combo->update($validatedData);
+            
+            // Xóa items cũ
+            $combo->items()->delete();
+            
+            // Tạo items mới
+            foreach ($items as $item) {
+                ComboItem::create([
+                    'combo_id' => $combo->id,
+                    'item_type' => $item['item_type'],
+                    'item_name' => $item['item_name'],
+                    'size' => $item['size'] ?? null,
+                    'quantity' => $item['quantity'],
+                ]);
+            }
+        });
 
         return redirect()->route('admin.combos.index')
             ->with('success', 'Combo đã được cập nhật thành công!');

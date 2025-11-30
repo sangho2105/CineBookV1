@@ -21,7 +21,7 @@
                 <dd class="col-sm-9">{{ $combo->id }}</dd>
 
                 <dt class="col-sm-3">Tên Combo:</dt>
-                <dd class="col-sm-9"><strong>{{ $combo->title }}</strong></dd>
+                <dd class="col-sm-9"><strong>{{ $combo->name }}</strong></dd>
 
                 <dt class="col-sm-3">Mô tả / Chi tiết:</dt>
                 <dd class="col-sm-9">{{ $combo->description ?? 'Không có mô tả' }}</dd>
@@ -29,7 +29,7 @@
                 <dt class="col-sm-3">Ảnh:</dt>
                 <dd class="col-sm-9">
                     @if($combo->image_path)
-                        <img src="{{ $combo->image_url }}" alt="{{ $combo->title }}" 
+                        <img src="{{ $combo->image_url }}" alt="{{ $combo->name }}" 
                              class="img-fluid rounded" style="max-height: 300px;">
                     @else
                         <span class="text-muted">Chưa có ảnh</span>

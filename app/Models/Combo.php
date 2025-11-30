@@ -10,11 +10,12 @@ class Combo extends Model
     use HasFactory;
 
     protected $fillable = [
-        'title',
+        'name',
         'description',
         'image_path',
         'price',
         'is_active',
+        'sort_order',
     ];
 
     protected $casts = [
@@ -28,6 +29,14 @@ class Combo extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    /**
+     * Relationship với ComboItem
+     */
+    public function items()
+    {
+        return $this->hasMany(ComboItem::class);
     }
 
     /**

@@ -57,7 +57,7 @@
                             <td>{{ ($combos->currentPage() - 1) * $combos->perPage() + $loop->iteration }}</td>
                             <td>
                                 @if($combo->image_path)
-                                    <img src="{{ $combo->image_url }}" alt="{{ $combo->title }}" 
+                                    <img src="{{ $combo->image_url }}" alt="{{ $combo->name }}" 
                                          class="img-fluid rounded" style="max-width: 100px; max-height: 100px; object-fit: cover;">
                                 @else
                                     <div class="bg-light d-flex align-items-center justify-content-center rounded" 
@@ -67,7 +67,7 @@
                                 @endif
                             </td>
                             <td>
-                                <strong>{{ $combo->title }}</strong>
+                                <strong>{{ $combo->name }}</strong>
                             </td>
                             <td>
                                 <div class="text-muted small">
