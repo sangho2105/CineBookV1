@@ -142,7 +142,7 @@
             <div class="card text-white bg-info">
                 <div class="card-body">
                     <h5 class="card-title">Doanh thu</h5>
-                    <h3>{{ number_format($stats['total_revenue'], 0) }} đ</h3>
+                    <h3>{{ format_currency($stats['total_revenue']) }}</h3>
                 </div>
             </div>
         </div>
@@ -336,7 +336,7 @@
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Doanh thu (VNĐ)',
+                        label: 'Doanh thu (USD)',
                         data: data,
                         borderColor: 'rgb(75, 192, 192)',
                         backgroundColor: 'rgba(75, 192, 192, 0.2)',

@@ -180,7 +180,7 @@
                 @endif
                 <div>
                     <h1 class="movie-title">{{ $movie->title }}</h1>
-                    <p class="text-muted mb-0">{{ $movie->duration }} phút</p>
+                    <p class="text-muted mb-0">{{ $movie->duration_minutes ?? 0 }} phút</p>
                 </div>
             </div>
         </div>
@@ -222,7 +222,7 @@
                         @foreach($roomShowtimes as $showtime)
                             <a href="{{ route('bookings.select-seats', $showtime->id) }}" 
                                class="showtime-btn">
-                                {{ date('H:i', strtotime($showtime->show_time)) }}
+                                {{ $showtime->getFormattedShowTime('H:i') }}
                             </a>
                         @endforeach
                     </div>

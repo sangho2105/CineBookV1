@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', request('status') == 'now_showing' ? 'Phim Đang Chiếu - CineBook' : (request('status') == 'upcoming' ? 'Phim Sắp Chiếu - CineBook' : 'Danh sách phim - CineBook'))
+@section('title', 'Phim yêu thích - CineBook')
 
 @push('css')
 <link rel="stylesheet" href="{{ asset('css/search.css') }}">
@@ -22,16 +22,10 @@
                         </a>
                     </li>
                     <li class="breadcrumb-item">
-                        <a href="{{ route('search') }}">Phim</a>
+                        <a href="{{ route('profile.index') }}">Hồ sơ</a>
                     </li>
                     <li class="breadcrumb-item active" aria-current="page">
-                        @if(request('status') == 'now_showing')
-                            Phim Đang Chiếu
-                        @elseif(request('status') == 'upcoming')
-                            Phim Sắp Chiếu
-                        @else
-                            Danh sách phim
-                        @endif
+                        Phim yêu thích
                     </li>
                 </ol>
             </nav>
@@ -43,26 +37,8 @@
         <div class="page-header mb-4">
             <div class="d-flex align-items-start justify-content-between position-relative">
                 <div class="flex-grow-1">
-                    <h1 class="page-title mb-0">
-                        @if(request('status') == 'now_showing')
-                            Phim Đang Chiếu
-                        @elseif(request('status') == 'upcoming')
-                            Phim Sắp Chiếu
-                        @else
-                            Danh sách phim
-                        @endif
-                    </h1>
-                </div>
-                <div class="ms-4">
-                    @if(request('status') == 'now_showing')
-                        <a href="{{ route('search', ['status' => 'upcoming']) }}" class="text-decoration-none text-dark">
-                            <h2 class="page-title-secondary mb-0">PHIM SẮP CHIẾU</h2>
-                        </a>
-                    @elseif(request('status') == 'upcoming')
-                        <a href="{{ route('search', ['status' => 'now_showing']) }}" class="text-decoration-none text-dark">
-                            <h2 class="page-title-secondary mb-0">PHIM ĐANG CHIẾU</h2>
-                        </a>
-                    @endif
+                    <h1 class="page-title mb-0">Phim yêu thích của tôi</h1>
+                    <p class="page-subtitle mb-0">Danh sách các phim bạn đã thích ({{ $favoriteMovies->total() }} phim)</p>
                 </div>
                 <div class="title-underline-full"></div>
             </div>
@@ -70,7 +46,7 @@
 
         {{-- Movies List --}}
         <div class="movies-row">
-            @forelse($movies as $movie)
+            @forelse($favoriteMovies as $movie)
                 @php
                     // Xác định rating badge
                     $rating = $movie->rating_average ?? 0;
@@ -137,31 +113,17 @@
                         
                         {{-- Action Buttons --}}
                         <div class="movie-actions">
-                            @auth
-                                <button class="btn-like {{ isset($movie->is_favorited) && $movie->is_favorited ? 'liked' : '' }}" 
-                                        data-movie-id="{{ $movie->id }}" 
-                                        data-like-url="{{ route('movie.favorite.toggle', $movie->id) }}">
-                                    <i class="bi bi-hand-thumbs-up{{ isset($movie->is_favorited) && $movie->is_favorited ? '-fill' : '' }}"></i> 
-                                    <span class="like-text">{{ isset($movie->is_favorited) && $movie->is_favorited ? 'Đã thích' : 'Thích' }}</span>
-                                    <span class="like-count">{{ $movie->favorites_count ?? 0 }}</span>
-                                </button>
-                            @else
-                                <a href="{{ route('login', ['redirect' => route('movie.show', $movie->id)]) }}" class="btn-like">
-                                    <i class="bi bi-hand-thumbs-up"></i> 
-                                    <span class="like-text">Thích</span>
-                                    <span class="like-count">{{ $movie->favorites_count ?? 0 }}</span>
-                                </a>
-                            @endauth
+                            <button class="btn-like liked" 
+                                    data-movie-id="{{ $movie->id }}" 
+                                    data-like-url="{{ route('movie.favorite.toggle', $movie->id) }}">
+                                <i class="bi bi-hand-thumbs-up-fill"></i> 
+                                <span class="like-text">Đã thích</span>
+                                <span class="like-count">{{ $movie->favorites_count ?? 0 }}</span>
+                            </button>
                             @if($movie->showtimes->isNotEmpty())
-                                @auth
-                                    <button type="button" class="btn-buy-ticket" data-booking-movie-id="{{ $movie->id }}" data-bs-toggle="modal" data-bs-target="#bookingModal">
-                                        MUA VÉ
-                                    </button>
-                                @else
-                                    <a href="{{ route('login', ['redirect' => route('movie.show', $movie->id)]) }}" class="btn-buy-ticket">
-                                        MUA VÉ
-                                    </a>
-                                @endauth
+                                <button type="button" class="btn-buy-ticket" data-booking-movie-id="{{ $movie->id }}" data-bs-toggle="modal" data-bs-target="#bookingModal">
+                                    MUA VÉ
+                                </button>
                             @else
                                 <button class="btn-buy-ticket" disabled>MUA VÉ</button>
                             @endif
@@ -172,16 +134,16 @@
                 <div class="col-12">
                     <div class="alert alert-warning text-center">
                         <i class="bi bi-exclamation-triangle"></i> 
-                        Không tìm thấy phim nào.
+                        Bạn chưa có phim yêu thích nào. Hãy thích các phim bạn quan tâm!
                     </div>
                 </div>
             @endforelse
         </div>
 
         {{-- Pagination --}}
-        @if($movies->hasPages())
+        @if($favoriteMovies->hasPages())
             <div class="d-flex justify-content-center mt-5 mb-5">
-                {{ $movies->links() }}
+                {{ $favoriteMovies->links() }}
             </div>
         @endif
     </div>
@@ -213,21 +175,28 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Cập nhật UI
-                    if (data.isLiked) {
+                    // Nếu unlike thì xóa phim khỏi danh sách
+                    if (!data.isLiked) {
+                        const movieCardElement = this.closest('.movie-card');
+                        if (movieCardElement) {
+                            movieCardElement.style.transition = 'opacity 0.3s';
+                            movieCardElement.style.opacity = '0';
+                            setTimeout(() => {
+                                movieCardElement.remove();
+                                // Kiểm tra nếu không còn phim nào
+                                if (document.querySelectorAll('.movie-card').length === 0) {
+                                    location.reload();
+                                }
+                            }, 300);
+                        }
+                    } else {
+                        // Cập nhật UI nếu like lại
                         this.classList.add('liked');
                         icon.classList.remove('bi-hand-thumbs-up');
                         icon.classList.add('bi-hand-thumbs-up-fill');
                         likeText.textContent = 'Đã thích';
-                    } else {
-                        this.classList.remove('liked');
-                        icon.classList.remove('bi-hand-thumbs-up-fill');
-                        icon.classList.add('bi-hand-thumbs-up');
-                        likeText.textContent = 'Thích';
+                        likeCount.textContent = data.likeCount;
                     }
-                    likeCount.textContent = data.likeCount;
-                } else if (data.redirect) {
-                    window.location.href = data.redirect;
                 } else {
                     alert(data.message || 'Có lỗi xảy ra');
                 }
@@ -245,3 +214,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 @endpush
 @endsection
+

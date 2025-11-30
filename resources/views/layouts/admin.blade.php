@@ -20,6 +20,11 @@
             margin: 0;
             padding: 0;
             overflow-x: hidden;
+            background-color: #F5F5DC;
+        }
+        
+        html {
+            background-color: #F5F5DC;
         }
         
         .sidebar {
@@ -103,6 +108,65 @@
             font-size: 0.9rem;
         }
         
+        /* Style cho bảng - màu beige phù hợp với nền */
+        .content .table {
+            background-color: #faf9f5;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .content .table thead,
+        .content .table thead.table-dark,
+        .content .table thead.table-light {
+            background-color: #d4c5a9 !important;
+            color: #333 !important;
+        }
+        
+        .content .table thead th,
+        .content .table thead.table-dark th,
+        .content .table thead.table-light th {
+            border-bottom: 2px solid #b8a082 !important;
+            padding: 12px 15px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            color: #333 !important;
+            background-color: #d4c5a9 !important;
+            white-space: nowrap; /* Ngăn text xuống dòng */
+        }
+        
+        .content .table tbody tr {
+            background-color: #faf9f5;
+            transition: background-color 0.2s ease;
+        }
+        
+        .content .table.table-striped tbody tr:nth-of-type(odd) {
+            background-color: #f5f0e8;
+        }
+        
+        .content .table tbody tr:hover {
+            background-color: #ebe5d8;
+        }
+        
+        .content .table tbody td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e8e0d4;
+            vertical-align: middle;
+        }
+        
+        .content .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .content .table-responsive {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
         /* Scrollbar cho sidebar */
         .sidebar::-webkit-scrollbar {
             width: 6px;
@@ -119,6 +183,136 @@
         
         .sidebar::-webkit-scrollbar-thumb:hover {
             background: #5a6268;
+        }
+        
+        /* CSS cho phân trang nhỏ gọn - đặt sau Bootstrap để override */
+        .content .pagination,
+        .pagination {
+            margin-bottom: 0 !important;
+            font-size: 0.8rem !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+        }
+        
+        .content .pagination .page-link,
+        .content .pagination a.page-link,
+        .pagination .page-link,
+        .pagination a.page-link {
+            padding: 0.25rem 0.5rem !important;
+            font-size: 0.8rem !important;
+            line-height: 1.4 !important;
+            min-width: 32px !important;
+            text-align: center !important;
+            border-radius: 0.25rem !important;
+        }
+        
+        .content .pagination .page-item,
+        .pagination .page-item {
+            margin: 0 !important;
+        }
+        
+        .content .pagination .page-item.disabled .page-link,
+        .content .pagination .page-item.disabled a.page-link,
+        .pagination .page-item.disabled .page-link,
+        .pagination .page-item.disabled a.page-link {
+            opacity: 0.5 !important;
+            cursor: not-allowed !important;
+            pointer-events: none !important;
+        }
+        
+        .content .pagination .page-item.active .page-link,
+        .content .pagination .page-item.active a.page-link,
+        .pagination .page-item.active .page-link,
+        .pagination .page-item.active a.page-link {
+            z-index: 3 !important;
+            color: #fff !important;
+            background-color: #0d6efd !important;
+            border-color: #0d6efd !important;
+        }
+        
+        .content .pagination .page-link:hover:not(.disabled),
+        .content .pagination a.page-link:hover:not(.disabled),
+        .pagination .page-link:hover:not(.disabled),
+        .pagination a.page-link:hover:not(.disabled) {
+            background-color: #e9ecef !important;
+            border-color: #dee2e6 !important;
+        }
+        
+        /* Đảm bảo các nút Previous/Next cũng được style */
+        .content .pagination .page-item:first-child .page-link,
+        .content .pagination .page-item:first-child a.page-link,
+        .content .pagination .page-item:last-child .page-link,
+        .content .pagination .page-item:last-child a.page-link,
+        .pagination .page-item:first-child .page-link,
+        .pagination .page-item:first-child a.page-link,
+        .pagination .page-item:last-child .page-link,
+        .pagination .page-item:last-child a.page-link {
+            padding: 0.25rem 0.5rem !important;
+            font-size: 0.8rem !important;
+        }
+        
+        /* Giới hạn kích thước SVG/icon trong pagination - override tất cả class */
+        .content .pagination svg,
+        .content .pagination .page-link svg,
+        .content .pagination a.page-link svg,
+        .content .pagination .page-item svg,
+        .content .pagination .page-item:first-child svg,
+        .content .pagination .page-item:last-child svg,
+        .pagination svg,
+        .pagination .page-link svg,
+        .pagination a.page-link svg,
+        .pagination .page-item svg,
+        .pagination .page-item:first-child svg,
+        .pagination .page-item:last-child svg {
+            width: 1rem !important;
+            height: 1rem !important;
+            max-width: 1rem !important;
+            max-height: 1rem !important;
+            min-width: 1rem !important;
+            min-height: 1rem !important;
+            display: inline-block !important;
+            vertical-align: middle !important;
+            flex-shrink: 0 !important;
+        }
+        
+        /* Override các class Tailwind như w-5, h-5 trong pagination */
+        .content .pagination svg.w-5,
+        .content .pagination svg.h-5,
+        .content .pagination .page-link svg.w-5,
+        .content .pagination .page-link svg.h-5,
+        .content .pagination a.page-link svg.w-5,
+        .content .pagination a.page-link svg.h-5,
+        .pagination svg.w-5,
+        .pagination svg.h-5,
+        .pagination .page-link svg.w-5,
+        .pagination .page-link svg.h-5,
+        .pagination a.page-link svg.w-5,
+        .pagination a.page-link svg.h-5,
+        /* Override tất cả SVG trong pagination bất kể class nào */
+        .content .pagination svg[class*="w-"],
+        .content .pagination svg[class*="h-"],
+        .pagination svg[class*="w-"],
+        .pagination svg[class*="h-"] {
+            width: 1rem !important;
+            height: 1rem !important;
+            max-width: 1rem !important;
+            max-height: 1rem !important;
+        }
+        
+        /* Đảm bảo các nút Previous/Next có kích thước hợp lý */
+        .content .pagination .page-item[rel="prev"] svg,
+        .content .pagination .page-item[rel="next"] svg,
+        .content .pagination a[rel="prev"] svg,
+        .content .pagination a[rel="next"] svg,
+        .pagination .page-item[rel="prev"] svg,
+        .pagination .page-item[rel="next"] svg,
+        .pagination a[rel="prev"] svg,
+        .pagination a[rel="next"] svg {
+            width: 1rem !important;
+            height: 1rem !important;
+            max-width: 1rem !important;
+            max-height: 1rem !important;
         }
     </style>
     @stack('styles')
@@ -151,6 +345,11 @@
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.promotions.*') ? 'active' : '' }}" href="{{ route('admin.promotions.index') }}">
                     🎉 Khuyến mãi &amp; Sự kiện
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.combos.*') ? 'active' : '' }}" href="{{ route('admin.combos.index') }}">
+                    🍿 Quản lý Combo
                 </a>
             </li>
         </ul>

@@ -51,6 +51,11 @@
                 </tbody>
             </table>
         </div>
+        
+        {{-- Phân trang --}}
+        <div class="mt-4">
+            {{ $theaters->links() }}
+        </div>
     @else
         <div class="alert alert-info">
             Chưa có rạp chiếu nào. <a href="{{ route('admin.theaters.create') }}">Tạo rạp đầu tiên!</a>

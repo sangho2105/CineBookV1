@@ -37,6 +37,16 @@ class Movie extends Model
         return $this->hasMany(Showtime::class);
     }
 
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class);
+    }
+
+    public function favoritedBy()
+    {
+        return $this->belongsToMany(User::class, 'favorites');
+    }
+
     /**
      * Auto-correct status based on release_date when creating/updating.
      * If a movie is marked as 'upcoming' but the release_date has arrived/passed,

@@ -1,16 +1,4 @@
 <div class="booking-modal-content">
-    <div class="booking-header">
-        <div class="movie-info">
-            @if($movie->poster_image_url)
-                <img src="{{ $movie->poster_image_url }}" alt="{{ $movie->title }}" class="movie-poster">
-            @endif
-            <div>
-                <h1 class="movie-title">{{ $movie->title }}</h1>
-                <p class="text-muted mb-0">{{ $movie->duration }} phút</p>
-            </div>
-        </div>
-    </div>
-
     <div class="date-selector">
         <h4 class="mb-3">Chọn ngày</h4>
         <div class="date-grid">
@@ -50,7 +38,7 @@
                     @foreach($roomShowtimes as $showtime)
                         <a href="{{ route('bookings.select-seats', $showtime->id) }}" 
                            class="showtime-btn">
-                            {{ date('H:i', strtotime($showtime->show_time)) }}
+                            {{ $showtime->getFormattedShowTime('H:i') }}
                         </a>
                     @endforeach
                 </div>

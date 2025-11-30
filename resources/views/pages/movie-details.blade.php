@@ -4,6 +4,7 @@
 @section('title', $movie->title . ' - CineBook')
 
 @push('css')
+<link rel="stylesheet" href="{{ asset('css/search.css') }}">
 <style>
     .movie-detail-tabs {
         position: relative;
@@ -93,14 +94,89 @@
             transform: translateY(0);
         }
     }
+    
+    /* Container lớn đóng khung nội dung phim */
+    .movie-content-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+        background-color: #F5F5DC;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    /* Đảm bảo khi zoom thì layout không bị vỡ */
+    .movie-content-wrapper * {
+        box-sizing: border-box;
+    }
+    
+    /* Đảm bảo 2 cột bằng nhau */
+    .movie-content-wrapper .row {
+        display: flex;
+        align-items: stretch;
+        min-height: 100%;
+    }
+    
+    .movie-content-wrapper .col-md-4,
+    .movie-content-wrapper .col-md-8 {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    
+    /* Đảm bảo poster và thông tin có chiều cao bằng nhau */
+    .movie-content-wrapper .col-md-4 img {
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .movie-content-wrapper .col-md-8 {
+        justify-content: flex-start;
+    }
+    
+    /* Responsive cho mobile */
+    @media (max-width: 768px) {
+        .movie-content-wrapper {
+            padding: 20px 15px;
+        }
+    }
 </style>
 @endpush
 
 @section('content')
-<div class="container my-5">
-    {{-- Tiêu đề và HR --}}
-    <h2 class="mb-3" style="font-size: 2rem; font-weight: bold; color: #333;">Nội Dung Phim</h2>
-    <hr class="mb-4">
+<div class="movies-listing-page">
+    {{-- Top Border --}}
+    <div class="top-dotted-border"></div>
+    
+    {{-- Breadcrumb --}}
+    <div class="breadcrumb-section">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item">
+                        <a href="{{ route('home') }}">
+                            <i class="bi bi-house-door"></i>
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{{ route('search') }}">Phim</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        {{ $movie->title }}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="container">
+    
+    {{-- Container lớn đóng khung toàn bộ nội dung --}}
+    <div class="movie-content-wrapper" style="border: none; border-radius: 0; padding: 30px; background-color: #F5F5DC; box-shadow: none;">
+        {{-- Tiêu đề và HR --}}
+        <h2 class="mb-3" style="font-size: 1.5rem; font-weight: bold; color: #333;">Nội Dung Phim</h2>
+        <hr class="mb-4">
 
     <div class="row">
         {{-- Cột Poster --}}
@@ -113,47 +189,47 @@
 
         {{-- Cột Thông tin --}}
         <div class="col-md-8">
-            <h1 class="mb-4">{{ $movie->title }}</h1>
+            <h1 class="mb-4" style="font-size: 1.5rem;">{{ $movie->title }}</h1>
             
             {{-- Thông tin chi tiết đầy đủ --}}
             <div class="movie-info-details mb-4">
                 <div class="mb-3">
-                    <p class="mb-2" style="font-size: 1.1rem;">
+                    <p class="mb-2" style="font-size: 0.95rem;">
                         <strong>Đạo diễn:</strong> 
                         <span>{{ $movie->director ?? 'Chưa cập nhật' }}</span>
                     </p>
                 </div>
 
                 <div class="mb-3">
-                    <p class="mb-2" style="font-size: 1.1rem;">
+                    <p class="mb-2" style="font-size: 0.95rem;">
                         <strong>Diễn viên:</strong> 
                         <span>{{ $movie->cast ?? 'Chưa cập nhật' }}</span>
                     </p>
                 </div>
 
                 <div class="mb-3">
-                    <p class="mb-2" style="font-size: 1.1rem;">
+                    <p class="mb-2" style="font-size: 0.95rem;">
                         <strong>Thể loại:</strong> 
                         <span>{{ $movie->genre ?? 'Chưa cập nhật' }}</span>
                     </p>
                 </div>
 
                 <div class="mb-3">
-                    <p class="mb-2" style="font-size: 1.1rem;">
+                    <p class="mb-2" style="font-size: 0.95rem;">
                         <strong>Khởi chiếu:</strong> 
                         <span>{{ \Carbon\Carbon::parse($movie->release_date)->format('d/m/Y') }}</span>
                     </p>
                 </div>
 
                 <div class="mb-3">
-                    <p class="mb-2" style="font-size: 1.1rem;">
+                    <p class="mb-2" style="font-size: 0.95rem;">
                         <strong>Thời lượng:</strong> 
                         <span>{{ $movie->duration_minutes ?? 0 }} phút</span>
                     </p>
                 </div>
 
                 <div class="mb-3">
-                    <p class="mb-2" style="font-size: 1.1rem;">
+                    <p class="mb-2" style="font-size: 0.95rem;">
                         <strong>Ngôn ngữ:</strong> 
                         <span>{{ $movie->language ?? 'Chưa cập nhật' }}</span>
                     </p>
@@ -161,7 +237,7 @@
 
                 @if($movie->rated)
                 <div class="mb-3">
-                    <p class="mb-2" style="font-size: 1.1rem;">
+                    <p class="mb-2" style="font-size: 0.95rem;">
                         <strong>Rated:</strong> 
                         <span>
                             {{ $movie->rated }} - 
@@ -185,16 +261,20 @@
             </div>
 
             {{-- Nút Đặt vé --}}
-            <div class="mt-4 mb-4">
+            <div class="mt-2 mb-3">
                 @if($movie->showtimes->isNotEmpty())
-                    <button type="button" class="btn btn-danger btn-lg px-5" style="font-weight: bold; font-size: 1.1rem;" data-booking-movie-id="{{ $movie->id }}" data-bs-toggle="modal" data-bs-target="#bookingModal">MUA VÉ</button>
+                    @auth
+                        <button type="button" class="btn btn-danger btn-lg px-5" style="font-weight: bold; font-size: 1rem;" data-booking-movie-id="{{ $movie->id }}" data-bs-toggle="modal" data-bs-target="#bookingModal">MUA VÉ</button>
+                    @else
+                        <a href="{{ route('login', ['redirect' => url()->current()]) }}" class="btn btn-danger btn-lg px-5" style="font-weight: bold; font-size: 1rem;">MUA VÉ</a>
+                    @endauth
                 @else
-                    <button class="btn btn-danger btn-lg px-5" style="font-weight: bold; font-size: 1.1rem;" disabled>MUA VÉ</button>
+                    <button class="btn btn-danger btn-lg px-5" style="font-weight: bold; font-size: 1rem;" disabled>MUA VÉ</button>
                 @endif
             </div>
 
             {{-- Tab Navigation - Centered --}}
-            <div class="d-flex justify-content-center my-4">
+            <div class="d-flex justify-content-center my-2">
                 <div class="movie-detail-tabs">
                     <button class="tab-btn active" data-tab="details">
                         <i class="bi bi-hand-index"></i>Chi tiết
@@ -210,8 +290,8 @@
             <div id="details-content" class="tab-content active">
                 <hr class="my-4">
 
-                <h4 class="mt-4 mb-3">Tóm tắt nội dung</h4>
-                <p style="font-size: 1.1rem; line-height: 1.6; color: #333;">
+                <h4 class="mt-4 mb-3" style="font-size: 1.1rem;">Tóm tắt nội dung</h4>
+                <p style="font-size: 0.95rem; line-height: 1.6; color: #333;">
                     {{ $movie->synopsis ?? 'Chưa có thông tin tóm tắt.' }}
                 </p>
             </div>
@@ -249,11 +329,11 @@
                                 Trình duyệt của bạn không hỗ trợ phát video.
                             </video>
                         @endif
-                    @else
-                        <div class="text-center py-5">
-                            <p class="text-muted" style="font-size: 1.1rem;">Phim này chưa có trailer.</p>
-                        </div>
-                    @endif
+                        @else
+                            <div class="text-center py-5">
+                                <p class="text-muted" style="font-size: 0.95rem;">Phim này chưa có trailer.</p>
+                            </div>
+                        @endif
                 </div>
             </div>
         </div>
@@ -263,7 +343,7 @@
     {{-- Bình luận & Đánh giá --}}
     <div class="row mt-5">
         <div class="col-md-8">
-            <h4 class="mb-3">Bình luận</h4>
+            <h4 class="mb-3" style="font-size: 1.1rem;">Bình luận</h4>
             @auth
                 <form action="{{ route('movie.comment.store', $movie->id) }}" method="POST" class="mb-4">
                     @csrf
@@ -332,9 +412,9 @@
             @endif
         </div>
         <div class="col-md-4">
-            <h4 class="mb-3">Đánh giá</h4>
+            <h4 class="mb-3" style="font-size: 1.1rem;">Đánh giá</h4>
             <p class="mb-2">
-                <span class="h5 mb-0">⭐ {{ number_format($ratingAverage ?? 0, 1) }}/5.0</span>
+                <span class="h5 mb-0" style="font-size: 1rem;">⭐ {{ number_format($ratingAverage ?? 0, 1) }}/5.0</span>
                 <small class="text-muted">({{ $ratingCount ?? 0 }} lượt)</small>
             </p>
 
@@ -367,6 +447,9 @@
                 </div>
             @endauth
         </div>
+    </div>
+    </div>
+    {{-- Kết thúc container lớn --}}
     </div>
 </div>
 

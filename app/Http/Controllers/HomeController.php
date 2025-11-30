@@ -65,6 +65,9 @@ class HomeController extends Controller
 
         // Eligibility: user đã thanh toán completed cho phim này?
         $canRate = false;
+        $isFavorited = false;
+        $favoritesCount = $movie->favorites()->count();
+        
         if (auth()->check()) {
             $canRate = \App\Models\Booking::where('user_id', auth()->id())
                 ->where('payment_status', 'completed')
@@ -72,8 +75,10 @@ class HomeController extends Controller
                     $q->where('movie_id', $movie->id);
                 })
                 ->exists();
+            
+            $isFavorited = $movie->favorites()->where('user_id', auth()->id())->exists();
         }
 
-        return view('pages.movie-details', compact('movie', 'comments', 'ratingAverage', 'ratingCount', 'canRate'));
+        return view('pages.movie-details', compact('movie', 'comments', 'ratingAverage', 'ratingCount', 'canRate', 'isFavorited', 'favoritesCount'));
     }
 }

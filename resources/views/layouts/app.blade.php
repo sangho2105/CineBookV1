@@ -4,11 +4,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'CineBook')</title> <!-- @yied là một directive trong Laravel để hiển thị nội dung của view con -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     @stack('css')
     <style>
+        /* Màu nền beige/ivory nhạt cho toàn bộ trang web */
+        body {
+            background-color: #F5F5DC !important;
+            min-height: 100vh;
+        }
+        
+        html {
+            background-color: #F5F5DC;
+        }
+        
         .dropdown-item form {
             margin: 0;
         }
@@ -176,8 +187,21 @@
     </div>
 
     <style>
+        #bookingModal .modal-content {
+            background-color: #F5F5DC;
+        }
+        
+        #bookingModal .modal-header {
+            background-color: #F5F5DC;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        #bookingModal .modal-body {
+            background-color: #F5F5DC;
+        }
+        
         .booking-modal-content .booking-header {
-            background: #fff;
+            background: #F5F5DC;
             padding: 20px;
             border-radius: 8px;
             margin-bottom: 20px;
@@ -185,26 +209,50 @@
 
         .booking-modal-content .movie-info {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 20px;
+            justify-content: flex-start;
+            width: 100%;
         }
 
         .booking-modal-content .movie-poster {
-            width: 80px;
-            height: 120px;
+            width: 100px;
+            height: 150px;
             object-fit: cover;
             border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+
+        .booking-modal-content .movie-info > div {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            gap: 8px;
         }
 
         .booking-modal-content .movie-title {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: bold;
             margin: 0;
             color: #333;
+            line-height: 1.3;
+            text-align: left !important;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+            width: 100%;
+        }
+
+        .booking-modal-content .movie-info .text-muted {
+            margin: 0;
+            text-align: left !important;
         }
 
         .booking-modal-content .date-selector {
-            background: #fff;
+            background: #F5F5DC;
             padding: 20px;
             border-radius: 8px;
             margin-bottom: 20px;
@@ -255,7 +303,7 @@
         }
 
         .booking-modal-content .showtime-section {
-            background: #fff;
+            background: #F5F5DC;
             padding: 20px;
             border-radius: 8px;
             margin-bottom: 20px;
@@ -334,8 +382,24 @@
                 }
                 
                 fetch(url)
-                    .then(response => response.text())
+                    .then(response => {
+                        // Kiểm tra nếu response redirect đến trang login (status 302 hoặc response là HTML của trang login)
+                        if (response.redirected || response.status === 401 || response.status === 403) {
+                            // Chuyển hướng đến trang login và lưu lại URL hiện tại
+                            window.location.href = '{{ route("login") }}';
+                            return;
+                        }
+                        return response.text();
+                    })
                     .then(html => {
+                        if (!html) return; // Nếu đã redirect thì không xử lý
+                        
+                        // Kiểm tra xem response có phải là trang login không (kiểm tra nội dung HTML)
+                        if (html.includes('login') && html.includes('Đăng nhập')) {
+                            window.location.href = '{{ route("login") }}';
+                            return;
+                        }
+                        
                         modalBody.innerHTML = html;
                         
                         // Xử lý click vào ngày
@@ -349,18 +413,170 @@
                         });
                     })
                     .catch(error => {
-                        modalBody.innerHTML = '<div class="alert alert-danger">Có lỗi xảy ra khi tải dữ liệu.</div>';
+                        modalBody.innerHTML = '<div class="alert alert-danger">Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại.</div>';
+                        console.error('Error loading booking modal:', error);
                     });
             }
         });
     </script>
     @stack('scripts')
 
-    <footer class="bg-dark text-white text-center p-4 mt-5">
-        <div class="container">
-            <p>&copy; 2025 CineBook. All Rights Reserved.</p>
+    <footer class="bg-dark text-white mt-5">
+        <div class="container py-5">
+            <div class="row g-4">
+                <!-- Thông tin về CineBook -->
+                <div class="col-lg-4 col-md-6">
+                    <h5 class="mb-3">
+                        <i class="bi bi-film"></i> CineBook
+                    </h5>
+                    <p class="text-light">
+                        Hệ thống đặt vé xem phim trực tuyến hàng đầu Việt Nam. 
+                        Trải nghiệm điện ảnh tuyệt vời với công nghệ hiện đại và dịch vụ chuyên nghiệp.
+                    </p>
+                    <div class="d-flex gap-3 mt-3">
+                        <a href="#" class="text-white" style="font-size: 1.5rem;" title="Facebook">
+                            <i class="bi bi-facebook"></i>
+                        </a>
+                        <a href="#" class="text-white" style="font-size: 1.5rem;" title="Instagram">
+                            <i class="bi bi-instagram"></i>
+                        </a>
+                        <a href="#" class="text-white" style="font-size: 1.5rem;" title="Twitter">
+                            <i class="bi bi-twitter"></i>
+                        </a>
+                        <a href="#" class="text-white" style="font-size: 1.5rem;" title="YouTube">
+                            <i class="bi bi-youtube"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Liên kết nhanh -->
+                <div class="col-lg-2 col-md-6">
+                    <h5 class="mb-3">
+                        <i class="bi bi-link-45deg"></i> Liên kết nhanh
+                    </h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <a href="{{ route('home') }}" class="text-light text-decoration-none">
+                                <i class="bi bi-chevron-right"></i> Trang chủ
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{{ route('search', ['status' => 'now_showing']) }}" class="text-light text-decoration-none">
+                                <i class="bi bi-chevron-right"></i> Phim đang chiếu
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{{ route('search', ['status' => 'upcoming']) }}" class="text-light text-decoration-none">
+                                <i class="bi bi-chevron-right"></i> Phim sắp chiếu
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{{ route('promotions.index') }}" class="text-light text-decoration-none">
+                                <i class="bi bi-chevron-right"></i> Ưu đãi &amp; Sự kiện
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Hỗ trợ -->
+                <div class="col-lg-3 col-md-6">
+                    <h5 class="mb-3">
+                        <i class="bi bi-headset"></i> Hỗ trợ
+                    </h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-telephone"></i> 
+                            <span class="text-light">Hotline: 1900 1234</span>
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-envelope"></i> 
+                            <span class="text-light">Email: support@cinebook.vn</span>
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-clock"></i> 
+                            <span class="text-light">Giờ làm việc: 8:00 - 22:00</span>
+                        </li>
+                        <li class="mb-2">
+                            <a href="#" class="text-light text-decoration-none">
+                                <i class="bi bi-question-circle"></i> Câu hỏi thường gặp
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="#" class="text-light text-decoration-none">
+                                <i class="bi bi-file-text"></i> Điều khoản sử dụng
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Đăng ký nhận tin -->
+                <div class="col-lg-3 col-md-6">
+                    <h5 class="mb-3">
+                        <i class="bi bi-bell"></i> Đăng ký nhận tin
+                    </h5>
+                    <p class="text-light small">
+                        Nhận thông tin về phim mới, ưu đãi đặc biệt và sự kiện độc quyền.
+                    </p>
+                    <form class="mt-3">
+                        <div class="input-group">
+                            <input type="email" class="form-control" placeholder="Email của bạn" required>
+                            <button class="btn btn-primary" type="submit">
+                                <i class="bi bi-send"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <div class="mt-3">
+                        <h6 class="mb-2">
+                            <i class="bi bi-download"></i> Tải ứng dụng
+                        </h6>
+                        <div class="d-flex gap-2">
+                            <a href="#" class="btn btn-outline-light btn-sm">
+                                <i class="bi bi-apple"></i> App Store
+                            </a>
+                            <a href="#" class="btn btn-outline-light btn-sm">
+                                <i class="bi bi-google-play"></i> Google Play
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4 bg-secondary">
+
+            <!-- Copyright -->
+            <div class="row">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="mb-0 text-light">
+                        &copy; {{ date('Y') }} CineBook. All Rights Reserved.
+                    </p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <p class="mb-0 text-light">
+                        Made with <i class="bi bi-heart-fill text-danger"></i> in Vietnam
+                    </p>
+                </div>
+            </div>
         </div>
     </footer>
+
+    <style>
+        footer a {
+            transition: color 0.3s ease;
+        }
+        footer a:hover {
+            color: #0d6efd !important;
+        }
+        footer .list-unstyled li {
+            transition: transform 0.2s ease;
+        }
+        footer .list-unstyled li:hover {
+            transform: translateX(5px);
+        }
+        footer .input-group input:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        }
+    </style>
 </body>
 
 </html>

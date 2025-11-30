@@ -8,7 +8,7 @@
         <h2 class="mb-2">Chọn ghế - {{ $showtime->movie->title }}</h2>
         <p class="mb-1"><strong>Phòng chiếu:</strong> {{ $showtime->room ? $showtime->room->name : ($showtime->theater ? $showtime->theater->name : 'N/A') }}</p>
         <p class="mb-1"><strong>Ngày:</strong> {{ $showtime->show_date->format('d/m/Y') }}</p>
-        <p class="mb-3"><strong>Giờ:</strong> {{ date('H:i', strtotime($showtime->show_time)) }}</p>
+        <p class="mb-3"><strong>Giờ:</strong> {{ $showtime->getFormattedShowTime('H:i') }}</p>
 
         <div class="screen text-center mb-3">
             <div class="screen-bar">MÀN HÌNH</div>
@@ -21,7 +21,6 @@
             @csrf
 
             <div class="seatmap-wrapper position-relative mb-3">
-                <div class="center-zone"></div>
                 @php
                     $seatsByRow = $seats->groupBy('row_number')->sortKeys();
                 @endphp
@@ -64,7 +63,6 @@
                 <div class="legend-item"><span class="legend-box seat-regular"></span> Ghế thường (Gold)</div>
                 <div class="legend-item"><span class="legend-box seat-vip"></span> Ghế VIP (Platinum)</div>
                 <div class="legend-item"><span class="legend-box seat-sweet"></span> Ghế cặp đôi (Box)</div>
-                <div class="legend-item"><span class="legend-box center-zone-box"></span> Vùng trung tâm</div>
             </div>
 
             <div class="selected-seats mb-3">
@@ -72,7 +70,7 @@
                 <div id="selectedSeatsList" class="mb-2 text-muted">Chưa chọn ghế nào</div>
                 <div id="seatError" class="alert alert-danger d-none mb-2"></div>
                 <div class="mb-2">
-                    <strong>Tổng tiền: <span id="totalAmount">0</span> đ</strong>
+                    <strong>Tổng tiền: <span id="totalAmount">$0.00</span></strong>
                 </div>
             </div>
 
@@ -90,9 +88,9 @@
                 <h5 class="mb-0">Giá vé</h5>
             </div>
             <div class="card-body">
-                <div class="d-flex align-items-center mb-2"><span class="legend-box seat-regular me-2"></span> Ghế thường (Gold): {{ number_format($showtime->gold_price, 0, ',', '.') }} đ</div>
-                <div class="d-flex align-items-center mb-2"><span class="legend-box seat-vip me-2"></span> Ghế VIP (Platinum): {{ number_format($showtime->platinum_price, 0, ',', '.') }} đ</div>
-                <div class="d-flex align-items-center"><span class="legend-box seat-sweet me-2"></span> Ghế cặp đôi (Box): {{ number_format($showtime->box_price, 0, ',', '.') }} đ</div>
+                <div class="d-flex align-items-center mb-2"><span class="legend-box seat-regular me-2"></span> Ghế thường (Gold): {{ format_currency($showtime->gold_price) }}</div>
+                <div class="d-flex align-items-center mb-2"><span class="legend-box seat-vip me-2"></span> Ghế VIP (Platinum): {{ format_currency($showtime->platinum_price) }}</div>
+                <div class="d-flex align-items-center"><span class="legend-box seat-sweet me-2"></span> Ghế cặp đôi (Box): {{ format_currency($showtime->box_price) }}</div>
             </div>
         </div>
     </div>
@@ -155,18 +153,24 @@
 .legend .seat-selected{ background:#0d6efd; }
 .legend .seat-regular{ background:#5b5bd6; }
 .legend .seat-sweet{ background:#bf3fb9; border-radius:12px; }
-.center-zone-box{ background:rgba(255,255,255,0.25); }
 
-/* Vùng trung tâm (highlight) */
-.seatmap-wrapper .center-zone{
-    position:absolute;
-    top:10%;
-    left:22%;
-    width:56%;
-    height:78%;
-    background: rgba(255,255,255,0.08);
-    border-radius:12px;
-    pointer-events:none;
+/* Đồng bộ nền cho modal combo */
+#comboModal .modal-content {
+    background-color: #F5F5DC;
+}
+
+#comboModal .modal-header {
+    background-color: #F5F5DC;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+#comboModal .modal-body {
+    background-color: #F5F5DC;
+}
+
+#comboModal .modal-footer {
+    background-color: #F5F5DC;
+    border-top: 1px solid #e0e0e0;
 }
 </style>
 
@@ -373,7 +377,7 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedSeats.forEach(seat => {
             total += prices[seat.category];
         });
-        totalAmountElement.textContent = total.toLocaleString('vi-VN');
+        totalAmountElement.textContent = '$' + total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
         
         // Update hidden input
         selectedSeatsInput.value = JSON.stringify(selectedSeats.map(s => s.id));
@@ -381,28 +385,102 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Modal chọn combo
     const combosInput = document.getElementById('combosInput');
+    @php
+        // Chuẩn bị dữ liệu combo với URL ảnh đầy đủ
+        $combosForJs = collect($combos ?? [])->map(function($combo) {
+            return [
+                'id' => $combo->id,
+                'title' => $combo->title,
+                'description' => $combo->description ?? '',
+                'price' => (float)$combo->price,
+                'image_url' => $combo->image_path ? asset('storage/' . $combo->image_path) : null,
+            ];
+        })->toArray();
+    @endphp
+    const combosData = @json($combosForJs ?? []);
+    
+    console.log('Combos data:', combosData); // Debug
+    
+    // Xóa modal cũ nếu có (để tránh duplicate)
+    const oldModal = document.getElementById('comboModal');
+    if (oldModal) {
+        oldModal.remove();
+    }
+    
+    // Tạo HTML cho modal combo động từ database với phân trang
+    let comboModalBody = '';
+    const combosPerPage = 3;
+    let currentComboPage = 1;
+    const totalComboPages = combosData && combosData.length > 0 ? Math.ceil(combosData.length / combosPerPage) : 0;
+    
+    if (combosData && combosData.length > 0) {
+        // Tạo container cho combo items
+        comboModalBody += '<div id="comboItemsContainer">';
+        combosData.forEach((combo, index) => {
+            const price = parseFloat(combo.price) || 0;
+            const title = (combo.title || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            const description = combo.description ? (combo.description || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') : '';
+            const imageHtml = combo.image_url ? `<img src="${combo.image_url}" alt="${title}" class="img-fluid rounded" style="max-width: 100px; max-height: 100px; object-fit: cover;">` : '';
+            const pageNumber = Math.floor(index / combosPerPage) + 1;
+            const displayStyle = pageNumber === 1 ? '' : 'display: none;';
+            
+            comboModalBody += `
+            <div class="combo-item mb-3 p-3 border rounded" data-combo-page="${pageNumber}" style="${displayStyle}">
+                <div class="d-flex align-items-start gap-3">
+                    ${imageHtml}
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1"><strong>${title}</strong></h6>
+                        ${description ? `<p class="text-muted small mb-2">${description}</p>` : ''}
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <span class="text-primary fw-bold">$${price.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <label class="small text-muted mb-0">Số lượng:</label>
+                                <input type="number" min="0" value="0" 
+                                       class="form-control form-control-sm" 
+                                       style="width:80px" 
+                                       id="combo${combo.id}Qty"
+                                       data-combo-id="${combo.id}"
+                                       data-combo-price="${combo.price}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        });
+        comboModalBody += '</div>';
+        
+        // Thêm phân trang nếu có nhiều hơn 3 combo
+        if (totalComboPages > 1) {
+            comboModalBody += `
+            <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                <button type="button" class="btn btn-sm btn-outline-primary" id="prevComboPage" style="display: none;">
+                    <i class="bi bi-chevron-left"></i> Trước
+                </button>
+                <div class="text-muted small">
+                    Trang <span id="currentComboPage">1</span> / <span id="totalComboPages">${totalComboPages}</span>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="nextComboPage">
+                    Sau <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>`;
+        }
+    } else {
+        comboModalBody = '<p class="text-muted">Hiện tại chưa có combo nào. Vui lòng liên hệ admin để thêm combo.</p>';
+    }
+    
     const comboModalHtml = `
     <div class="modal fade" id="comboModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog">
+      <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Bạn có muốn chọn thêm combo bắp nước?</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <div class="mb-2 d-flex align-items-center justify-content-between">
-              <div>
-                <strong>Combo 1:</strong> Bắp + Nước (M) - $5
-              </div>
-              <input type="number" min="0" value="0" class="form-control form-control-sm" style="width:80px" id="combo1Qty">
-            </div>
-            <div class="mb-2 d-flex align-items-center justify-content-between">
-              <div>
-                <strong>Combo 2:</strong> Bắp (L) + 2 Nước (M) - $8
-              </div>
-              <input type="number" min="0" value="0" class="form-control form-control-sm" style="width:80px" id="combo2Qty">
-            </div>
-            <small class="text-muted">Bạn có thể bỏ qua bước này và thanh toán ngay.</small>
+            ${comboModalBody}
+            <small class="text-muted d-block mt-3">Bạn có thể bỏ qua bước này và thanh toán ngay.</small>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Bỏ qua</button>
@@ -411,7 +489,53 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
       </div>
     </div>`;
+    
+    // Tạo modal
     document.body.insertAdjacentHTML('beforeend', comboModalHtml);
+    
+    // Xử lý phân trang combo
+    if (totalComboPages > 1) {
+        const prevBtn = document.getElementById('prevComboPage');
+        const nextBtn = document.getElementById('nextComboPage');
+        const currentPageSpan = document.getElementById('currentComboPage');
+        const totalPagesSpan = document.getElementById('totalComboPages');
+        let currentPage = 1;
+        
+        function showComboPage(page) {
+            // Ẩn tất cả combo items
+            document.querySelectorAll('.combo-item').forEach(item => {
+                item.style.display = 'none';
+            });
+            
+            // Hiển thị combo items của trang hiện tại
+            document.querySelectorAll(`.combo-item[data-combo-page="${page}"]`).forEach(item => {
+                item.style.display = 'block';
+            });
+            
+            // Cập nhật nút điều hướng
+            if (prevBtn) prevBtn.style.display = page > 1 ? 'inline-block' : 'none';
+            if (nextBtn) nextBtn.style.display = page < totalComboPages ? 'inline-block' : 'none';
+            if (currentPageSpan) currentPageSpan.textContent = page;
+        }
+        
+        if (prevBtn) {
+            prevBtn.addEventListener('click', function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    showComboPage(currentPage);
+                }
+            });
+        }
+        
+        if (nextBtn) {
+            nextBtn.addEventListener('click', function() {
+                if (currentPage < totalComboPages) {
+                    currentPage++;
+                    showComboPage(currentPage);
+                }
+            });
+        }
+    }
 
     const comboModal = new bootstrap.Modal(document.getElementById('comboModal'));
     const confirmCombosBtn = document.getElementById('confirmCombosBtn');
@@ -466,11 +590,23 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     confirmCombosBtn.addEventListener('click', function() {
-        const combo1 = parseInt(document.getElementById('combo1Qty').value || '0', 10);
-        const combo2 = parseInt(document.getElementById('combo2Qty').value || '0', 10);
         const combos = [];
-        if (combo1 > 0) combos.push({ name: 'Combo 1: Popcorn + Drink (M)', quantity: combo1, unit_price: 5 });
-        if (combo2 > 0) combos.push({ name: 'Combo 2: Popcorn (L) + 2 Drinks (M)', quantity: combo2, unit_price: 8 });
+        
+        // Lấy tất cả các input combo từ database
+        combosData.forEach(combo => {
+            const qtyInput = document.getElementById(`combo${combo.id}Qty`);
+            if (qtyInput) {
+                const quantity = parseInt(qtyInput.value || '0', 10);
+                if (quantity > 0) {
+                    combos.push({
+                        name: combo.title,
+                        quantity: quantity,
+                        unit_price: parseFloat(combo.price)
+                    });
+                }
+            }
+        });
+        
         combosInput.value = JSON.stringify(combos);
         // Gắn cờ đã hiển thị modal rồi để submit thực sự
         seatForm.dataset.comboShown = '1';

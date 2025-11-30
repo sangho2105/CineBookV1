@@ -54,7 +54,7 @@ class BookingController extends Controller
         // Sắp xếp theo ngày đặt vé mới nhất
         $bookings = $query->orderBy('booking_date', 'desc')
                           ->orderBy('created_at', 'desc')
-                          ->paginate(20);
+                          ->paginate(8);
 
         // Thống kê
         $stats = [

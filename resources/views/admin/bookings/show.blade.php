@@ -24,38 +24,18 @@
                 <div class="card-body">
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <strong>Mã vé:</strong><br>
-                            <span class="text-primary fs-5">{{ $booking->booking_id_unique }}</span>
+                            <strong>Mã vé:</strong> <span class="text-primary fs-5">{{ $booking->booking_id_unique }}</span>
                         </div>
                         <div class="col-md-6">
-                            <strong>Trạng thái thanh toán:</strong><br>
-                            @if($booking->payment_status === 'completed')
-                                <span class="badge bg-success fs-6">
-                                    <i class="bi bi-check-circle"></i> Đã thanh toán
-                                </span>
-                            @elseif($booking->payment_status === 'pending')
-                                <span class="badge bg-warning text-dark fs-6">
-                                    <i class="bi bi-clock"></i> Chờ thanh toán
-                                </span>
-                            @elseif($booking->payment_status === 'cancelled')
-                                <span class="badge bg-secondary fs-6">
-                                    <i class="bi bi-x-circle"></i> Đã hủy
-                                </span>
-                            @else
-                                <span class="badge bg-danger fs-6">
-                                    <i class="bi bi-exclamation-triangle"></i> Thất bại
-                                </span>
-                            @endif
+                            <strong>Trạng thái thanh toán:</strong> @if($booking->payment_status === 'completed')<span class="badge bg-success" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;"><i class="bi bi-check-circle"></i> Đã thanh toán</span>@elseif($booking->payment_status === 'pending')<span class="badge bg-warning text-dark" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;"><i class="bi bi-clock"></i> Chờ thanh toán</span>@elseif($booking->payment_status === 'cancelled')<span class="badge bg-secondary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;"><i class="bi bi-x-circle"></i> Đã hủy</span>@else<span class="badge bg-danger" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;"><i class="bi bi-exclamation-triangle"></i> Thất bại</span>@endif
                         </div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <strong>Ngày đặt vé:</strong><br>
-                            {{ $booking->booking_date->format('d/m/Y H:i:s') }}
+                            <strong>Ngày đặt vé:</strong> {{ $booking->booking_date->format('d/m/Y H:i:s') }}
                         </div>
                         <div class="col-md-6">
-                            <strong>Tổng tiền:</strong><br>
-                            <span class="text-success fs-5 fw-bold">{{ number_format($booking->total_amount, 0) }} đ</span>
+                            <strong>Tổng tiền:</strong> <span class="text-success fs-5 fw-bold">{{ format_currency($booking->total_amount) }}</span>
                         </div>
                     </div>
                 </div>
@@ -69,33 +49,27 @@
                 <div class="card-body">
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <strong>Tên phim:</strong><br>
-                            <span class="fs-5">{{ $booking->showtime->movie->title ?? 'N/A' }}</span>
+                            <strong>Tên phim:</strong> <span class="fs-5">{{ $booking->showtime->movie->title ?? 'N/A' }}</span>
                         </div>
                         <div class="col-md-6">
-                            <strong>Thể loại:</strong><br>
-                            {{ $booking->showtime->movie->genre ?? 'N/A' }}
+                            <strong>Thể loại:</strong> {{ $booking->showtime->movie->genre ?? 'N/A' }}
                         </div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-4">
-                            <strong>Ngày chiếu:</strong><br>
-                            {{ $booking->showtime->show_date->format('d/m/Y') ?? 'N/A' }}
+                            <strong>Ngày chiếu:</strong> {{ $booking->showtime->show_date->format('d/m/Y') ?? 'N/A' }}
                         </div>
                         <div class="col-md-4">
-                            <strong>Giờ chiếu:</strong><br>
-                            {{ $booking->showtime->show_time->format('H:i') ?? 'N/A' }}
+                            <strong>Giờ chiếu:</strong> {{ $booking->showtime->getFormattedShowTime('H:i') ?? 'N/A' }}
                         </div>
                         <div class="col-md-4">
-                            <strong>Phòng chiếu:</strong><br>
-                            {{ $booking->showtime->room->name ?? 'N/A' }}
+                            <strong>Phòng chiếu:</strong> {{ $booking->showtime->room->name ?? 'N/A' }}
                         </div>
                     </div>
                     @if($booking->showtime->theater)
                     <div class="row">
                         <div class="col-md-12">
-                            <strong>Rạp chiếu:</strong><br>
-                            {{ $booking->showtime->theater->name ?? 'N/A' }} - {{ $booking->showtime->theater->city ?? 'N/A' }}
+                            <strong>Rạp chiếu:</strong> {{ $booking->showtime->theater->name ?? 'N/A' }} - {{ $booking->showtime->theater->city ?? 'N/A' }}
                         </div>
                     </div>
                     @endif
@@ -140,8 +114,8 @@
                                     <tr>
                                         <td>{{ $combo->combo_name }}</td>
                                         <td>{{ $combo->quantity }}</td>
-                                        <td>{{ number_format($combo->unit_price, 0) }} đ</td>
-                                        <td>{{ number_format($combo->quantity * $combo->unit_price, 0) }} đ</td>
+                                        <td>{{ format_currency($combo->unit_price) }}</td>
+                                        <td>{{ format_currency($combo->quantity * $combo->unit_price) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -160,21 +134,17 @@
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <strong>Họ tên:</strong><br>
-                        {{ $booking->user->name ?? 'N/A' }}
+                        <strong>Họ tên:</strong> {{ $booking->user->name ?? 'N/A' }}
                     </div>
                     <div class="mb-3">
-                        <strong>Email:</strong><br>
-                        {{ $booking->user->email ?? 'N/A' }}
+                        <strong>Email:</strong> {{ $booking->user->email ?? 'N/A' }}
                     </div>
                     @if($booking->user)
                     <div class="mb-3">
-                        <strong>Số điện thoại:</strong><br>
-                        {{ $booking->user->phone ?? 'Chưa cập nhật' }}
+                        <strong>Số điện thoại:</strong> {{ $booking->user->phone ?? 'Chưa cập nhật' }}
                     </div>
                     <div>
-                        <strong>Ngày tham gia:</strong><br>
-                        {{ $booking->user->created_at->format('d/m/Y') ?? 'N/A' }}
+                        <strong>Ngày tham gia:</strong> {{ $booking->user->created_at->format('d/m/Y') ?? 'N/A' }}
                     </div>
                     @endif
                 </div>

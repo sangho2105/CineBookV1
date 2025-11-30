@@ -28,7 +28,58 @@ class BookingController extends Controller
             ->where('show_date', '>=', $startDate)
             ->orderBy('show_date')
             ->orderBy('show_time')
-            ->get();
+            ->get()
+            ->filter(function($showtime) {
+                // Lọc bỏ những suất chiếu đã qua
+                $now = Carbon::now();
+                $showDate = $showtime->show_date instanceof Carbon 
+                    ? $showtime->show_date 
+                    : Carbon::parse($showtime->show_date);
+                
+                // Parse show_time - có thể là string hoặc Carbon instance
+                $timeStr = '';
+                if ($showtime->show_time instanceof Carbon) {
+                    $timeStr = $showtime->show_time->format('H:i');
+                } else {
+                    $timeStr = is_string($showtime->show_time) ? $showtime->show_time : (string)$showtime->show_time;
+                    $timeStr = trim($timeStr);
+                    if (strlen($timeStr) > 5) {
+                        $timeStr = substr($timeStr, 0, 5); // Chỉ lấy H:i
+                    }
+                }
+                
+                // Bỏ qua nếu time không hợp lệ
+                if (empty($timeStr)) {
+                    return false;
+                }
+                
+                $timeParts = explode(':', $timeStr);
+                
+                // Bỏ qua nếu format không đúng
+                if (count($timeParts) < 2) {
+                    return false;
+                }
+                
+                $hour = (int)($timeParts[0] ?? 0);
+                $minute = (int)($timeParts[1] ?? 0);
+                
+                // Validate range
+                if ($hour < 0 || $hour > 23 || $minute < 0 || $minute > 59) {
+                    return false;
+                }
+                
+                // Tạo datetime từ các thành phần riêng biệt
+                $showDateTime = Carbon::create(
+                    $showDate->year,
+                    $showDate->month,
+                    $showDate->day,
+                    $hour,
+                    $minute,
+                    0
+                );
+                
+                return $showDateTime->gt($now);
+            });
         
         // Nhóm showtimes theo ngày
         $showtimesByDate = $showtimes->groupBy(function($showtime) {
@@ -75,7 +126,58 @@ class BookingController extends Controller
             ->where('show_date', '>=', $startDate)
             ->orderBy('show_date')
             ->orderBy('show_time')
-            ->get();
+            ->get()
+            ->filter(function($showtime) {
+                // Lọc bỏ những suất chiếu đã qua
+                $now = Carbon::now();
+                $showDate = $showtime->show_date instanceof Carbon 
+                    ? $showtime->show_date 
+                    : Carbon::parse($showtime->show_date);
+                
+                // Parse show_time - có thể là string hoặc Carbon instance
+                $timeStr = '';
+                if ($showtime->show_time instanceof Carbon) {
+                    $timeStr = $showtime->show_time->format('H:i');
+                } else {
+                    $timeStr = is_string($showtime->show_time) ? $showtime->show_time : (string)$showtime->show_time;
+                    $timeStr = trim($timeStr);
+                    if (strlen($timeStr) > 5) {
+                        $timeStr = substr($timeStr, 0, 5); // Chỉ lấy H:i
+                    }
+                }
+                
+                // Bỏ qua nếu time không hợp lệ
+                if (empty($timeStr)) {
+                    return false;
+                }
+                
+                $timeParts = explode(':', $timeStr);
+                
+                // Bỏ qua nếu format không đúng
+                if (count($timeParts) < 2) {
+                    return false;
+                }
+                
+                $hour = (int)($timeParts[0] ?? 0);
+                $minute = (int)($timeParts[1] ?? 0);
+                
+                // Validate range
+                if ($hour < 0 || $hour > 23 || $minute < 0 || $minute > 59) {
+                    return false;
+                }
+                
+                // Tạo datetime từ các thành phần riêng biệt
+                $showDateTime = Carbon::create(
+                    $showDate->year,
+                    $showDate->month,
+                    $showDate->day,
+                    $hour,
+                    $minute,
+                    0
+                );
+                
+                return $showDateTime->gt($now);
+            });
         
         // Nhóm showtimes theo ngày
         $showtimesByDate = $showtimes->groupBy(function($showtime) {
@@ -110,6 +212,58 @@ class BookingController extends Controller
     // Hiển thị trang chọn ghế
     public function selectSeats(Showtime $showtime)
     {
+        // Kiểm tra suất chiếu chưa qua
+        $now = Carbon::now();
+        $showDate = $showtime->show_date instanceof Carbon 
+            ? $showtime->show_date 
+            : Carbon::parse($showtime->show_date);
+        
+        // Parse show_time - có thể là string hoặc Carbon instance
+        $timeStr = '';
+        if ($showtime->show_time instanceof Carbon) {
+            $timeStr = $showtime->show_time->format('H:i');
+        } else {
+            $timeStr = is_string($showtime->show_time) ? $showtime->show_time : (string)$showtime->show_time;
+            $timeStr = trim($timeStr);
+            if (strlen($timeStr) > 5) {
+                $timeStr = substr($timeStr, 0, 5); // Chỉ lấy H:i
+            }
+        }
+        
+        // Kiểm tra time hợp lệ
+        if (empty($timeStr)) {
+            abort(403, 'Thời gian suất chiếu không hợp lệ.');
+        }
+        
+        $timeParts = explode(':', $timeStr);
+        
+        // Kiểm tra format hợp lệ
+        if (count($timeParts) < 2) {
+            abort(403, 'Định dạng thời gian không hợp lệ.');
+        }
+        
+        $hour = (int)($timeParts[0] ?? 0);
+        $minute = (int)($timeParts[1] ?? 0);
+        
+        // Validate range
+        if ($hour < 0 || $hour > 23 || $minute < 0 || $minute > 59) {
+            abort(403, 'Thời gian không hợp lệ.');
+        }
+        
+        // Tạo datetime từ các thành phần riêng biệt
+        $showDateTime = Carbon::create(
+            $showDate->year,
+            $showDate->month,
+            $showDate->day,
+            $hour,
+            $minute,
+            0
+        );
+        
+        if ($showDateTime->lte($now)) {
+            abort(403, 'Suất chiếu này đã qua, không thể đặt vé.');
+        }
+        
         $showtime->load(['movie', 'room']);
         
         if (!$showtime->room) {
@@ -172,12 +326,53 @@ class BookingController extends Controller
             }
         }
         
-        return view('bookings.select-seats', compact('showtime', 'seats', 'bookedSeatIds', 'coupleRows'));
+        // Lấy các combo đang hoạt động từ database
+        $combos = \App\Models\Combo::active()->orderBy('id')->get();
+        
+        // Debug: Log số lượng combo (có thể xóa sau)
+        \Log::info('Combos loaded: ' . $combos->count());
+        
+        return view('bookings.select-seats', compact('showtime', 'seats', 'bookedSeatIds', 'coupleRows', 'combos'));
     }
 
     // Xử lý đặt vé
     public function store(Request $request, Showtime $showtime)
     {
+        // Kiểm tra suất chiếu chưa qua
+        $now = Carbon::now();
+        $showDate = $showtime->show_date instanceof Carbon 
+            ? $showtime->show_date 
+            : Carbon::parse($showtime->show_date);
+        
+        // Parse show_time - có thể là string hoặc Carbon instance
+        $timeStr = '';
+        if ($showtime->show_time instanceof Carbon) {
+            $timeStr = $showtime->show_time->format('H:i');
+        } else {
+            $timeStr = is_string($showtime->show_time) ? $showtime->show_time : (string)$showtime->show_time;
+            if (strlen($timeStr) > 5) {
+                $timeStr = substr($timeStr, 0, 5); // Chỉ lấy H:i
+            }
+        }
+        
+        $timeParts = explode(':', $timeStr);
+        $hour = (int)($timeParts[0] ?? 0);
+        $minute = (int)($timeParts[1] ?? 0);
+        
+        // Tạo datetime từ các thành phần riêng biệt
+        $showDateTime = Carbon::create(
+            $showDate->year,
+            $showDate->month,
+            $showDate->day,
+            $hour,
+            $minute,
+            0
+        );
+        
+        if ($showDateTime->lte($now)) {
+            return back()->withErrors(['error' => 'Suất chiếu này đã qua, không thể đặt vé.']);
+        }
+        
         $request->validate([
             'selected_seats' => 'required|string',
         ]);
@@ -470,5 +665,16 @@ class BookingController extends Controller
         }
         return redirect()->route('bookings.payment', $booking->id)
             ->withErrors(['error' => 'Thanh toán chưa hoàn tất, vui lòng thử lại.']);
+    }
+
+    // Xem chi tiết vé điện tử
+    public function show(Booking $booking)
+    {
+        // Chỉ cho chủ booking xem
+        if ($booking->user_id !== auth()->id()) {
+            abort(403);
+        }
+        $booking->load(['showtime.movie', 'showtime.room', 'showtime.theater', 'seats', 'combos']);
+        return view('bookings.show', compact('booking'));
     }
 }

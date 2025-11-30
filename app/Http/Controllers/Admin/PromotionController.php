@@ -25,7 +25,7 @@ class PromotionController extends Controller
         }
         
         $promotions = $query->orderByDesc('created_at')
-            ->paginate(10)
+            ->paginate(8)
             ->withQueryString(); // Giữ lại query parameters khi phân trang
 
         return view('admin.promotions.index', compact('promotions'));

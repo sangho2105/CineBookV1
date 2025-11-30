@@ -92,5 +92,48 @@ class Promotion extends Model
         // Trả về asset URL từ storage
         return asset('storage/' . $this->image_path);
     }
+
+    /**
+     * Tính toán trạng thái hiển thị của khuyến mãi.
+     * Trả về: 'active' (đang kích hoạt), 'inactive' (đã tắt), 'ended' (đã kết thúc)
+     */
+    public function getStatusAttribute(): string
+    {
+        $today = Carbon::today();
+
+        // Nếu có end_date và đã hết hạn → đã kết thúc
+        if ($this->end_date && $this->end_date->lt($today)) {
+            return 'ended';
+        }
+
+        // Nếu không hết hạn, kiểm tra is_active
+        return $this->is_active ? 'active' : 'inactive';
+    }
+
+    /**
+     * Nhãn trạng thái hiển thị cho admin.
+     */
+    public function getStatusLabelAttribute(): string
+    {
+        return match ($this->status) {
+            'active' => 'Đang kích hoạt',
+            'inactive' => 'Đã tắt',
+            'ended' => 'Đã kết thúc',
+            default => 'Không xác định',
+        };
+    }
+
+    /**
+     * Màu badge cho trạng thái.
+     */
+    public function getStatusBadgeClassAttribute(): string
+    {
+        return match ($this->status) {
+            'active' => 'bg-success',
+            'inactive' => 'bg-secondary',
+            'ended' => 'bg-danger',
+            default => 'bg-secondary',
+        };
+    }
 }
 

@@ -17,13 +17,52 @@ class ShowtimeController extends Controller
     private function checkTimeConflict($roomId, $showDate, $showTime, $movieDuration, $excludeId = null)
     {
         // Parse show_time - có thể là "H:i" hoặc "H:i:s"
-        $timeStr = is_string($showTime) ? $showTime : (is_object($showTime) ? $showTime->format('H:i') : $showTime);
+        $timeStr = is_string($showTime) ? $showTime : (is_object($showTime) ? $showTime->format('H:i') : (string)$showTime);
+        
+        // Kiểm tra chuỗi rỗng
+        if (empty($timeStr) || trim($timeStr) === '') {
+            throw ValidationException::withMessages([
+                'show_time' => 'Thời gian suất chiếu không hợp lệ.',
+            ]);
+        }
+        
+        $timeStr = trim($timeStr);
         if (strlen($timeStr) > 5) {
             $timeStr = substr($timeStr, 0, 5); // Chỉ lấy H:i
         }
         
+        // Parse thủ công từ chuỗi H:i
+        $timeParts = explode(':', $timeStr);
+        
+        // Kiểm tra format hợp lệ
+        if (count($timeParts) < 2) {
+            throw ValidationException::withMessages([
+                'show_time' => 'Định dạng thời gian không hợp lệ. Vui lòng nhập theo định dạng HH:mm.',
+            ]);
+        }
+        
+        $hour = (int)($timeParts[0] ?? 0);
+        $minute = (int)($timeParts[1] ?? 0);
+        
+        // Validate range
+        if ($hour < 0 || $hour > 23 || $minute < 0 || $minute > 59) {
+            throw ValidationException::withMessages([
+                'show_time' => 'Thời gian không hợp lệ. Giờ phải từ 0-23, phút phải từ 0-59.',
+            ]);
+        }
+        
+        // Parse show_date
+        $showDateCarbon = $showDate instanceof Carbon ? $showDate : Carbon::parse($showDate);
+        
         // Tạo datetime cho suất chiếu mới
-        $newStartDateTime = Carbon::createFromFormat('Y-m-d H:i', $showDate . ' ' . $timeStr);
+        $newStartDateTime = Carbon::create(
+            $showDateCarbon->year,
+            $showDateCarbon->month,
+            $showDateCarbon->day,
+            $hour,
+            $minute,
+            0
+        );
         $newEndDateTime = $newStartDateTime->copy()->addMinutes($movieDuration);
 
         // Lấy tất cả suất chiếu trong cùng phòng và cùng ngày
@@ -40,14 +79,50 @@ class ShowtimeController extends Controller
         foreach ($existingShowtimes as $existing) {
             // Lấy thời gian bắt đầu và kết thúc của suất chiếu hiện có
             $existingDate = $existing->show_date instanceof Carbon 
-                ? $existing->show_date->format('Y-m-d')
-                : Carbon::parse($existing->show_date)->format('Y-m-d');
+                ? $existing->show_date
+                : Carbon::parse($existing->show_date);
             
-            $existingTime = $existing->show_time instanceof Carbon
-                ? $existing->show_time->format('H:i')
-                : date('H:i', strtotime($existing->show_time));
+            // Parse show_time thủ công
+            $existingTimeStr = '';
+            if ($existing->show_time instanceof Carbon) {
+                $existingTimeStr = $existing->show_time->format('H:i');
+            } else {
+                $existingTimeStr = is_string($existing->show_time) ? $existing->show_time : (string)$existing->show_time;
+                $existingTimeStr = trim($existingTimeStr);
+                if (strlen($existingTimeStr) > 5) {
+                    $existingTimeStr = substr($existingTimeStr, 0, 5); // Chỉ lấy H:i
+                }
+            }
             
-            $existingStartDateTime = Carbon::createFromFormat('Y-m-d H:i', $existingDate . ' ' . $existingTime);
+            // Bỏ qua nếu time không hợp lệ
+            if (empty($existingTimeStr)) {
+                continue;
+            }
+            
+            $existingTimeParts = explode(':', $existingTimeStr);
+            
+            // Bỏ qua nếu format không đúng
+            if (count($existingTimeParts) < 2) {
+                continue;
+            }
+            
+            $existingHour = (int)($existingTimeParts[0] ?? 0);
+            $existingMinute = (int)($existingTimeParts[1] ?? 0);
+            
+            // Validate range và bỏ qua nếu không hợp lệ
+            if ($existingHour < 0 || $existingHour > 23 || $existingMinute < 0 || $existingMinute > 59) {
+                continue;
+            }
+            
+            // Tạo datetime từ các thành phần riêng biệt
+            $existingStartDateTime = Carbon::create(
+                $existingDate->year,
+                $existingDate->month,
+                $existingDate->day,
+                $existingHour,
+                $existingMinute,
+                0
+            );
             $existingDuration = $existing->movie->duration_minutes ?? 0;
             $existingEndDateTime = $existingStartDateTime->copy()->addMinutes($existingDuration);
 
@@ -106,32 +181,36 @@ class ShowtimeController extends Controller
         }
         
         $showtimes = $query->latest()
-            ->get()
-            ->map(function ($showtime) {
-                $completedBookings = $showtime->bookings->where('payment_status', 'completed');
-                $seatCount = 0;
-                $byCategory = ['Gold' => 0, 'Platinum' => 0, 'Box' => 0];
-                foreach ($completedBookings as $bk) {
-                    foreach ($bk->seats as $s) {
-                        $seatCount += 1;
-                        if (isset($byCategory[$s->seat_category])) {
-                            $byCategory[$s->seat_category] += 1;
-                        }
+            ->paginate(8)
+            ->withQueryString();
+        
+        // Map qua từng item để tính stats
+        $showtimes->getCollection()->transform(function ($showtime) {
+            $completedBookings = $showtime->bookings->where('payment_status', 'completed');
+            $seatCount = 0;
+            $byCategory = ['Gold' => 0, 'Platinum' => 0, 'Box' => 0];
+            foreach ($completedBookings as $bk) {
+                foreach ($bk->seats as $s) {
+                    $seatCount += 1;
+                    if (isset($byCategory[$s->seat_category])) {
+                        $byCategory[$s->seat_category] += 1;
                     }
                 }
-                $comboTotals = [];
-                foreach ($completedBookings as $bk) {
-                    foreach ($bk->combos as $cb) {
-                        $comboTotals[$cb->combo_name] = ($comboTotals[$cb->combo_name] ?? 0) + $cb->quantity;
-                    }
+            }
+            $comboTotals = [];
+            foreach ($completedBookings as $bk) {
+                foreach ($bk->combos as $cb) {
+                    $comboTotals[$cb->combo_name] = ($comboTotals[$cb->combo_name] ?? 0) + $cb->quantity;
                 }
-                $showtime->stats = [
-                    'seat_count' => $seatCount,
-                    'by_category' => $byCategory,
-                    'combos' => $comboTotals,
-                ];
-                return $showtime;
-            });
+            }
+            $showtime->stats = [
+                'seat_count' => $seatCount,
+                'by_category' => $byCategory,
+                'combos' => $comboTotals,
+            ];
+            return $showtime;
+        });
+        
         return view('showtimes.index', compact('showtimes'));
     }
 public function create()
@@ -150,13 +229,47 @@ public function store(Request $request)
     $validated = $request->validate([
         'movie_id' => 'required|exists:movies,id',
         'room_id' => 'required|exists:rooms,id',
-        'show_date' => 'required|date',
+        'show_date' => [
+            'required',
+            'date',
+            'after_or_equal:today',
+        ],
         'show_time' => 'required',
         'gold_price' => 'required|numeric|min:1|max:1000',
         'platinum_price' => 'required|numeric|min:1|max:1000',
         'box_price' => 'required|numeric|min:1|max:1000',
         'is_peak_hour' => 'boolean',
     ]);
+
+    // Kiểm tra nếu show_date là hôm nay thì show_time phải lớn hơn thời gian hiện tại
+    $now = Carbon::now();
+    $showDate = Carbon::parse($validated['show_date']);
+    
+    // Parse show_time an toàn với định dạng cụ thể
+    $timeStr = $validated['show_time'];
+    // Loại bỏ giây nếu có (chỉ lấy H:i)
+    if (strlen($timeStr) > 5) {
+        $timeStr = substr($timeStr, 0, 5);
+    }
+    $timeParts = explode(':', $timeStr);
+    $hour = (int)($timeParts[0] ?? 0);
+    $minute = (int)($timeParts[1] ?? 0);
+    
+    // Tạo datetime từ các thành phần riêng biệt
+    $showDateTime = Carbon::create(
+        $showDate->year,
+        $showDate->month,
+        $showDate->day,
+        $hour,
+        $minute,
+        0
+    );
+
+    if ($showDateTime->lte($now)) {
+        throw ValidationException::withMessages([
+            'show_time' => 'Thời gian suất chiếu phải lớn hơn thời gian hiện tại.',
+        ]);
+    }
 
     // Lấy thông tin phim để biết thời lượng
     $movie = Movie::findOrFail($validated['movie_id']);
@@ -169,6 +282,16 @@ public function store(Request $request)
         $validated['show_time'],
         $movieDuration
     );
+
+    // Tính giá tự động dựa trên Peak hour
+    $baseGoldPrice = 17;
+    $basePlatinumPrice = 20;
+    $baseBoxPrice = 40;
+    $multiplier = $validated['is_peak_hour'] ? 1.2 : 1; // Tăng 20% nếu Peak hour
+    
+    $validated['gold_price'] = round($baseGoldPrice * $multiplier, 2);
+    $validated['platinum_price'] = round($basePlatinumPrice * $multiplier, 2);
+    $validated['box_price'] = round($baseBoxPrice * $multiplier, 2);
 
     Showtime::create($validated);
 
@@ -230,13 +353,47 @@ public function update(Request $request, Showtime $showtime)
     $validated = $request->validate([
         'movie_id' => 'required|exists:movies,id',
         'room_id' => 'required|exists:rooms,id',
-        'show_date' => 'required|date',
+        'show_date' => [
+            'required',
+            'date',
+            'after_or_equal:today',
+        ],
         'show_time' => 'required',
         'gold_price' => 'required|numeric|min:1|max:1000',
         'platinum_price' => 'required|numeric|min:1|max:1000',
         'box_price' => 'required|numeric|min:1|max:1000',
         'is_peak_hour' => 'boolean',
     ]);
+
+    // Kiểm tra nếu show_date là hôm nay thì show_time phải lớn hơn thời gian hiện tại
+    $now = Carbon::now();
+    $showDate = Carbon::parse($validated['show_date']);
+    
+    // Parse show_time an toàn với định dạng cụ thể
+    $timeStr = $validated['show_time'];
+    // Loại bỏ giây nếu có (chỉ lấy H:i)
+    if (strlen($timeStr) > 5) {
+        $timeStr = substr($timeStr, 0, 5);
+    }
+    $timeParts = explode(':', $timeStr);
+    $hour = (int)($timeParts[0] ?? 0);
+    $minute = (int)($timeParts[1] ?? 0);
+    
+    // Tạo datetime từ các thành phần riêng biệt
+    $showDateTime = Carbon::create(
+        $showDate->year,
+        $showDate->month,
+        $showDate->day,
+        $hour,
+        $minute,
+        0
+    );
+
+    if ($showDateTime->lte($now)) {
+        throw ValidationException::withMessages([
+            'show_time' => 'Thời gian suất chiếu phải lớn hơn thời gian hiện tại.',
+        ]);
+    }
 
     // Lấy thông tin phim để biết thời lượng
     $movie = Movie::findOrFail($validated['movie_id']);
@@ -250,6 +407,16 @@ public function update(Request $request, Showtime $showtime)
         $movieDuration,
         $showtime->id
     );
+
+    // Tính giá tự động dựa trên Peak hour
+    $baseGoldPrice = 17;
+    $basePlatinumPrice = 20;
+    $baseBoxPrice = 40;
+    $multiplier = $validated['is_peak_hour'] ? 1.2 : 1; // Tăng 20% nếu Peak hour
+    
+    $validated['gold_price'] = round($baseGoldPrice * $multiplier, 2);
+    $validated['platinum_price'] = round($basePlatinumPrice * $multiplier, 2);
+    $validated['box_price'] = round($baseBoxPrice * $multiplier, 2);
 
     $showtime->update($validated);
 

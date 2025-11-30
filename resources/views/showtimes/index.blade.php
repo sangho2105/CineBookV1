@@ -42,11 +42,11 @@
         <tbody>
             @forelse($showtimes as $showtime)
             <tr>
-                <td>{{ $loop->iteration }}</td>
+                <td>{{ ($showtimes->currentPage() - 1) * $showtimes->perPage() + $loop->iteration }}</td>
                 <td>{{ $showtime->movie->title }}</td>
                 <td>{{ $showtime->room ? $showtime->room->name . ' (' . $showtime->room->total_seats . ' ghế)' : ($showtime->theater ? $showtime->theater->name : 'N/A') }}</td>
                 <td>{{ $showtime->show_date->format('d/m/Y') }}</td>
-                <td>{{ date('H:i', strtotime($showtime->show_time)) }}</td>
+                <td>{{ $showtime->getFormattedShowTime('H:i') }}</td>
                 <td>
                     <a href="{{ route('admin.showtimes.show', $showtime) }}" class="btn btn-sm btn-info" title="View">
                         <i class="bi bi-eye"></i>
@@ -70,6 +70,11 @@
             @endforelse
         </tbody>
     </table>
+</div>
+
+{{-- Phân trang --}}
+<div class="mt-4">
+    {{ $showtimes->links() }}
 </div>
 </div>
 @endsection

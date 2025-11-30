@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('movies', function (Blueprint $table) {
-            $table->string('rated', 10)->nullable()->after('rating_average');
+            $table->string('rated', 255)->nullable()->after('rating_average');
         });
     }
 

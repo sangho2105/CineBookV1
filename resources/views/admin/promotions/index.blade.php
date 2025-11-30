@@ -73,11 +73,7 @@
                                 @endif
                             </td>
                             <td>
-                                @if($promotion->is_active)
-                                    <span class="badge bg-success">Đang kích hoạt</span>
-                                @else
-                                    <span class="badge bg-secondary">Đã tắt</span>
-                                @endif
+                                <span class="badge {{ $promotion->status_badge_class }}">{{ $promotion->status_label }}</span>
                             </td>
                             <td class="text-end">
                                 <a href="{{ route('admin.promotions.edit', $promotion) }}" class="btn btn-sm btn-warning" title="Sửa">

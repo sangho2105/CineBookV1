@@ -59,8 +59,8 @@
                                             // Nếu đã cast thành Carbon, format chỉ lấy H:i
                                             $timeOnly = $showtime->show_time->format('H:i');
                                         } else {
-                                            // Fallback
-                                            $timeOnly = date('H:i', strtotime($showtime->show_time));
+                                            // Fallback - sử dụng method helper
+                                            $timeOnly = $showtime->getFormattedShowTime('H:i');
                                         }
                                         
                                         // Tạo datetime từ ngày và giờ

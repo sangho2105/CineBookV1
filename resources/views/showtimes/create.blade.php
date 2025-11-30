@@ -3,7 +3,7 @@
 @section('title', 'Add Showtime')
 
 @section('content')
-<h2>Add Showtime</h2>
+<h2>Thêm suất chiếu</h2>
 
 <form action="{{ route('admin.showtimes.store') }}" method="POST">
     @csrf
@@ -42,57 +42,199 @@
         <div class="col-md-6">
             <label for="show_date" class="form-label">Show Date <span class="text-danger">*</span></label>
             <input type="date" name="show_date" id="show_date" class="form-control @error('show_date') is-invalid @enderror" 
-                   value="{{ old('show_date') }}" required>
+                   value="{{ old('show_date') }}" min="{{ date('Y-m-d') }}" required>
             @error('show_date')
             <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
         <div class="col-md-6">
-            <label for="show_time" class="form-label">Show Time <span class="text-danger">*</span></label>
-            <input type="time" name="show_time" id="show_time" class="form-control @error('show_time') is-invalid @enderror" 
-                   value="{{ old('show_time') }}" required>
+            <label class="form-label">Show Time <span class="text-danger">*</span></label>
+            <div class="d-flex gap-2 align-items-center">
+                @php
+                    $defaultHour = old('show_time_hour');
+                    if (!$defaultHour && old('show_time')) {
+                        // Parse thủ công từ chuỗi H:i hoặc H:i:s
+                        $timeStr = old('show_time');
+                        if (strlen($timeStr) > 5) {
+                            $timeStr = substr($timeStr, 0, 5); // Chỉ lấy H:i
+                        }
+                        $timeParts = explode(':', $timeStr);
+                        $defaultHour = str_pad((int)($timeParts[0] ?? 0), 2, '0', STR_PAD_LEFT);
+                    }
+                    // Chuyển đổi 00 thành 24 để hiển thị
+                    if ($defaultHour === '00') {
+                        $defaultHour = '24';
+                    }
+                @endphp
+                <select name="show_time_hour" id="show_time_hour" class="form-select @error('show_time') is-invalid @enderror" required>
+                    <option value="">Giờ</option>
+                    @for($i = 1; $i <= 24; $i++)
+                        <option value="{{ str_pad($i, 2, '0', STR_PAD_LEFT) }}" 
+                                {{ $defaultHour == str_pad($i, 2, '0', STR_PAD_LEFT) ? 'selected' : '' }}>
+                            {{ $i }}
+                        </option>
+                    @endfor
+                </select>
+                <span class="fw-bold">:</span>
+                <select name="show_time_minute" id="show_time_minute" class="form-select @error('show_time') is-invalid @enderror" required>
+                    <option value="">Phút</option>
+                    @for($i = 0; $i < 60; $i += 5)
+                        <option value="{{ str_pad($i, 2, '0', STR_PAD_LEFT) }}" 
+                                {{ old('show_time_minute', '00') == str_pad($i, 2, '0', STR_PAD_LEFT) ? 'selected' : '' }}>
+                            {{ str_pad($i, 2, '0', STR_PAD_LEFT) }}
+                        </option>
+                    @endfor
+                </select>
+                <input type="hidden" name="show_time" id="show_time" value="{{ old('show_time') }}">
+            </div>
             @error('show_time')
-            <div class="invalid-feedback">{{ $message }}</div>
+            <div class="invalid-feedback d-block">{{ $message }}</div>
             @enderror
         </div>
     </div>
 
-    <div class="mb-3">
-        <label for="gold_price" class="form-label">Gold Price (USD) <span class="text-danger">*</span></label>
-        <input type="number" name="gold_price" id="gold_price" class="form-control @error('gold_price') is-invalid @enderror" 
-               value="{{ old('gold_price') }}" min="1" max="1000" step="1" required>
-        @error('gold_price')
-        <div class="invalid-feedback">{{ $message }}</div>
-        @enderror
-    </div>
-
-    <div class="mb-3">
-        <label for="platinum_price" class="form-label">Platinum Price (USD) <span class="text-danger">*</span></label>
-        <input type="number" name="platinum_price" id="platinum_price" class="form-control @error('platinum_price') is-invalid @enderror" 
-               value="{{ old('platinum_price') }}" min="1" max="1000" step="1" required>
-        @error('platinum_price')
-        <div class="invalid-feedback">{{ $message }}</div>
-        @enderror
-    </div>
-
-    <div class="mb-3">
-        <label for="box_price" class="form-label">Box Price (USD) <span class="text-danger">*</span></label>
-        <input type="number" name="box_price" id="box_price" class="form-control @error('box_price') is-invalid @enderror" 
-               value="{{ old('box_price') }}" min="1" max="1000" step="1" required>
-        @error('box_price')
-        <div class="invalid-feedback">{{ $message }}</div>
-        @enderror
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label for="gold_price" class="form-label">Gold Price (USD) <span class="text-danger">*</span></label>
+            <input type="number" name="gold_price" id="gold_price" class="form-control @error('gold_price') is-invalid @enderror" 
+                   value="{{ old('gold_price', 17) }}" min="0.01" max="1000" step="0.01" required readonly>
+            @error('gold_price')
+            <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
+        <div class="col-md-4">
+            <label for="platinum_price" class="form-label">Platinum Price (USD) <span class="text-danger">*</span></label>
+            <input type="number" name="platinum_price" id="platinum_price" class="form-control @error('platinum_price') is-invalid @enderror" 
+                   value="{{ old('platinum_price', 20) }}" min="0.01" max="1000" step="0.01" required readonly>
+            @error('platinum_price')
+            <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
+        <div class="col-md-4">
+            <label for="box_price" class="form-label">Box Price (USD) <span class="text-danger">*</span></label>
+            <input type="number" name="box_price" id="box_price" class="form-control @error('box_price') is-invalid @enderror" 
+                   value="{{ old('box_price', 40) }}" min="0.01" max="1000" step="0.01" required readonly>
+            @error('box_price')
+            <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
     </div>
 
     <div class="mb-3">
         <div class="form-check">
             <input type="checkbox" name="is_peak_hour" id="is_peak_hour" value="1" 
                    class="form-check-input" {{ old('is_peak_hour') ? 'checked' : '' }}>
-                <label for="is_peak_hour" class="form-check-label">Peak Hour</label>
+                <label for="is_peak_hour" class="form-check-label">Giờ cao điểm</label>
         </div>
     </div>
 
     <button type="submit" class="btn btn-primary">Save</button>
     <a href="{{ route('admin.showtimes.index') }}" class="btn btn-secondary">Cancel</a>
 </form>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const showDateInput = document.getElementById('show_date');
+    const showTimeHour = document.getElementById('show_time_hour');
+    const showTimeMinute = document.getElementById('show_time_minute');
+    const showTimeInput = document.getElementById('show_time');
+    
+    // Cập nhật hidden input khi chọn giờ/phút
+    function updateTimeInput() {
+        let hour = showTimeHour.value;
+        const minute = showTimeMinute.value;
+        if (hour && minute) {
+            // Chuyển đổi giờ 24 thành 00 (vì 24:00 = 00:00)
+            if (hour === '24') {
+                hour = '00';
+            }
+            showTimeInput.value = hour + ':' + minute + ':00';
+        } else {
+            showTimeInput.value = '';
+        }
+        validateDateTime();
+    }
+    
+    showTimeHour.addEventListener('change', updateTimeInput);
+    showTimeMinute.addEventListener('change', updateTimeInput);
+    
+    // Parse old value nếu có - chuyển đổi 00 thành 24 để hiển thị
+    @if(old('show_time'))
+        const oldTime = '{{ old("show_time") }}';
+        if (oldTime) {
+            let [hour, minute] = oldTime.split(':');
+            // Chuyển đổi 00 thành 24 để hiển thị
+            if (hour === '00') {
+                hour = '24';
+            }
+            if (hour) showTimeHour.value = hour;
+            if (minute) showTimeMinute.value = minute;
+            updateTimeInput();
+        }
+    @endif
+    
+    function validateDateTime() {
+        const showDate = showDateInput.value;
+        let hour = showTimeHour.value;
+        const minute = showTimeMinute.value;
+        
+        if (!showDate || !hour || !minute) {
+            showTimeInput.setCustomValidity('');
+            return;
+        }
+        
+        // Chuyển đổi giờ 24 thành 00 để validate
+        if (hour === '24') {
+            hour = '00';
+        }
+        
+        const today = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const selectedDate = new Date(showDate);
+        const selectedDateTime = new Date(selectedDate);
+        selectedDateTime.setHours(parseInt(hour), parseInt(minute), 0, 0);
+        
+        if (showDate === today && selectedDateTime <= now) {
+            showTimeInput.setCustomValidity('Thời gian suất chiếu phải lớn hơn thời gian hiện tại.');
+            showTimeHour.setCustomValidity('Thời gian suất chiếu phải lớn hơn thời gian hiện tại.');
+            showTimeMinute.setCustomValidity('Thời gian suất chiếu phải lớn hơn thời gian hiện tại.');
+        } else {
+            showTimeInput.setCustomValidity('');
+            showTimeHour.setCustomValidity('');
+            showTimeMinute.setCustomValidity('');
+        }
+    }
+    
+    showDateInput.addEventListener('change', validateDateTime);
+    
+    // Tính giá tự động khi chọn Peak hour
+    const goldPriceInput = document.getElementById('gold_price');
+    const platinumPriceInput = document.getElementById('platinum_price');
+    const boxPriceInput = document.getElementById('box_price');
+    const peakHourCheckbox = document.getElementById('is_peak_hour');
+    
+    // Giá cố định
+    const BASE_GOLD_PRICE = 17;
+    const BASE_PLATINUM_PRICE = 20;
+    const BASE_BOX_PRICE = 40;
+    const PEAK_HOUR_MULTIPLIER = 1.2; // Tăng 20%
+    
+    function updatePrices() {
+        const isPeakHour = peakHourCheckbox.checked;
+        const multiplier = isPeakHour ? PEAK_HOUR_MULTIPLIER : 1;
+        
+        goldPriceInput.value = (BASE_GOLD_PRICE * multiplier).toFixed(2);
+        platinumPriceInput.value = (BASE_PLATINUM_PRICE * multiplier).toFixed(2);
+        boxPriceInput.value = (BASE_BOX_PRICE * multiplier).toFixed(2);
+    }
+    
+    // Cập nhật giá khi checkbox thay đổi
+    peakHourCheckbox.addEventListener('change', updatePrices);
+    
+    // Cập nhật giá ban đầu nếu checkbox đã được chọn
+    updatePrices();
+});
+</script>
+@endpush
 @endsection

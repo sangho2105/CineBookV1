@@ -2,48 +2,6 @@
 
 @section('title', 'Hồ sơ của tôi')
 
-@push('css')
-<style>
-    .bookings-scroll-container {
-        max-height: 300px; /* Chiều cao để hiển thị khoảng 3 hàng */
-        overflow-y: auto;
-        scrollbar-width: thin;
-        scrollbar-color: #6c757d #f8f9fa;
-    }
-    
-    .bookings-scroll-container::-webkit-scrollbar {
-        width: 8px;
-    }
-    
-    .bookings-scroll-container::-webkit-scrollbar-track {
-        background: #f8f9fa;
-        border-radius: 4px;
-    }
-    
-    .bookings-scroll-container::-webkit-scrollbar-thumb {
-        background: #6c757d;
-        border-radius: 4px;
-    }
-    
-    .bookings-scroll-container::-webkit-scrollbar-thumb:hover {
-        background: #5a6268;
-    }
-    
-    .bookings-scroll-container .table {
-        margin-bottom: 0;
-    }
-    
-    .bookings-scroll-container thead {
-        display: none; /* Ẩn thead trong phần scroll vì đã có ở trên */
-    }
-    
-    /* Đảm bảo các cột có cùng width */
-    .bookings-scroll-container table {
-        table-layout: fixed;
-        width: 100%;
-    }
-</style>
-@endpush
 
 @section('content')
 <div class="container">
@@ -58,6 +16,9 @@
                 <p class="mb-1"><strong>Điện thoại:</strong> {{ $user->phone }}</p>
             @endif
             <a class="btn btn-sm btn-outline-primary mt-2" href="{{ route('profile.edit') }}">Chỉnh sửa</a>
+            <a class="btn btn-sm btn-outline-success mt-2" href="{{ route('profile.favorites') }}">
+                <i class="bi bi-heart-fill"></i> Phim yêu thích
+            </a>
         </div>
     </div>
 
@@ -69,91 +30,41 @@
                     <table class="table table-striped align-middle mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Mã đặt vé</th>
                                 <th>Phim</th>
-                                <th>Rạp</th>
                                 <th>Ngày</th>
-                                <th>Giờ</th>
-                                <th>Ghế</th>
-                                <th>Tổng tiền</th>
                                 <th>Trạng thái</th>
-                                <th>Vé điện tử</th>
+                                <th class="text-end">Vé điện tử</th>
                             </tr>
                         </thead>
-                    </table>
-                </div>
-                <div class="bookings-scroll-container">
-                    <div class="table-responsive">
-                        <table class="table table-striped align-middle mb-0">
-                            <thead style="display: none;">
+                        <tbody>
+                            @foreach($bookings as $booking)
                                 <tr>
-                                    <th></th>
-                                    <th></th>
-                                    <th></th>
-                                    <th></th>
-                                    <th></th>
-                                    <th></th>
-                                    <th></th>
-                                    <th></th>
-                                    <th></th>
+                                    <td>
+                                        <strong>{{ $booking->showtime->movie->title ?? '' }}</strong>
+                                        @if($booking->showtime->theater)
+                                            <div class="text-muted small">{{ $booking->showtime->theater->name }}</div>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        {{ optional($booking->showtime->show_date)->format('d/m/Y') }}
+                                        <div class="text-muted small">{{ $booking->showtime->getFormattedShowTime('H:i') }}</div>
+                                    </td>
+                                    <td>
+                                        @if($booking->payment_status === 'completed')
+                                            <span class="badge bg-success">Đã thanh toán</span>
+                                        @else
+                                            <span class="badge bg-warning text-dark">Chờ thanh toán</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{{ route('bookings.show', $booking) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-ticket-perforated"></i> Xem vé
+                                        </a>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                    @foreach($bookings as $booking)
-                        <tr>
-                            <td><code>{{ $booking->booking_id_unique }}</code></td>
-                            <td>{{ $booking->showtime->movie->title ?? '' }}</td>
-                            <td>{{ $booking->showtime->theater->name ?? '' }}</td>
-                            <td>{{ optional($booking->showtime->show_date)->format('d/m/Y') }}</td>
-                            <td>{{ date('H:i', strtotime($booking->showtime->show_time)) }}</td>
-                            <td>
-                                @php
-                                    $seatLabels = $booking->seats->map(function($s){
-                                        return $s->seat_number . ' (' . $s->seat_category . ')';
-                                    })->implode(', ');
-                                @endphp
-                                {{ $seatLabels }}
-                            </td>
-                            <td>${{ number_format($booking->total_amount, 0, ',', '.') }}</td>
-                            <td>
-                                @if($booking->payment_status === 'completed')
-                                    <span class="badge bg-success">Đã thanh toán</span>
-                                @else
-                                    <span class="badge bg-warning text-dark">Chờ thanh toán</span>
-                                @endif
-                            </td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#ticket-{{ $booking->id }}">
-                                    Xem vé
-                                </button>
-                            </td>
-                        </tr>
-                        <tr class="collapse" id="ticket-{{ $booking->id }}">
-                            <td colspan="9">
-                                <div class="p-3 border rounded bg-light">
-                                    <div class="d-flex justify-content-between">
-                                        <div>
-                                            <h5 class="mb-2">{{ $booking->showtime->movie->title ?? '' }}</h5>
-                                            <p class="mb-1"><strong>Rạp:</strong> {{ $booking->showtime->theater->name ?? '' }}</p>
-                                            <p class="mb-1">
-                                                <strong>Suất:</strong>
-                                                {{ optional($booking->showtime->show_date)->format('d/m/Y') }}
-                                                - {{ date('H:i', strtotime($booking->showtime->show_time)) }}
-                                            </p>
-                                            <p class="mb-1"><strong>Ghế:</strong> {{ $seatLabels }}</p>
-                                        </div>
-                                        <div class="text-end">
-                                            <p class="mb-1"><strong>Mã đặt vé</strong></p>
-                                            <h5><code>{{ $booking->booking_id_unique }}</code></h5>
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
                             @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

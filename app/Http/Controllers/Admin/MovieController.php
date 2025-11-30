@@ -25,7 +25,7 @@ class MovieController extends Controller
         }
         
         // Sắp xếp theo ID tăng dần (phim nào thêm trước sẽ có STT nhỏ hơn)
-        $movies = $query->orderBy('id', 'asc')->get();
+        $movies = $query->orderBy('id', 'asc')->paginate(8)->withQueryString();
         return view('admin.movies.index', compact('movies'));
     }
 

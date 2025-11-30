@@ -48,7 +48,7 @@
         <tbody>
             @foreach($movies as $movie)
                 <tr>
-                    <td>{{ $loop->iteration }}</td>
+                    <td>{{ ($movies->currentPage() - 1) * $movies->perPage() + $loop->iteration }}</td>
                     <td>{{ $movie->title }}</td>
                     <td>{{ $movie->release_date }}</td>
                     <td>
@@ -72,6 +72,11 @@
             @endforeach
         </tbody>
     </table>
+    </div>
+    
+    {{-- Phân trang --}}
+    <div class="mt-4">
+        {{ $movies->links() }}
     </div>
 </div>
 @endsection

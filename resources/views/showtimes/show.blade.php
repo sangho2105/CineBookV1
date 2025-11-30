@@ -7,40 +7,41 @@
 
 <div class="card">
     <div class="card-body">
-        <dl class="row">
-            <dt class="col-sm-3">ID:</dt>
-            <dd class="col-sm-9">{{ $showtime->id }}</dd>
-
-            <dt class="col-sm-3">Movie:</dt>
-            <dd class="col-sm-9">{{ $showtime->movie->title }}</dd>
-
-            <dt class="col-sm-3">Phòng chiếu:</dt>
-            <dd class="col-sm-9">{{ $showtime->room ? $showtime->room->name . ' (' . $showtime->room->total_seats . ' ghế)' : ($showtime->theater ? $showtime->theater->name . ' - ' . $showtime->theater->city : 'N/A') }}</dd>
-
-            <dt class="col-sm-3">Show Date:</dt>    
-            <dd class="col-sm-9">{{ $showtime->show_date->format('d/m/Y') }}</dd>
-
-            <dt class="col-sm-3">Show Time:</dt>
-            <dd class="col-sm-9">{{ date('H:i', strtotime($showtime->show_time)) }}</dd>
-
-            <dt class="col-sm-3">Gold Price:</dt>
-            <dd class="col-sm-9">{{ number_format($showtime->gold_price, 0, ',', '.') }} đ</dd>
-
-            <dt class="col-sm-3">Platinum Price:</dt>
-            <dd class="col-sm-9">{{ number_format($showtime->platinum_price, 0, ',', '.') }} đ</dd>
-
-            <dt class="col-sm-3">Box Price:</dt>
-            <dd class="col-sm-9">{{ number_format($showtime->box_price, 0, ',', '.') }} đ</dd>
-
-            <dt class="col-sm-3">Peak Hour:</dt>
-            <dd class="col-sm-9">{{ $showtime->is_peak_hour ? 'Có' : 'Không' }}</dd>
-
-            <dt class="col-sm-3">Created At:</dt>
-            <dd class="col-sm-9">{{ $showtime->created_at->format('d/m/Y H:i:s') }}</dd>
-
-            <dt class="col-sm-3">Updated At:</dt>
-            <dd class="col-sm-9">{{ $showtime->updated_at->format('d/m/Y H:i:s') }}</dd>
-        </dl>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <strong>ID:</strong> {{ $showtime->id }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <strong>Movie:</strong> {{ $showtime->movie->title }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <strong>Phòng chiếu:</strong> {{ $showtime->room ? $showtime->room->name . ' (' . $showtime->room->total_seats . ' ghế)' : ($showtime->theater ? $showtime->theater->name . ' - ' . $showtime->theater->city : 'N/A') }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <strong>Show Date:</strong> {{ $showtime->show_date->format('d/m/Y') }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <strong>Show Time:</strong> {{ $showtime->getFormattedShowTime('H:i') }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <strong>Gold Price:</strong> {{ format_currency($showtime->gold_price) }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <strong>Platinum Price:</strong> {{ format_currency($showtime->platinum_price) }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <strong>Box Price:</strong> {{ format_currency($showtime->box_price) }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <strong>Peak Hour:</strong> {{ $showtime->is_peak_hour ? 'Có' : 'Không' }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <strong>Created At:</strong> {{ $showtime->created_at->format('d/m/Y H:i:s') }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <strong>Updated At:</strong> {{ $showtime->updated_at->format('d/m/Y H:i:s') }}
+            </div>
+        </div>
 
         <div class="mt-3">
             <a href="{{ route('admin.showtimes.edit', $showtime) }}" class="btn btn-warning">Sửa</a>

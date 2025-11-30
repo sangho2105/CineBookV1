@@ -41,6 +41,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/showtimes/{showtime}/select-seats', [App\Http\Controllers\BookingController::class, 'selectSeats'])->name('bookings.select-seats');
     Route::post('/showtimes/{showtime}/bookings', [App\Http\Controllers\BookingController::class, 'store'])->name('bookings.store');
     Route::get('/bookings/{booking}/payment', [App\Http\Controllers\BookingController::class, 'payment'])->name('bookings.payment');
+    Route::get('/bookings/{booking}', [App\Http\Controllers\BookingController::class, 'show'])->name('bookings.show');
     Route::post('/bookings/{booking}/pay', [App\Http\Controllers\BookingController::class, 'pay'])->name('bookings.pay');
     // PayPal endpoints
     Route::post('/bookings/{booking}/paypal/create-order', [App\Http\Controllers\BookingController::class, 'paypalCreateOrder'])->name('bookings.paypal.create');
@@ -58,6 +59,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/movie/{movie}/rating', [\App\Http\Controllers\MovieFeedbackController::class, 'storeRating'])->name('movie.rating.store');
     Route::put('/movie/{movie}/comments/{comment}', [\App\Http\Controllers\MovieFeedbackController::class, 'updateComment'])->name('movie.comment.update');
     Route::delete('/movie/{movie}/comments/{comment}', [\App\Http\Controllers\MovieFeedbackController::class, 'deleteComment'])->name('movie.comment.delete');
+    
+    // Favorites Routes
+    Route::post('/movie/{movie}/favorite/toggle', [\App\Http\Controllers\FavoriteController::class, 'toggle'])->name('movie.favorite.toggle');
+    Route::get('/profile/favorites', [\App\Http\Controllers\FavoriteController::class, 'index'])->name('profile.favorites');
 });
 
 // Nhóm các route cho admin
@@ -82,4 +87,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // Route cho quản lý Vé (Bookings)
     Route::get('bookings', [\App\Http\Controllers\Admin\BookingController::class, 'index'])->name('bookings.index');
     Route::get('bookings/{booking}', [\App\Http\Controllers\Admin\BookingController::class, 'show'])->name('bookings.show');
+
+    // Route cho quản lý Combo
+    Route::resource('combos', \App\Http\Controllers\Admin\ComboController::class);
 });

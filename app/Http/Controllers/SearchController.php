@@ -117,9 +117,31 @@ class SearchController extends Controller
             });
         }
 
+        // Load số lượt like và kiểm tra trạng thái like của user hiện tại
+        $query->withCount('favorites');
+        
+        if (auth()->check()) {
+            $userId = auth()->id();
+            $query->withExists(['favorites as is_favorited' => function ($q) use ($userId) {
+                $q->where('user_id', $userId);
+            }]);
+        }
+
+        // Thêm subquery để đếm số vé bán được (booking đã thanh toán completed)
+        $query->addSelect([
+            'tickets_sold' => DB::table('bookings')
+                ->join('showtimes', 'bookings.showtime_id', '=', 'showtimes.id')
+                ->whereColumn('showtimes.movie_id', 'movies.id')
+                ->where('bookings.payment_status', 'completed')
+                ->selectRaw('COUNT(*)')
+        ]);
+
+        // Sắp xếp phim theo số vé bán được (DESC), nếu bằng nhau thì sắp xếp theo tên
+        $query->orderByRaw('COALESCE(tickets_sold, 0) DESC')
+              ->orderBy('movies.title');
+
         // Get results with pagination
         $movies = $query->with(['showtimes.theater'])
-            ->orderBy('title')
             ->paginate(12)
             ->appends($request->all());
 

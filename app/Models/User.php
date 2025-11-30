@@ -50,4 +50,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Booking::class);
     }
+
+    public function favorites()
+    {
+        return $this->hasMany(Favorite::class);
+    }
+
+    public function favoritedMovies()
+    {
+        return $this->belongsToMany(Movie::class, 'favorites');
+    }
 }

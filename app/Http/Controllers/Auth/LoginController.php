@@ -10,8 +10,13 @@ use Illuminate\Http\Request;
 class LoginController extends Controller
 {
     // Show the login form
-    public function showLoginForm()
+    public function showLoginForm(Request $request)
     {
+        // Lưu URL redirect vào session nếu có
+        if ($request->has('redirect')) {
+            session()->put('url.intended', $request->get('redirect'));
+        }
+        
         return view('auth.login');
     }
 

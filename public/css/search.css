@@ -38,7 +38,6 @@
 .page-header {
     margin-top: 30px;
     margin-bottom: 30px;
-    border-bottom: 2px solid #000;
     padding-bottom: 15px;
 }
 
@@ -47,7 +46,33 @@
     font-weight: bold;
     color: #000;
     margin: 0;
+    text-transform: none;
+}
+
+.page-title-secondary {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #666;
+    margin: 0;
     text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.title-underline {
+    height: 3px;
+    background-color: #000;
+    width: 100%;
+    max-width: 100%;
+}
+
+.title-underline-full {
+    position: absolute;
+    bottom: -15px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background-color: #000;
+    width: 100%;
 }
 
 /* Movies Row */
@@ -99,6 +124,7 @@
     padding-bottom: 135%; /* Tỷ lệ poster phim */
     overflow: hidden;
     border-radius: 8px;
+    background-color: #f0f0f0; /* Màu nền khi ảnh không đầy */
 }
 
 .movie-poster {
@@ -107,9 +133,18 @@
     left: 0;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain; /* Giữ nguyên tỷ lệ, không cắt ảnh */
     display: block;
     border-radius: 8px;
+}
+
+.movie-poster-wrapper a {
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 /* Rating Badge */
@@ -294,6 +329,24 @@
 .btn-like:hover {
     background-color: #0056b3;
     color: #fff;
+}
+
+.btn-like.liked {
+    background-color: #28a745;
+}
+
+.btn-like.liked:hover {
+    background-color: #218838;
+}
+
+.btn-like:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-like .like-count {
+    margin-left: 5px;
+    font-weight: 600;
 }
 
 .btn-buy-ticket {

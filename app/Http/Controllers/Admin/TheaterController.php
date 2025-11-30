@@ -10,7 +10,7 @@ class TheaterController extends Controller
 {
     public function index()
     {
-        $theaters = Theater::orderBy('city')->orderBy('name')->get();
+        $theaters = Theater::orderBy('city')->orderBy('name')->paginate(8);
         return view('admin.theaters.index', compact('theaters'));
     }
 
