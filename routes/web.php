@@ -31,10 +31,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'index'])->name('profile.index');
     Route::get('/profile/edit', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
-    
+
     // Movies Routes (only for authenticated users)
     Route::resource('movies', App\Http\Controllers\MovieController::class);
-    
+
     // Booking Routes
     Route::get('/movie/{movie}/book', [App\Http\Controllers\BookingController::class, 'selectShowtime'])->name('bookings.select-showtime');
     Route::get('/movie/{movie}/book/modal', [App\Http\Controllers\BookingController::class, 'selectShowtimeModal'])->name('bookings.select-showtime-modal');
@@ -43,6 +43,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/bookings/{booking}/payment', [App\Http\Controllers\BookingController::class, 'payment'])->name('bookings.payment');
     Route::get('/bookings/{booking}', [App\Http\Controllers\BookingController::class, 'show'])->name('bookings.show');
     Route::post('/bookings/{booking}/pay', [App\Http\Controllers\BookingController::class, 'pay'])->name('bookings.pay');
+    Route::get('/bookings/{booking}/ticket', [App\Http\Controllers\BookingController::class, 'showTicket'])->name('bookings.ticket');
+    Route::get('/bookings/{booking}/ticket/download', [App\Http\Controllers\BookingController::class, 'downloadTicket'])->name('bookings.ticket.download');
     // PayPal endpoints
     Route::post('/bookings/{booking}/paypal/create-order', [App\Http\Controllers\BookingController::class, 'paypalCreateOrder'])->name('bookings.paypal.create');
     Route::post('/bookings/{booking}/paypal/capture', [App\Http\Controllers\BookingController::class, 'paypalCapture'])->name('bookings.paypal.capture');
@@ -69,17 +71,18 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     // Route cho quản lý Phim (CRUD)
     Route::resource('movies', MovieController::class);
-    
+
     // Route cho quản lý Phòng chiếu (chỉ xem)
     Route::get('rooms', [\App\Http\Controllers\Admin\RoomController::class, 'index'])->name('rooms.index');
     Route::get('rooms/{room}', [\App\Http\Controllers\Admin\RoomController::class, 'show'])->name('rooms.show');
     Route::get('rooms/{room}/schedule', [\App\Http\Controllers\Admin\RoomController::class, 'schedule'])->name('rooms.schedule');
-    
+
     // Route cho quản lý Rạp chiếu (CRUD) - giữ lại để tương thích
     Route::resource('theaters', AdminTheaterController::class);
 
     // Route cho quản lý Khuyến mãi & Sự kiện
     Route::resource('promotions', PromotionController::class)->except(['show']);
+    Route::post('promotions/update-order', [PromotionController::class, 'updateOrder'])->name('promotions.update-order');
 
     // Route cho quản lý Suất chiếu (Showtimes)
     Route::resource('showtimes', \App\Http\Controllers\ShowtimeController::class);

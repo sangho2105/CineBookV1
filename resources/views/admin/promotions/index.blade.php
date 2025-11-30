@@ -40,6 +40,7 @@
             <table class="table table-striped align-middle">
                 <thead>
                     <tr>
+                        <th style="width: 50px;">Thứ tự</th>
                         <th>Ảnh</th>
                         <th>Tiêu đề</th>
                         <th>Loại</th>
@@ -48,9 +49,12 @@
                         <th class="text-end">Hành động</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="sortable-promotions">
                     @foreach($promotions as $promotion)
-                        <tr>
+                        <tr data-id="{{ $promotion->id }}" class="sortable-row" style="cursor: move;">
+                            <td class="text-center">
+                                <i class="bi bi-grip-vertical text-muted" style="font-size: 1.2rem;"></i>
+                            </td>
                             <td style="width: 120px">
                                 <img src="{{ $promotion->image_url }}" alt="{{ $promotion->title }}" class="img-fluid rounded">
                             </td>
@@ -98,5 +102,120 @@
         </div>
     @endif
 </div>
+
+@push('styles')
+<style>
+    .sortable-row {
+        transition: background-color 0.2s;
+    }
+    .sortable-row:hover {
+        background-color: #f8f9fa;
+    }
+    .sortable-row.dragging {
+        opacity: 0.5;
+        background-color: #e9ecef;
+    }
+    .sortable-row.drag-over {
+        border-top: 2px solid #007bff;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tbody = document.getElementById('sortable-promotions');
+    if (!tbody) return;
+    
+    let draggedElement = null;
+    let draggedOverElement = null;
+    
+    // Làm cho các hàng có thể kéo được
+    const rows = tbody.querySelectorAll('.sortable-row');
+    rows.forEach(row => {
+        row.draggable = true;
+        
+        row.addEventListener('dragstart', function(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.outerHTML);
+        });
+        
+        row.addEventListener('dragend', function(e) {
+            this.classList.remove('dragging');
+            rows.forEach(r => r.classList.remove('drag-over'));
+        });
+        
+        row.addEventListener('dragover', function(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            
+            if (this !== draggedElement && this !== draggedOverElement) {
+                rows.forEach(r => r.classList.remove('drag-over'));
+                this.classList.add('drag-over');
+                draggedOverElement = this;
+            }
+            return false;
+        });
+        
+        row.addEventListener('dragleave', function(e) {
+            this.classList.remove('drag-over');
+        });
+        
+        row.addEventListener('drop', function(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            
+            if (draggedElement !== this) {
+                const allRows = Array.from(tbody.querySelectorAll('.sortable-row'));
+                const draggedIndex = allRows.indexOf(draggedElement);
+                const targetIndex = allRows.indexOf(this);
+                
+                if (draggedIndex < targetIndex) {
+                    tbody.insertBefore(draggedElement, this.nextSibling);
+                } else {
+                    tbody.insertBefore(draggedElement, this);
+                }
+                
+                // Cập nhật thứ tự trên server
+                updateOrder();
+            }
+            
+            this.classList.remove('drag-over');
+            return false;
+        });
+    });
+    
+    function updateOrder() {
+        const rows = tbody.querySelectorAll('.sortable-row');
+        const order = Array.from(rows).map(row => row.getAttribute('data-id'));
+        
+        fetch('{{ route("admin.promotions.update-order") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ order: order })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Có thể hiển thị thông báo thành công nếu muốn
+                console.log('Thứ tự đã được cập nhật');
+            }
+        })
+        .catch(error => {
+            console.error('Lỗi cập nhật thứ tự:', error);
+            alert('Có lỗi xảy ra khi cập nhật thứ tự. Vui lòng thử lại.');
+        });
+    }
+});
+</script>
+@endpush
 @endsection
 

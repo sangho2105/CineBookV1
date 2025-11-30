@@ -23,23 +23,27 @@ class Promotion extends Model
         'start_date',
         'end_date',
         'is_active',
+        'discount_rules',
+        'sort_order',
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
         'is_active' => 'boolean',
+        'discount_rules' => 'array',
     ];
 
     /**
      * Scope a query to include promotions that are currently active.
+     * Khi is_active = true, hiển thị ngay không cần đợi đến start_date.
      */
     public function scopeActive(Builder $query): Builder
     {
         $today = Carbon::today();
 
         return $query->where('is_active', true)
-            ->whereDate('start_date', '<=', $today)
+            // Bỏ kiểm tra start_date - khi is_active = true thì hiển thị ngay
             ->where(function (Builder $query) use ($today) {
                 $query->whereNull('end_date')
                       ->orWhereDate('end_date', '>=', $today);

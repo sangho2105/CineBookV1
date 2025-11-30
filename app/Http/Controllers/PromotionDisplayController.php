@@ -23,6 +23,7 @@ class PromotionDisplayController extends Controller
 
     /**
      * Hiển thị chi tiết khuyến mãi công khai.
+     * Khi is_active = true, hiển thị ngay không cần đợi đến start_date.
      */
     public function show(Promotion $promotion)
     {
@@ -30,7 +31,7 @@ class PromotionDisplayController extends Controller
 
         abort_unless(
             $promotion->is_active
-            && $promotion->start_date->lte($today)
+            // Bỏ kiểm tra start_date - khi is_active = true thì hiển thị ngay
             && ($promotion->end_date === null || $promotion->end_date->gte($today)),
             404
         );

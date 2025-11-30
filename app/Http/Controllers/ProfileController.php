@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Carbon\Carbon;
 
 class ProfileController extends Controller
 {
@@ -16,9 +17,26 @@ class ProfileController extends Controller
         $user = Auth::user(); // Get the logged-in user
         // Lấy lịch sử đặt vé của user
         $bookings = $user->bookings()
-            ->with(['showtime.movie', 'showtime.theater', 'seats'])
+            ->with(['showtime.movie', 'showtime.theater', 'showtime.room', 'seats'])
             ->orderByDesc('booking_date')
             ->get();
+        
+        // Tính toán thông tin cho mỗi booking
+        $bookings->each(function ($booking) {
+            if ($booking->showtime && $booking->showtime->movie) {
+                $showTimeStr = $booking->showtime->show_time;
+                if ($showTimeStr instanceof \DateTime) {
+                    $showTimeStr = $showTimeStr->format('H:i:s');
+                } elseif (is_string($showTimeStr)) {
+                    $showTimeStr = date('H:i:s', strtotime($showTimeStr));
+                }
+                $startTime = Carbon::parse($booking->showtime->show_date->format('Y-m-d') . ' ' . $showTimeStr);
+                $endTime = $startTime->copy()->addMinutes($booking->showtime->movie->duration_minutes ?? 0);
+                $booking->start_time = $startTime->format('H:i');
+                $booking->end_time = $endTime->format('H:i');
+            }
+        });
+        
         return view('profile.index', compact('user', 'bookings'));
     }
 
