@@ -21,7 +21,31 @@
                 <strong>Show Date:</strong> {{ $showtime->show_date->format('d/m/Y') }}
             </div>
             <div class="col-md-6 mb-3">
-                <strong>Show Time:</strong> {{ $showtime->getFormattedShowTime('H:i') }}
+                @php
+                    // Lấy giờ bắt đầu
+                    $startTime = $showtime->getFormattedShowTime('H:i');
+                    
+                    // Tính giờ kết thúc = giờ bắt đầu + duration_minutes
+                    $duration = $showtime->movie->duration_minutes ?? 0;
+                    $startTimeParts = explode(':', $startTime);
+                    $startHour = (int)($startTimeParts[0] ?? 0);
+                    $startMinute = (int)($startTimeParts[1] ?? 0);
+                    
+                    // Tạo Carbon instance từ show_date và show_time
+                    $startDateTime = \Carbon\Carbon::create(
+                        $showtime->show_date->year,
+                        $showtime->show_date->month,
+                        $showtime->show_date->day,
+                        $startHour,
+                        $startMinute,
+                        0
+                    );
+                    
+                    // Cộng thêm duration để có giờ kết thúc
+                    $endDateTime = $startDateTime->copy()->addMinutes($duration);
+                    $endTime = $endDateTime->format('H:i');
+                @endphp
+                <strong>Show Time:</strong> {{ $startTime }} - {{ $endTime }}
             </div>
             <div class="col-md-6 mb-3">
                 <strong>Gold Price:</strong> {{ format_currency($showtime->gold_price) }}

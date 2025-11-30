@@ -224,17 +224,38 @@
         /* Container mã vạch */
         .barcode-container {
             background-color: #ffffff;
-            padding: 0.5mm;
+            padding: 0.3mm 0.5mm;
             margin: 0 auto;
             text-align: center;
+            width: 100%;
+            display: block;
+            box-sizing: border-box;
         }
 
         .barcode-container img {
-            max-width: 70%;
-            max-height: 10mm;
+            max-width: 75%;
+            max-height: 9mm;
             height: auto;
             display: block;
             margin: 0 auto;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+        
+        .barcode-container > div {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        /* Đảm bảo barcode không bị méo */
+        .barcode-container table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        
+        .barcode-container td {
+            padding: 0;
+            margin: 0;
         }
     </style>
 </head>
@@ -298,9 +319,19 @@
             <div class="booking-label">Mã đặt chỗ</div>
             <div class="booking-code">{{ $booking->booking_id_unique }}</div>
             
-            @if(isset($barcodeBase64) && $barcodeBase64)
+            @if(isset($barcodeHtml) && !empty($barcodeHtml))
                 <div class="barcode-container">
-                    <img src="data:image/png;base64,{{ $barcodeBase64 }}" alt="Barcode {{ $booking->booking_id_unique }}" style="max-width: 70%; max-height: 10mm; height: auto;">
+                    {!! $barcodeHtml !!}
+                </div>
+            @elseif(isset($barcodeBase64) && !empty($barcodeBase64))
+                <div class="barcode-container" style="text-align: center;">
+                    <img src="data:image/png;base64,{{ $barcodeBase64 }}" 
+                         alt="Barcode {{ $booking->booking_id_unique }}" 
+                         style="max-width: 70%; max-height: 10mm; height: auto; display: inline-block; vertical-align: middle;">
+                </div>
+            @else
+                <div class="barcode-container" style="font-size: 5px; color: #333; padding: 1mm 0; text-align: center;">
+                    {{ $booking->booking_id_unique }}
                 </div>
             @endif
         </div>

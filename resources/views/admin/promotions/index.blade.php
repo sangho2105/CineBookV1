@@ -40,7 +40,7 @@
             <table class="table table-striped align-middle">
                 <thead>
                     <tr>
-                        <th style="width: 50px;">Thứ tự</th>
+                        <th style="width: 50px;">STT</th>
                         <th>Ảnh</th>
                         <th>Tiêu đề</th>
                         <th>Loại</th>
@@ -50,10 +50,15 @@
                     </tr>
                 </thead>
                 <tbody id="sortable-promotions">
-                    @foreach($promotions as $promotion)
+                    @php
+                        $currentPage = $promotions->currentPage();
+                        $perPage = $promotions->perPage();
+                        $startNumber = ($currentPage - 1) * $perPage;
+                    @endphp
+                    @foreach($promotions as $index => $promotion)
                         <tr data-id="{{ $promotion->id }}" class="sortable-row" style="cursor: move;">
                             <td class="text-center">
-                                <i class="bi bi-grip-vertical text-muted" style="font-size: 1.2rem;"></i>
+                                <span class="text-muted fw-bold">{{ $startNumber + $loop->iteration }}</span>
                             </td>
                             <td style="width: 120px">
                                 <img src="{{ $promotion->image_url }}" alt="{{ $promotion->title }}" class="img-fluid rounded">

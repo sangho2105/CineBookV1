@@ -66,6 +66,58 @@
             padding: 20px;
             min-height: 100vh;
             width: calc(100% - 250px);
+            overflow-x: auto;
+        }
+        
+        /* Container wrapper để tránh biến dạng khi zoom */
+        .admin-content-wrapper {
+            max-width: 100%;
+            width: 100%;
+            overflow-x: auto;
+            box-sizing: border-box;
+        }
+        
+        .admin-content-wrapper .container-fluid {
+            max-width: 100%;
+            width: 100%;
+            padding-left: 15px;
+            padding-right: 15px;
+            box-sizing: border-box;
+        }
+        
+        /* Đảm bảo table responsive khi zoom */
+        .admin-content-wrapper .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            max-width: 100%;
+        }
+        
+        .admin-content-wrapper .table {
+            min-width: 600px;
+            width: 100%;
+            table-layout: auto;
+        }
+        
+        /* Đảm bảo form không bị vỡ khi zoom */
+        .admin-content-wrapper .row {
+            margin-left: -15px;
+            margin-right: -15px;
+        }
+        
+        .admin-content-wrapper .row > * {
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+        
+        /* Đảm bảo các element không bị overflow */
+        .admin-content-wrapper img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .admin-content-wrapper .card {
+            max-width: 100%;
+            box-sizing: border-box;
         }
         
         /* Chuẩn hóa font chữ và kích cỡ cho admin */
@@ -314,6 +366,59 @@
             max-width: 1rem !important;
             max-height: 1rem !important;
         }
+        
+        /* Responsive cho mobile và tablet */
+        @media (max-width: 992px) {
+            .content {
+                margin-left: 0;
+                width: 100%;
+                padding: 15px;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+        }
+        
+        /* Đảm bảo khi zoom không bị vỡ layout */
+        @media (max-width: 1200px) {
+            .admin-content-wrapper .table {
+                font-size: 0.85rem;
+            }
+            
+            .admin-content-wrapper .table th,
+            .admin-content-wrapper .table td {
+                padding: 8px 10px;
+            }
+        }
+        
+        /* Đảm bảo các button và form control responsive */
+        .admin-content-wrapper .btn {
+            white-space: nowrap;
+        }
+        
+        .admin-content-wrapper .form-control,
+        .admin-content-wrapper .form-select {
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        
+        /* Đảm bảo flex containers không bị vỡ */
+        .admin-content-wrapper .d-flex {
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        /* Đảm bảo khi zoom in/out không bị overflow */
+        .admin-content-wrapper * {
+            max-width: 100%;
+            box-sizing: border-box;
+        }
     </style>
     @stack('styles')
 </head>
@@ -356,12 +461,14 @@
     </div>
 
     <div class="content">
-        {{-- 
-            Đây là nơi nội dung từ các file con
-            (index.blade.php, create.blade.php...) 
-            sẽ được chèn vào
-        --}}
-        @yield('content')
+        <div class="admin-content-wrapper">
+            {{-- 
+                Đây là nơi nội dung từ các file con
+                (index.blade.php, create.blade.php...) 
+                sẽ được chèn vào
+            --}}
+            @yield('content')
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

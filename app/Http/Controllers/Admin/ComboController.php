@@ -22,7 +22,7 @@ class ComboController extends Controller
             $query->where('title', 'like', '%' . $search . '%');
         }
         
-        $combos = $query->orderBy('id', 'desc')->paginate(8)->withQueryString();
+        $combos = $query->orderBy('id', 'desc')->paginate(6)->withQueryString();
         
         return view('admin.combos.index', compact('combos'));
     }

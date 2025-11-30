@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }).then(res => res.json())
               .then(result => {
                 if (result.status === 'COMPLETED') {
-                    window.location.reload();
+                    window.location.href = "{{ route('bookings.ticket', $booking->id) }}";
                 } else {
                     alert('Thanh toán chưa hoàn tất. Vui lòng thử lại.');
                 }

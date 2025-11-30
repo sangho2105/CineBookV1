@@ -66,7 +66,7 @@
                         $defaultHour = '24';
                     }
                 @endphp
-                <select name="show_time_hour" id="show_time_hour" class="form-select @error('show_time') is-invalid @enderror" required>
+                <select name="show_time_hour" id="show_time_hour" class="form-select @error('show_time') is-invalid @enderror" style="flex: 0 0 auto; width: 80px;" required>
                     <option value="">Giờ</option>
                     @for($i = 1; $i <= 24; $i++)
                         <option value="{{ str_pad($i, 2, '0', STR_PAD_LEFT) }}" 
@@ -75,8 +75,8 @@
                         </option>
                     @endfor
                 </select>
-                <span class="fw-bold">:</span>
-                <select name="show_time_minute" id="show_time_minute" class="form-select @error('show_time') is-invalid @enderror" required>
+                <span class="fw-bold" style="flex: 0 0 auto;">:</span>
+                <select name="show_time_minute" id="show_time_minute" class="form-select @error('show_time') is-invalid @enderror" style="flex: 0 0 auto; width: 80px;" required>
                     <option value="">Phút</option>
                     @for($i = 0; $i < 60; $i += 5)
                         <option value="{{ str_pad($i, 2, '0', STR_PAD_LEFT) }}" 
@@ -195,10 +195,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedDateTime = new Date(selectedDate);
         selectedDateTime.setHours(parseInt(hour), parseInt(minute), 0, 0);
         
-        if (showDate === today && selectedDateTime <= now) {
-            showTimeInput.setCustomValidity('Thời gian suất chiếu phải lớn hơn thời gian hiện tại.');
-            showTimeHour.setCustomValidity('Thời gian suất chiếu phải lớn hơn thời gian hiện tại.');
-            showTimeMinute.setCustomValidity('Thời gian suất chiếu phải lớn hơn thời gian hiện tại.');
+        // Thời gian suất chiếu phải lớn hơn thời gian hiện tại ít nhất 1 giờ
+        const minimumDateTime = new Date(now.getTime() + 60 * 60 * 1000); // Thêm 1 giờ (60 phút * 60 giây * 1000 ms)
+        
+        if (showDate === today && selectedDateTime <= minimumDateTime) {
+            showTimeInput.setCustomValidity('Thời gian suất chiếu phải lớn hơn thời gian hiện tại ít nhất 1 giờ để khách hàng có thời gian mua vé.');
+            showTimeHour.setCustomValidity('Thời gian suất chiếu phải lớn hơn thời gian hiện tại ít nhất 1 giờ để khách hàng có thời gian mua vé.');
+            showTimeMinute.setCustomValidity('Thời gian suất chiếu phải lớn hơn thời gian hiện tại ít nhất 1 giờ để khách hàng có thời gian mua vé.');
         } else {
             showTimeInput.setCustomValidity('');
             showTimeHour.setCustomValidity('');

@@ -26,9 +26,9 @@
                             <strong>Tổng số ghế:</strong> {{ $room->total_seats }} ghế<br>
                             <strong>Số hàng:</strong> {{ count($room->layout) }} hàng
                         </p>
-                        <div class="d-flex gap-2">
-                            <a href="{{ route('admin.rooms.show', $room) }}" class="btn btn-primary btn-sm flex-shrink-0">Xem sơ đồ phòng</a>
-                            <a href="{{ route('admin.rooms.schedule', $room) }}" class="btn btn-info btn-sm flex-shrink-0">
+                        <div class="d-flex gap-2" style="flex-wrap: nowrap;">
+                            <a href="{{ route('admin.rooms.show', $room) }}" class="btn btn-primary btn-sm" style="white-space: nowrap; flex: 0 0 auto;">Xem sơ đồ phòng</a>
+                            <a href="{{ route('admin.rooms.schedule', $room) }}" class="btn btn-info btn-sm" style="white-space: nowrap; flex: 0 0 auto;">
                                 <i class="bi bi-calendar-event"></i> Xem lịch chiếu
                             </a>
                         </div>

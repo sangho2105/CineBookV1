@@ -164,6 +164,12 @@
                                 <i class="bi bi-credit-card"></i> Thanh toán ngay
                             </a>
                         </div>
+                    @else
+                        <div class="mt-4 text-center">
+                            <a href="{{ route('bookings.ticket', $booking) }}" class="btn btn-success btn-lg">
+                                <i class="bi bi-ticket-perforated"></i> Xem vé điện tử
+                            </a>
+                        </div>
                     @endif
                 </div>
             </div>

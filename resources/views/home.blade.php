@@ -127,7 +127,6 @@
         @endif
     </div>
 
-<div class="container">
     {{-- Coming Soon Section - CGV Style --}}
     <div class="home-movie-selection my-5">
         <div class="movie-selection-header">

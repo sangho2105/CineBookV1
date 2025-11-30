@@ -10,6 +10,7 @@ use App\Models\Movie;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class BookingController extends Controller
 {
@@ -499,10 +500,10 @@ class BookingController extends Controller
             abort(403);
         }
         if ($booking->payment_status === 'completed') {
-            return redirect()->route('bookings.payment', $booking)->with('success', 'Đơn hàng đã thanh toán trước đó.');
+            return redirect()->route('bookings.ticket', $booking)->with('success', 'Đơn hàng đã thanh toán trước đó.');
         }
         $booking->update(['payment_status' => 'completed']);
-        return redirect()->route('bookings.payment', $booking)->with('success', 'Thanh toán thành công!');
+        return redirect()->route('bookings.ticket', $booking)->with('success', 'Thanh toán thành công!');
     }
 
     // ===== PayPal Integration =====
@@ -660,7 +661,7 @@ class BookingController extends Controller
         $result = $this->paypalCapture($booking);
         $json = $result->getData(true);
         if (($json['status'] ?? '') === 'COMPLETED') {
-            return redirect()->route('bookings.payment', $booking->id)
+            return redirect()->route('bookings.ticket', $booking->id)
                 ->with('success', 'Thanh toán thành công!');
         }
         return redirect()->route('bookings.payment', $booking->id)
@@ -676,5 +677,250 @@ class BookingController extends Controller
         }
         $booking->load(['showtime.movie', 'showtime.room', 'showtime.theater', 'seats', 'combos']);
         return view('bookings.show', compact('booking'));
+    }
+
+    // Hiển thị vé điện tử
+    public function showTicket(Booking $booking)
+    {
+        // Chỉ cho chủ booking xem
+        if ($booking->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $booking->load(['showtime.movie', 'showtime.room', 'showtime.theater', 'seats', 'combos']);
+        
+        // Tính toán thông tin vé
+        $ticketInfo = $this->calculateTicketInfo($booking);
+        
+        // Tạo mã vạch
+        $barcodeBase64 = $this->generateBarcode($booking->booking_id_unique);
+        
+        return view('bookings.ticket', compact('booking', 'ticketInfo', 'barcodeBase64'));
+    }
+
+    // Tải vé PDF
+    public function downloadTicket(Booking $booking)
+    {
+        // Chỉ cho chủ booking tải
+        if ($booking->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $booking->load(['showtime.movie', 'showtime.room', 'showtime.theater', 'seats', 'combos']);
+        
+        // Tính toán thông tin vé
+        $ticketInfo = $this->calculateTicketInfo($booking);
+        
+        // Tạo mã vạch dưới dạng HTML/CSS (DomPDF hỗ trợ tốt hơn)
+        $barcodeHtml = $this->generateBarcodeHTML($booking->booking_id_unique);
+        $barcodeBase64 = $this->generateBarcode($booking->booking_id_unique); // Fallback
+        
+        // Tạo PDF
+        $pdf = Pdf::loadView('bookings.ticket-pdf', compact('booking', 'ticketInfo', 'barcodeBase64', 'barcodeHtml'));
+        
+        // Cấu hình DomPDF
+        $pdf->setOption('isHtml5ParserEnabled', true);
+        $pdf->setOption('isRemoteEnabled', false);
+        
+        $filename = 've-' . $booking->booking_id_unique . '.pdf';
+        
+        return $pdf->download($filename);
+    }
+    
+    // Tạo barcode dưới dạng HTML/CSS (DomPDF hỗ trợ tốt)
+    private function generateBarcodeHTML(string $code): string
+    {
+        try {
+            // Sử dụng thư viện picqer để tạo barcode pattern
+            if (class_exists('\Picqer\Barcode\BarcodeGeneratorHTML')) {
+                $generator = new \Picqer\Barcode\BarcodeGeneratorHTML();
+                // Tạo barcode với kích thước phù hợp cho PDF nhỏ
+                $html = $generator->getBarcode($code, $generator::TYPE_CODE_128, 1, 25);
+                // Wrap trong container với CSS đẹp hơn
+                return '<div style="text-align: center; width: 100%; padding: 0.5mm 0;">' . $html . '</div>';
+            }
+            
+            // Fallback: Tạo barcode HTML đơn giản với CSS đẹp
+            return $this->generateSimpleBarcodeHTML($code);
+        } catch (\Exception $e) {
+            \Log::error('Lỗi tạo barcode HTML: ' . $e->getMessage());
+            return $this->generateSimpleBarcodeHTML($code);
+        }
+    }
+    
+    // Tạo barcode HTML đơn giản với CSS đẹp cho PDF
+    private function generateSimpleBarcodeHTML(string $code): string
+    {
+        // Sử dụng table layout để đảm bảo không bị méo trong PDF
+        $html = '<div style="text-align: center; width: 100%; margin: 0 auto; padding: 0.3mm 0;">';
+        $html .= '<div style="display: inline-block; background: #ffffff; padding: 0.8mm 1mm; border: 0.3px solid #d0d0d0; border-radius: 1px; box-sizing: border-box;">';
+        
+        // Container cho các vạch - sử dụng table để đảm bảo alignment
+        $html .= '<table style="border-collapse: collapse; margin: 0 auto; display: inline-table; vertical-align: bottom;">';
+        $html .= '<tr style="vertical-align: bottom;">';
+        
+        // Tạo các vạch dựa trên code với kích thước phù hợp cho PDF nhỏ
+        $barWidth = 0.8; // mm - nhỏ hơn để vừa với PDF A8
+        $baseHeight = 6; // mm - chiều cao cơ bản
+        $spacing = 0.15; // mm - khoảng cách giữa các vạch
+        
+        for ($i = 0; $i < strlen($code); $i++) {
+            $char = ord($code[$i]);
+            // Tạo chiều cao vạch đa dạng (3 mức)
+            $heightMultiplier = ($char % 3) + 1; // 1, 2, hoặc 3
+            $height = $baseHeight + ($heightMultiplier * 1.2);
+            
+            $html .= '<td style="padding: 0; margin: 0; vertical-align: bottom; line-height: 0;">';
+            $html .= '<div style="display: block; width: ' . $barWidth . 'mm; height: ' . $height . 'mm; background: #000000; margin-right: ' . $spacing . 'mm; min-width: ' . $barWidth . 'mm;"></div>';
+            $html .= '</td>';
+        }
+        
+        $html .= '</tr>';
+        $html .= '</table>';
+        
+        // Mã đặt chỗ bên dưới với font đẹp hơn
+        $html .= '<div style="font-size: 4px; margin-top: 0.6mm; color: #333333; font-weight: 600; letter-spacing: 0.5px; font-family: Arial, Helvetica, sans-serif; text-transform: uppercase;">' . htmlspecialchars($code) . '</div>';
+        $html .= '</div>'; // End container
+        $html .= '</div>'; // End wrapper
+        
+        return $html;
+    }
+
+    // Tính toán thông tin vé
+    private function calculateTicketInfo(Booking $booking): array
+    {
+        $showtime = $booking->showtime;
+        $movie = $showtime->movie;
+        
+        // Lấy thời gian bắt đầu
+        $startTime = $showtime->getFormattedShowTime('H:i');
+        
+        // Tính thời gian kết thúc (start_time + duration_minutes)
+        $durationMinutes = $movie->duration_minutes ?? 120; // Mặc định 120 phút nếu không có
+        $showDate = $showtime->show_date instanceof Carbon 
+            ? $showtime->show_date 
+            : Carbon::parse($showtime->show_date);
+        
+        // Parse start_time
+        $timeStr = $showtime->getFormattedShowTime('H:i');
+        $timeParts = explode(':', $timeStr);
+        $hour = (int)($timeParts[0] ?? 0);
+        $minute = (int)($timeParts[1] ?? 0);
+        
+        $startDateTime = Carbon::create(
+            $showDate->year,
+            $showDate->month,
+            $showDate->day,
+            $hour,
+            $minute,
+            0
+        );
+        
+        $endDateTime = $startDateTime->copy()->addMinutes($durationMinutes);
+        $endTime = $endDateTime->format('H:i');
+        
+        // Tính tiền vé
+        $ticketPrice = 0;
+        $seatDetails = [];
+        foreach ($booking->seats as $seat) {
+            $seatPrice = 0;
+            if ($seat->seat_category == 'Gold') {
+                $seatPrice = $showtime->gold_price;
+            } elseif ($seat->seat_category == 'Platinum') {
+                $seatPrice = $showtime->platinum_price;
+            } else {
+                $seatPrice = $showtime->box_price;
+            }
+            $ticketPrice += $seatPrice;
+            
+            $seatDetails[] = [
+                'number' => $seat->seat_number,
+                'category' => $seat->seat_category,
+            ];
+        }
+        
+        // Tính tiền combo
+        $comboPrice = 0;
+        $comboDetails = [];
+        foreach ($booking->combos as $combo) {
+            $comboTotal = $combo->quantity * $combo->unit_price;
+            $comboPrice += $comboTotal;
+            $comboDetails[] = [
+                'name' => $combo->combo_name,
+                'quantity' => $combo->quantity,
+                'unit_price' => $combo->unit_price,
+                'total' => $comboTotal,
+            ];
+        }
+        
+        // Tính giảm giá (nếu có promotion code - tạm thời để 0)
+        $discountAmount = 0;
+        
+        // Tổng tiền
+        $total = $ticketPrice + $comboPrice - $discountAmount;
+        
+        return [
+            'start_time' => $startTime,
+            'end_time' => $endTime,
+            'seat_details' => $seatDetails,
+            'ticket_price' => $ticketPrice,
+            'combo_price' => $comboPrice,
+            'combo_details' => $comboDetails,
+            'discount_amount' => $discountAmount,
+            'total' => $total,
+        ];
+    }
+
+    // Tạo mã vạch sử dụng thư viện picqer/php-barcode-generator
+    private function generateBarcode(string $code): ?string
+    {
+        try {
+            // Sử dụng thư viện picqer/php-barcode-generator (đã có trong composer.json)
+            if (class_exists('\Picqer\Barcode\BarcodeGeneratorPNG')) {
+                $generator = new \Picqer\Barcode\BarcodeGeneratorPNG();
+                // Sử dụng CODE128 format (hỗ trợ chữ và số, chuẩn cho PDF)
+                // Tham số: code, type, width factor, height
+                $barcodeData = $generator->getBarcode($code, $generator::TYPE_CODE_128, 2, 50);
+                return base64_encode($barcodeData);
+            }
+            
+            // Fallback: Sử dụng GD library nếu thư viện không có sẵn
+            if (!extension_loaded('gd')) {
+                \Log::warning('GD extension không được cài đặt và barcode library không có sẵn');
+                return null;
+            }
+            
+            // Tạo barcode đơn giản bằng GD
+            $width = 200;
+            $height = 60;
+            $image = imagecreate($width, $height);
+            
+            // Màu nền trắng
+            $white = imagecolorallocate($image, 255, 255, 255);
+            // Màu đen cho vạch
+            $black = imagecolorallocate($image, 0, 0, 0);
+            
+            // Vẽ các vạch đơn giản (barcode giả lập)
+            $barWidth = 2;
+            $x = 10;
+            for ($i = 0; $i < strlen($code); $i++) {
+                $char = ord($code[$i]);
+                $barHeight = ($char % 3 + 1) * 15 + 20;
+                imagefilledrectangle($image, $x, 10, $x + $barWidth, 10 + $barHeight, $black);
+                $x += $barWidth + 1;
+            }
+            
+            // Chuyển đổi sang base64
+            ob_start();
+            imagepng($image);
+            $imageData = ob_get_contents();
+            ob_end_clean();
+            imagedestroy($image);
+            
+            return base64_encode($imageData);
+        } catch (\Exception $e) {
+            \Log::error('Lỗi tạo barcode: ' . $e->getMessage());
+            return null;
+        }
     }
 }

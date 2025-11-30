@@ -241,7 +241,7 @@ public function store(Request $request)
         'is_peak_hour' => 'boolean',
     ]);
 
-    // Kiểm tra nếu show_date là hôm nay thì show_time phải lớn hơn thời gian hiện tại
+    // Kiểm tra nếu show_date là hôm nay thì show_time phải lớn hơn thời gian hiện tại ít nhất 1 giờ
     $now = Carbon::now();
     $showDate = Carbon::parse($validated['show_date']);
     
@@ -265,9 +265,11 @@ public function store(Request $request)
         0
     );
 
-    if ($showDateTime->lte($now)) {
+    // Thời gian suất chiếu phải lớn hơn thời gian hiện tại ít nhất 1 giờ
+    $minimumDateTime = $now->copy()->addHour();
+    if ($showDateTime->lte($minimumDateTime)) {
         throw ValidationException::withMessages([
-            'show_time' => 'Thời gian suất chiếu phải lớn hơn thời gian hiện tại.',
+            'show_time' => 'Thời gian suất chiếu phải lớn hơn thời gian hiện tại ít nhất 1 giờ để khách hàng có thời gian mua vé.',
         ]);
     }
 
@@ -389,9 +391,11 @@ public function update(Request $request, Showtime $showtime)
         0
     );
 
-    if ($showDateTime->lte($now)) {
+    // Thời gian suất chiếu phải lớn hơn thời gian hiện tại ít nhất 1 giờ
+    $minimumDateTime = $now->copy()->addHour();
+    if ($showDateTime->lte($minimumDateTime)) {
         throw ValidationException::withMessages([
-            'show_time' => 'Thời gian suất chiếu phải lớn hơn thời gian hiện tại.',
+            'show_time' => 'Thời gian suất chiếu phải lớn hơn thời gian hiện tại ít nhất 1 giờ để khách hàng có thời gian mua vé.',
         ]);
     }
 
