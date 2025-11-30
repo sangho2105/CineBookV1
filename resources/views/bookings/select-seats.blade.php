@@ -442,7 +442,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                        style="width:80px" 
                                        id="combo${combo.id}Qty"
                                        data-combo-id="${combo.id}"
-                                       data-combo-price="${combo.price}">
+                                       data-combo-price="${combo.price}"
+                                       oninput="if(this.value < 0) this.value = 0;"
+                                       onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E' || event.key === '+' || event.key === '.') event.preventDefault();">
                             </div>
                         </div>
                     </div>
@@ -539,6 +541,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const comboModal = new bootstrap.Modal(document.getElementById('comboModal'));
     const confirmCombosBtn = document.getElementById('confirmCombosBtn');
+    
+    // Thêm validation cho tất cả input số lượng combo để ngăn nhập số âm
+    function validateComboQuantity() {
+        combosData.forEach(combo => {
+            const qtyInput = document.getElementById(`combo${combo.id}Qty`);
+            if (qtyInput) {
+                // Xử lý khi người dùng nhập
+                qtyInput.addEventListener('input', function() {
+                    if (this.value < 0) {
+                        this.value = 0;
+                    }
+                });
+                
+                // Xử lý khi người dùng paste
+                qtyInput.addEventListener('paste', function(e) {
+                    setTimeout(() => {
+                        if (this.value < 0) {
+                            this.value = 0;
+                        }
+                    }, 0);
+                });
+                
+                // Xử lý khi người dùng blur (rời khỏi input)
+                qtyInput.addEventListener('blur', function() {
+                    if (this.value < 0 || this.value === '' || isNaN(this.value)) {
+                        this.value = 0;
+                    }
+                });
+            }
+        });
+    }
+    
+    // Gọi hàm validation khi modal được hiển thị
+    document.getElementById('comboModal').addEventListener('shown.bs.modal', function() {
+        validateComboQuantity();
+    });
 
     seatForm.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -596,7 +634,12 @@ document.addEventListener('DOMContentLoaded', function() {
         combosData.forEach(combo => {
             const qtyInput = document.getElementById(`combo${combo.id}Qty`);
             if (qtyInput) {
-                const quantity = parseInt(qtyInput.value || '0', 10);
+                let quantity = parseInt(qtyInput.value || '0', 10);
+                // Đảm bảo số lượng không âm
+                if (quantity < 0) {
+                    quantity = 0;
+                    qtyInput.value = 0;
+                }
                 if (quantity > 0) {
                     combos.push({
                         name: combo.title,
