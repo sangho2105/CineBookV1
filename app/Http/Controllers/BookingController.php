@@ -7,10 +7,14 @@ use App\Models\Showtime;
 use App\Models\Seat;
 use App\Models\Room;
 use App\Models\Movie;
+use App\Models\Promotion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Mail\BookingConfirmationMail;
 
 class BookingController extends Controller
 {
@@ -334,6 +338,281 @@ class BookingController extends Controller
         \Log::info('Combos loaded: ' . $combos->count());
         
         return view('bookings.select-seats', compact('showtime', 'seats', 'bookedSeatIds', 'coupleRows', 'combos'));
+    }
+
+    // Hiển thị trang xác nhận trước khi thanh toán
+    public function confirm(Request $request, Showtime $showtime)
+    {
+        // Kiểm tra suất chiếu chưa bắt đầu chiếu
+        $now = Carbon::now('Asia/Ho_Chi_Minh');
+        $showDate = $showtime->show_date instanceof Carbon 
+            ? $showtime->show_date->setTimezone('Asia/Ho_Chi_Minh')
+            : Carbon::parse($showtime->show_date)->setTimezone('Asia/Ho_Chi_Minh');
+        
+        $timeStr = '';
+        if ($showtime->show_time instanceof Carbon) {
+            $timeStr = $showtime->show_time->format('H:i');
+        } else {
+            $timeStr = is_string($showtime->show_time) ? $showtime->show_time : (string)$showtime->show_time;
+            if (strlen($timeStr) > 5) {
+                $timeStr = substr($timeStr, 0, 5);
+            }
+        }
+        
+        $timeParts = explode(':', $timeStr);
+        $hour = (int)($timeParts[0] ?? 0);
+        $minute = (int)($timeParts[1] ?? 0);
+        
+        $showDateTime = Carbon::create(
+            $showDate->year,
+            $showDate->month,
+            $showDate->day,
+            $hour,
+            $minute,
+            0,
+            'Asia/Ho_Chi_Minh'
+        );
+        
+        if ($showDateTime->lte($now)) {
+            return back()->withErrors(['error' => 'Suất chiếu này đã bắt đầu chiếu, không thể đặt vé.']);
+        }
+        
+        $request->validate([
+            'selected_seats' => 'required|string',
+        ]);
+
+        // Parse JSON từ hidden input
+        $selectedSeatIds = json_decode($request->selected_seats, true);
+
+        if (empty($selectedSeatIds)) {
+            return back()->withErrors(['selected_seats' => 'Vui lòng chọn ít nhất một ghế!']);
+        }
+
+        // Validate ids tồn tại
+        $validSeatCount = Seat::whereIn('id', $selectedSeatIds)->count();
+        if ($validSeatCount !== count($selectedSeatIds)) {
+            return back()->withErrors(['selected_seats' => 'Ghế không hợp lệ, vui lòng thử lại.']);
+        }
+
+        // Kiểm tra xem các ghế có available không
+        $bookedSeatIds = Booking::where('showtime_id', $showtime->id)
+            ->where('payment_status', 'completed')
+            ->with('seats')
+            ->get()
+            ->pluck('seats')
+            ->flatten()
+            ->pluck('id')
+            ->toArray();
+
+        $conflictingSeats = array_intersect($selectedSeatIds, $bookedSeatIds);
+        if (!empty($conflictingSeats)) {
+            return back()->withErrors(['selected_seats' => 'Một số ghế đã được đặt rồi!']);
+        }
+
+        // Lấy thông tin ghế
+        $seats = Seat::whereIn('id', $selectedSeatIds)->get();
+        $showtime->load(['movie', 'room']);
+        
+        // Tính tiền vé
+        $ticketPrice = 0;
+        $seatDetails = [];
+        foreach ($seats as $seat) {
+            $seatPrice = 0;
+            if ($seat->seat_category == 'Gold') {
+                $seatPrice = $showtime->gold_price;
+            } elseif ($seat->seat_category == 'Platinum') {
+                $seatPrice = $showtime->platinum_price;
+            } else {
+                $seatPrice = $showtime->box_price;
+            }
+            $ticketPrice += $seatPrice;
+            $seatDetails[] = [
+                'seat' => $seat,
+                'price' => $seatPrice,
+            ];
+        }
+
+        // Tính tiền combo
+        $comboPrice = 0;
+        $comboDetails = [];
+        if ($request->filled('combos')) {
+            $decoded = json_decode($request->combos, true);
+            if (is_array($decoded)) {
+                foreach ($decoded as $c) {
+                    $qty = max(0, (int)($c['quantity'] ?? 0));
+                    $price = (float)($c['unit_price'] ?? 0);
+                    if ($qty > 0 && $price >= 0) {
+                        $comboTotal = $qty * $price;
+                        $comboPrice += $comboTotal;
+                        $comboDetails[] = [
+                            'name' => (string)($c['name'] ?? 'Combo'),
+                            'quantity' => $qty,
+                            'unit_price' => $price,
+                            'total' => $comboTotal,
+                        ];
+                    }
+                }
+            }
+        }
+
+        // Tính khuyến mãi (giả lập booking để tính promotion)
+        $tempBooking = new Booking([
+            'user_id' => auth()->id(),
+            'showtime_id' => $showtime->id,
+            'total_amount' => $ticketPrice + $comboPrice,
+        ]);
+        $tempBooking->setRelation('showtime', $showtime);
+        
+        // Tạo temp combos để tính promotion
+        $tempCombos = collect($comboDetails)->map(function($c) {
+            return new \App\Models\BookingCombo([
+                'combo_name' => $c['name'],
+                'quantity' => $c['quantity'],
+                'unit_price' => $c['unit_price'],
+            ]);
+        });
+        $tempBooking->setRelation('combos', $tempCombos);
+        
+        $promotionInfo = $this->calculatePromotionForConfirm($tempBooking, $ticketPrice, $comboPrice, count($seats));
+        
+        $discountAmount = $promotionInfo['discount_amount'] ?? 0;
+        $promotionDetails = $promotionInfo['promotion_details'] ?? [];
+        $hasGiftPromotion = $promotionInfo['has_gift_promotion'] ?? false;
+        
+        // Tổng tiền cuối cùng
+        $finalTotal = $ticketPrice + $comboPrice - $discountAmount;
+
+        return view('bookings.confirm', compact(
+            'showtime',
+            'seats',
+            'seatDetails',
+            'ticketPrice',
+            'comboDetails',
+            'comboPrice',
+            'promotionDetails',
+            'discountAmount',
+            'hasGiftPromotion',
+            'finalTotal',
+            'selectedSeatIds'
+        ));
+    }
+
+    // Tính toán promotion cho trang xác nhận (không tạo booking)
+    private function calculatePromotionForConfirm($booking, float $ticketPrice, float $comboPrice, int $ticketCount): array
+    {
+        $showtime = $booking->showtime;
+        $movie = $showtime->movie;
+        
+        // Lấy tất cả promotion đang active
+        $now = Carbon::now('Asia/Ho_Chi_Minh');
+        $promotions = Promotion::where('is_active', true)
+            ->where('start_date', '<=', $now)
+            ->where(function($query) use ($now) {
+                $query->whereNull('end_date')
+                      ->orWhere('end_date', '>=', $now);
+            })
+            ->get();
+        
+        $bestDiscount = 0;
+        $bestPromotion = null;
+        $promotionDetails = [];
+        $hasGiftPromotion = false;
+        
+        foreach ($promotions as $promotion) {
+            $rules = $promotion->discount_rules ?? [];
+            if (empty($rules) || !is_array($rules)) {
+                continue;
+            }
+            
+            // Chỉ lấy rule đầu tiên (theo yêu cầu mỗi promotion chỉ có 1 rule)
+            $rule = reset($rules);
+            if (empty($rule)) {
+                continue;
+            }
+            
+            // Kiểm tra phim - nếu có movie_id trong rule thì phải khớp với phim đang đặt
+            if (!empty($rule['movie_id'])) {
+                if ($rule['movie_id'] != $movie->id) {
+                    continue; // Bỏ qua nếu không khớp phim
+                }
+            }
+            
+            // Kiểm tra số vé
+            if (!empty($rule['min_tickets']) && $ticketCount < $rule['min_tickets']) {
+                continue;
+            }
+            
+            // Kiểm tra yêu cầu combo
+            if (!empty($rule['requires_combo'])) {
+                if ($comboPrice <= 0) {
+                    continue;
+                }
+                
+                if (!empty($rule['requires_combo_ids']) && is_array($rule['requires_combo_ids'])) {
+                    $bookingComboNames = $booking->combos->pluck('combo_name')->toArray();
+                    $requiredComboNames = \App\Models\Combo::whereIn('id', $rule['requires_combo_ids'])
+                        ->pluck('name')
+                        ->toArray();
+                    
+                    if (empty(array_intersect($bookingComboNames, $requiredComboNames))) {
+                        continue;
+                    }
+                }
+            }
+            
+            // Kiểm tra gift only
+            $discountPercentage = $rule['discount_percentage'] ?? 0;
+            $appliesTo = $rule['applies_to'] ?? [];
+            $giftOnly = !empty($rule['gift_only']);
+            
+            if ($giftOnly) {
+                // Nếu là gift only, chỉ đánh dấu có gift, không tính discount
+                $hasGiftPromotion = true;
+                if (!$bestPromotion) {
+                    $bestPromotion = $promotion;
+                }
+                $promotionDetails[] = [
+                    'name' => $promotion->title,
+                    'type' => 'gift',
+                    'discount' => 0,
+                ];
+                continue;
+            }
+            
+            // Tính discount
+            $ruleDiscount = 0;
+            if (in_array('ticket', $appliesTo)) {
+                $ruleDiscount += ($ticketPrice * $discountPercentage / 100);
+            }
+            if (in_array('combo', $appliesTo)) {
+                $ruleDiscount += ($comboPrice * $discountPercentage / 100);
+            }
+            if (in_array('total', $appliesTo)) {
+                $totalBeforeDiscount = $ticketPrice + $comboPrice;
+                $ruleDiscount += ($totalBeforeDiscount * $discountPercentage / 100);
+            }
+            
+            if ($ruleDiscount > $bestDiscount) {
+                $bestDiscount = $ruleDiscount;
+                $bestPromotion = $promotion;
+            }
+            
+            if ($ruleDiscount > 0) {
+                $promotionDetails[] = [
+                    'name' => $promotion->title,
+                    'type' => 'discount',
+                    'discount' => $ruleDiscount,
+                    'percentage' => $discountPercentage,
+                ];
+            }
+        }
+        
+        return [
+            'discount_amount' => $bestDiscount,
+            'promotion_details' => $promotionDetails,
+            'has_gift_promotion' => $hasGiftPromotion,
+            'best_promotion' => $bestPromotion,
+        ];
     }
 
     // Xử lý đặt vé

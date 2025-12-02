@@ -19,6 +19,7 @@ class ProfileController extends Controller
         $bookings = $user->bookings()
             ->with(['showtime.movie', 'showtime.theater', 'showtime.room', 'seats'])
             ->orderByDesc('booking_date')
+            ->orderByDesc('created_at') // Sắp xếp theo created_at nếu booking_date null
             ->get();
         
         // Tính toán thông tin cho mỗi booking

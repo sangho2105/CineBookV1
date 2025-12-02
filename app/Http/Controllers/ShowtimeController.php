@@ -114,6 +114,13 @@ class ShowtimeController extends Controller
                 continue;
             }
             
+            // Kiểm tra trùng giờ bắt đầu chính xác (cùng giờ:phút)
+            if ($hour === $existingHour && $minute === $existingMinute) {
+                throw ValidationException::withMessages([
+                    'show_time' => "Đã có suất chiếu khác bắt đầu lúc {$timeStr} trong phòng này. Không thể tạo nhiều suất chiếu cùng giờ bắt đầu cho một phòng.",
+                ]);
+            }
+            
             // Tạo datetime từ các thành phần riêng biệt
             $existingStartDateTime = Carbon::create(
                 $existingDate->year,
@@ -241,9 +248,9 @@ public function store(Request $request)
         'is_peak_hour' => 'boolean',
     ]);
 
-    // Kiểm tra nếu show_date là hôm nay thì show_time phải lớn hơn thời gian hiện tại ít nhất 1 giờ
-    $now = Carbon::now();
-    $showDate = Carbon::parse($validated['show_date']);
+    // Validation: Thời gian suất chiếu phải lớn hơn thời gian hiện tại ít nhất 1 giờ
+    $now = Carbon::now('Asia/Ho_Chi_Minh');
+    $showDate = Carbon::parse($validated['show_date'])->setTimezone('Asia/Ho_Chi_Minh');
     
     // Parse show_time an toàn với định dạng cụ thể
     $timeStr = $validated['show_time'];
@@ -255,14 +262,15 @@ public function store(Request $request)
     $hour = (int)($timeParts[0] ?? 0);
     $minute = (int)($timeParts[1] ?? 0);
     
-    // Tạo datetime từ các thành phần riêng biệt
+    // Tạo datetime từ các thành phần riêng biệt với timezone
     $showDateTime = Carbon::create(
         $showDate->year,
         $showDate->month,
         $showDate->day,
         $hour,
         $minute,
-        0
+        0,
+        'Asia/Ho_Chi_Minh'
     );
 
     // Thời gian suất chiếu phải lớn hơn thời gian hiện tại ít nhất 1 giờ
@@ -343,7 +351,11 @@ public function edit(Showtime $showtime)
 {
     $movies = Movie::all();
     $rooms = Room::orderBy('room_number')->get();
-    return view('showtimes.edit', compact('showtime', 'movies', 'rooms'));
+    // Pass thông tin về bookings để JavaScript biết có thể chỉnh sửa hay không
+    $hasCompletedBookings = $showtime->bookings()
+        ->where('payment_status', 'completed')
+        ->exists();
+    return view('showtimes.edit', compact('showtime', 'movies', 'rooms', 'hasCompletedBookings'));
 }
 public function update(Request $request, Showtime $showtime)
 {
@@ -391,12 +403,20 @@ public function update(Request $request, Showtime $showtime)
         0
     );
 
-    // Thời gian suất chiếu phải lớn hơn thời gian hiện tại ít nhất 1 giờ
-    $minimumDateTime = $now->copy()->addHour();
-    if ($showDateTime->lte($minimumDateTime)) {
-        throw ValidationException::withMessages([
-            'show_time' => 'Thời gian suất chiếu phải lớn hơn thời gian hiện tại ít nhất 1 giờ để khách hàng có thời gian mua vé.',
-        ]);
+    // Chỉ validate thời gian nếu showtime chưa có booking nào đã thanh toán
+    // Nếu showtime đã có booking, vẫn cho phép chỉnh sửa để sửa lỗi
+    $hasCompletedBookings = $showtime->bookings()
+        ->where('payment_status', 'completed')
+        ->exists();
+    
+    // Nếu chưa có booking đã thanh toán, validate thời gian phải lớn hơn hiện tại ít nhất 1 giờ
+    if (!$hasCompletedBookings) {
+        $minimumDateTime = $now->copy()->addHour();
+        if ($showDateTime->lte($minimumDateTime)) {
+            throw ValidationException::withMessages([
+                'show_time' => 'Thời gian suất chiếu phải lớn hơn thời gian hiện tại ít nhất 1 giờ để khách hàng có thời gian mua vé.',
+            ]);
+        }
     }
 
     // Lấy thông tin phim để biết thời lượng

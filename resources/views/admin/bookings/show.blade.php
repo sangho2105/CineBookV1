@@ -32,7 +32,7 @@
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <strong>Ngày đặt vé:</strong> {{ $booking->booking_date->format('d/m/Y H:i:s') }}
+                            <strong>Ngày đặt vé:</strong> {{ $booking->booking_date ? $booking->booking_date->setTimezone('Asia/Ho_Chi_Minh')->format('d/m/Y H:i:s') : 'Chưa thanh toán' }}
                         </div>
                         <div class="col-md-6">
                             <strong>Tổng tiền:</strong> <span class="text-success fs-5 fw-bold">{{ format_currency($booking->total_amount) }}</span>
@@ -69,7 +69,7 @@
                     @if($booking->showtime->theater)
                     <div class="row">
                         <div class="col-md-12">
-                            <strong>Rạp chiếu:</strong> {{ $booking->showtime->theater->name ?? 'N/A' }} - {{ $booking->showtime->theater->city ?? 'N/A' }}
+                            <strong>Rạp chiếu:</strong> CineBook Center{{ $booking->showtime->theater->city ? ' - ' . $booking->showtime->theater->city : '' }}
                         </div>
                     </div>
                     @endif

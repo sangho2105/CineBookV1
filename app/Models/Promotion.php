@@ -139,5 +139,28 @@ class Promotion extends Model
             default => 'bg-secondary',
         };
     }
+
+    /**
+     * Kiểm tra xem sự kiện có đang trong thời gian hoạt động không.
+     * Sự kiện được coi là đang hoạt động nếu:
+     * - start_date <= today
+     * - (end_date == null OR end_date >= today)
+     */
+    public function isCurrentlyActive(): bool
+    {
+        $today = Carbon::today();
+        
+        // Kiểm tra start_date
+        if ($this->start_date && $this->start_date->gt($today)) {
+            return false; // Chưa bắt đầu
+        }
+        
+        // Kiểm tra end_date
+        if ($this->end_date && $this->end_date->lt($today)) {
+            return false; // Đã kết thúc
+        }
+        
+        return true; // Đang trong thời gian hoạt động
+    }
 }
 

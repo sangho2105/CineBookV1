@@ -98,4 +98,55 @@ public function bookings()
 {
     return $this->hasMany(Booking::class);
 }
+
+/**
+ * Kiểm tra xem suất chiếu đã kết thúc chưa.
+ * Suất chiếu được coi là đã kết thúc khi:
+ * - show_date < today HOẶC
+ * - (show_date == today VÀ show_time + duration < now)
+ */
+public function hasEnded(): bool
+{
+    $now = Carbon::now();
+    $today = Carbon::today();
+    
+    // Nếu show_date < today, suất chiếu đã kết thúc
+    if ($this->show_date->lt($today)) {
+        return true;
+    }
+    
+    // Nếu show_date > today, suất chiếu chưa diễn ra
+    if ($this->show_date->gt($today)) {
+        return false;
+    }
+    
+    // Nếu show_date == today, kiểm tra thời gian
+    // Lấy thời gian bắt đầu chiếu
+    $timeStr = $this->getFormattedShowTime('H:i');
+    $timeParts = explode(':', $timeStr);
+    if (count($timeParts) < 2) {
+        return false; // Không thể xác định, coi như chưa kết thúc
+    }
+    
+    $hour = (int)($timeParts[0] ?? 0);
+    $minute = (int)($timeParts[1] ?? 0);
+    
+    $showDateTime = Carbon::create(
+        $this->show_date->year,
+        $this->show_date->month,
+        $this->show_date->day,
+        $hour,
+        $minute,
+        0
+    );
+    
+    // Lấy thời lượng phim (tính bằng phút)
+    $duration = $this->movie->duration_minutes ?? 120; // Mặc định 120 phút nếu không có
+    
+    // Thời gian kết thúc = thời gian bắt đầu + thời lượng phim
+    $endDateTime = $showDateTime->copy()->addMinutes($duration);
+    
+    // Nếu thời gian kết thúc < now, suất chiếu đã kết thúc
+    return $endDateTime->lt($now);
+}
 }

@@ -51,8 +51,8 @@ class BookingController extends Controller
             });
         }
 
-        // Sắp xếp theo ngày đặt vé mới nhất
-        $bookings = $query->orderBy('booking_date', 'desc')
+        // Sắp xếp theo ngày đặt vé mới nhất (hoặc created_at nếu booking_date null)
+        $bookings = $query->orderByRaw('COALESCE(booking_date, created_at) DESC')
                           ->orderBy('created_at', 'desc')
                           ->paginate(8);
 

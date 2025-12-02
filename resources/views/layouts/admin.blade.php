@@ -457,17 +457,27 @@
                     🍿 Quản lý Combo
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.comments.*') ? 'active' : '' }}" href="{{ route('admin.comments.index') }}">
+                    💬 Quản lý Bình luận
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}">
+                    👥 Quản lý User
+                </a>
+            </li>
         </ul>
     </div>
 
     <div class="content">
         <div class="admin-content-wrapper">
-            {{-- 
-                Đây là nơi nội dung từ các file con
-                (index.blade.php, create.blade.php...) 
-                sẽ được chèn vào
-            --}}
-            @yield('content')
+        {{-- 
+            Đây là nơi nội dung từ các file con
+            (index.blade.php, create.blade.php...) 
+            sẽ được chèn vào
+        --}}
+        @yield('content')
         </div>
     </div>
 

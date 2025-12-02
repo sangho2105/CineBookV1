@@ -1,36 +1,67 @@
 @php
     $combo = $combo ?? null;
-    $items = old('items', $combo ? $combo->items->toArray() : []);
-    if (empty($items)) {
-        $items = [['item_type' => 'popcorn', 'item_name' => '', 'size' => '', 'quantity' => 1]];
-    }
 @endphp
 
-@csrf
-
 <div class="mb-3">
-    <label for="name" class="form-label">Tên combo <span class="text-danger">*</span></label>
-    <input type="text" class="form-control" id="name" name="name"
-           value="{{ old('name', $combo->name ?? '') }}" required>
+    <label for="name" class="form-label">Tên Combo <span class="text-danger">*</span></label>
+    <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name"
+           value="{{ old('name', $combo->name ?? '') }}">
+    @error('name')
+        <div class="invalid-feedback">{{ $message }}</div>
+    @enderror
 </div>
 
 <div class="mb-3">
-    <label for="description" class="form-label">Mô tả</label>
-    <textarea class="form-control" id="description" name="description" rows="3">{{ old('description', $combo->description ?? '') }}</textarea>
+    <label for="description" class="form-label">Mô tả / Chi tiết Combo</label>
+    <textarea class="form-control @error('description') is-invalid @enderror" 
+              id="description" name="description" rows="4" 
+              placeholder="Ví dụ: 1 Bắp (L) + 2 Nước (M)">{{ old('description', $combo->description ?? '') }}</textarea>
+    @error('description')
+        <div class="invalid-feedback">{{ $message }}</div>
+    @enderror
+    <small class="text-muted">Mô tả chi tiết các sản phẩm trong combo.</small>
 </div>
 
-<div class="row mb-3">
-    <div class="col-md-6">
-        <label for="price" class="form-label">Giá (USD) <span class="text-danger">*</span></label>
-        <input type="number" class="form-control" id="price" name="price"
-               value="{{ old('price', $combo->price ?? '') }}" min="0.01" step="0.01" required>
+@if($combo && $combo->image_path)
+<div class="mb-3">
+    <label class="form-label">Ảnh hiện tại:</label>
+    <div>
+        <img src="{{ $combo->image_url }}" alt="{{ $combo->name }}" 
+             class="img-fluid rounded" style="max-height: 200px;">
     </div>
-    <div class="col-md-6">
-        <label for="sort_order" class="form-label">Thứ tự hiển thị</label>
-        <input type="number" class="form-control" id="sort_order" name="sort_order"
-               value="{{ old('sort_order', $combo->sort_order ?? 0) }}" min="0">
-        <small class="text-muted">Số nhỏ hơn sẽ hiển thị trước</small>
+</div>
+@endif
+
+<div class="mb-3">
+    <label for="image" class="form-label">Ảnh Combo @if(!$combo)<span class="text-danger">*</span>@endif</label>
+    <input type="file" class="form-control @error('image') is-invalid @enderror" 
+           id="image" name="image" accept="image/jpeg,image/png,image/webp">
+    @error('image')
+        <div class="invalid-feedback">{{ $message }}</div>
+    @enderror
+    <small class="text-muted">
+        @if($combo)
+            Chọn ảnh mới để thay thế (tối đa 4MB). Để trống nếu giữ nguyên ảnh cũ.
+        @else
+            Chấp nhận ảnh JPG, PNG, WEBP tối đa 4MB.
+        @endif
+    </small>
+    <div id="image-preview" class="mt-2" style="display: none;">
+        <label class="form-label">Xem trước ảnh{{ $combo ? ' mới' : '' }}:</label>
+        <div>
+            <img id="preview-img" src="" alt="Preview" class="img-fluid rounded" style="max-height: 300px;">
+        </div>
     </div>
+</div>
+
+<div class="mb-3">
+    <label for="price" class="form-label">Giá (USD) <span class="text-danger">*</span></label>
+    <input type="text" class="form-control @error('price') is-invalid @enderror" id="price" name="price"
+           value="{{ old('price', $combo->price ?? '') }}" placeholder="0.00">
+    @error('price')
+        <div class="invalid-feedback">{{ $message }}</div>
+    @enderror
+    <small class="text-muted">Nhập giá bằng số thập phân (ví dụ: 5.00, 10.50 cho $5.00, $10.50).</small>
 </div>
 
 <div class="mb-3">
@@ -38,156 +69,41 @@
         <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1"
                {{ old('is_active', $combo->is_active ?? true) ? 'checked' : '' }}>
         <label class="form-check-label" for="is_active">
-            Hiển thị ở trang user
+            Kích hoạt combo này
         </label>
     </div>
+    <small class="text-muted">Combo đang hoạt động sẽ hiển thị cho khách hàng khi đặt vé.</small>
 </div>
 
-<div class="mb-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <label class="form-label mb-0">Thành phần combo <span class="text-danger">*</span></label>
-        <button type="button" class="btn btn-sm btn-success" id="add-item">
-            <i class="bi bi-plus-circle"></i> Thêm thành phần
-        </button>
-    </div>
-    <small class="text-muted d-block mb-3">Thêm các thành phần như bắp, nước, thức ăn vào combo.</small>
-    
-    <div id="items-container">
-        @foreach($items as $index => $item)
-            <div class="card mb-3 item-row" data-index="{{ $index }}">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="mb-0">Thành phần #{{ $index + 1 }}</h6>
-                        <button type="button" class="btn btn-sm btn-danger remove-item" {{ count($items) <= 1 ? 'disabled' : '' }}>
-                            <i class="bi bi-trash"></i> Xóa
-                        </button>
-                    </div>
-                    
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <label class="form-label">Loại <span class="text-danger">*</span></label>
-                            <select class="form-select item-type" name="items[{{ $index }}][item_type]" required>
-                                <option value="popcorn" {{ ($item['item_type'] ?? 'popcorn') === 'popcorn' ? 'selected' : '' }}>Bắp</option>
-                                <option value="drink" {{ ($item['item_type'] ?? '') === 'drink' ? 'selected' : '' }}>Nước</option>
-                                <option value="food" {{ ($item['item_type'] ?? '') === 'food' ? 'selected' : '' }}>Thức ăn</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Tên <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control item-name" name="items[{{ $index }}][item_name]"
-                                   value="{{ $item['item_name'] ?? '' }}" placeholder="VD: Bắp rang bơ, Coca Cola, Hotdog" required>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Size</label>
-                            <input type="text" class="form-control item-size" name="items[{{ $index }}][size]"
-                                   value="{{ $item['size'] ?? '' }}" placeholder="VD: S, M, L">
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Số lượng <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control item-quantity" name="items[{{ $index }}][quantity]"
-                                   value="{{ $item['quantity'] ?? 1 }}" min="1" required>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endforeach
-    </div>
-</div>
 
 <div class="d-flex gap-2">
-    <button type="submit" class="btn btn-primary">Lưu</button>
+    <button type="submit" class="btn btn-primary">{{ $combo ? 'Cập nhật Combo' : 'Tạo Combo' }}</button>
     <a href="{{ route('admin.combos.index') }}" class="btn btn-secondary">Hủy</a>
 </div>
 
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const container = document.getElementById('items-container');
-    let itemIndex = {{ count($items) }};
+    // Preview ảnh
+    const imageInput = document.getElementById('image');
+    const previewDiv = document.getElementById('image-preview');
+    const previewImg = document.getElementById('preview-img');
     
-    // Thêm item mới
-    document.getElementById('add-item').addEventListener('click', function() {
-        const newItem = `
-            <div class="card mb-3 item-row" data-index="${itemIndex}">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="mb-0">Thành phần #${itemIndex + 1}</h6>
-                        <button type="button" class="btn btn-sm btn-danger remove-item">
-                            <i class="bi bi-trash"></i> Xóa
-                        </button>
-                    </div>
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <label class="form-label">Loại <span class="text-danger">*</span></label>
-                            <select class="form-select item-type" name="items[${itemIndex}][item_type]" required>
-                                <option value="popcorn">Bắp</option>
-                                <option value="drink">Nước</option>
-                                <option value="food">Thức ăn</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Tên <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control item-name" name="items[${itemIndex}][item_name]"
-                                   placeholder="VD: Bắp rang bơ, Coca Cola, Hotdog" required>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Size</label>
-                            <input type="text" class="form-control item-size" name="items[${itemIndex}][size]"
-                                   placeholder="VD: S, M, L">
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Số lượng <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control item-quantity" name="items[${itemIndex}][quantity]"
-                                   value="1" min="1" required>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        container.insertAdjacentHTML('beforeend', newItem);
-        itemIndex++;
-        updateRemoveButtons();
-    });
-    
-    // Xóa item
-    container.addEventListener('click', function(e) {
-        if (e.target.closest('.remove-item')) {
-            const itemRow = e.target.closest('.item-row');
-            const items = container.querySelectorAll('.item-row');
-            if (items.length > 1) {
-                itemRow.remove();
-                updateItemNumbers();
-                updateRemoveButtons();
+    if (imageInput && previewDiv && previewImg) {
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    previewDiv.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                previewDiv.style.display = 'none';
             }
-        }
-    });
-    
-    function updateItemNumbers() {
-        const items = container.querySelectorAll('.item-row');
-        items.forEach((item, index) => {
-            item.querySelector('h6').textContent = `Thành phần #${index + 1}`;
-            const inputs = item.querySelectorAll('input, select');
-            inputs.forEach(input => {
-                const name = input.name;
-                if (name) {
-                    const match = name.match(/items\[(\d+)\]/);
-                    if (match) {
-                        input.name = name.replace(/items\[\d+\]/, `items[${index}]`);
-                    }
-                }
-            });
         });
     }
-    
-    function updateRemoveButtons() {
-        const items = container.querySelectorAll('.item-row');
-        const removeButtons = container.querySelectorAll('.remove-item');
-        removeButtons.forEach(btn => {
-            btn.disabled = items.length <= 1;
-        });
-    }
-    
-    updateRemoveButtons();
 });
 </script>
 @endpush

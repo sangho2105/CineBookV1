@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Select Seats')
+@section('title', 'Chọn ghế - CineBook')
 
 @section('content')
 <div class="row">
     <div class="col-lg-9">
         <h2 class="mb-2">Chọn ghế - {{ $showtime->movie->title }}</h2>
-        <p class="mb-1"><strong>Phòng chiếu:</strong> {{ $showtime->room ? $showtime->room->name : ($showtime->theater ? $showtime->theater->name : 'N/A') }}</p>
+        <p class="mb-1"><strong>Phòng chiếu:</strong> {{ $showtime->room ? $showtime->room->name : 'CineBook Center' }}</p>
         <p class="mb-1"><strong>Ngày:</strong> {{ $showtime->show_date->format('d/m/Y') }}</p>
         <p class="mb-3"><strong>Giờ:</strong> {{ $showtime->getFormattedShowTime('H:i') }}</p>
 
@@ -14,7 +14,7 @@
             <div class="screen-bar">MÀN HÌNH</div>
         </div>
 
-        <form id="seatForm" action="{{ route('bookings.store', $showtime) }}" method="POST"
+        <form id="seatForm" action="{{ route('bookings.confirm', $showtime) }}" method="POST"
               data-gold-price="{{ $showtime->gold_price }}"
               data-platinum-price="{{ $showtime->platinum_price }}"
               data-box-price="{{ $showtime->box_price }}">
@@ -77,7 +77,7 @@
             <input type="hidden" name="selected_seats" id="selectedSeatsInput">
             <input type="hidden" name="combos" id="combosInput">
 
-            <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Tiếp tục thanh toán</button>
+            <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Xác nhận</button>
             <a href="{{ route('movie.show', $showtime->movie->id) }}" class="btn btn-secondary">Hủy</a>
         </form>
     </div>
@@ -88,9 +88,9 @@
                 <h5 class="mb-0">Giá vé</h5>
             </div>
             <div class="card-body">
-                <div class="d-flex align-items-center mb-2"><span class="legend-box seat-regular me-2"></span> Ghế thường (Gold): {{ format_currency($showtime->gold_price) }}</div>
-                <div class="d-flex align-items-center mb-2"><span class="legend-box seat-vip me-2"></span> Ghế VIP (Platinum): {{ format_currency($showtime->platinum_price) }}</div>
-                <div class="d-flex align-items-center"><span class="legend-box seat-sweet me-2"></span> Ghế cặp đôi (Box): {{ format_currency($showtime->box_price) }}</div>
+                <div class="d-flex align-items-center mb-2"><span class="legend-box seat-regular me-2"></span> Ghế thường: {{ format_currency($showtime->gold_price) }}</div>
+                <div class="d-flex align-items-center mb-2"><span class="legend-box seat-vip me-2"></span> Ghế VIP: {{ format_currency($showtime->platinum_price) }}</div>
+                <div class="d-flex align-items-center"><span class="legend-box seat-sweet me-2"></span> Ghế cặp đôi: {{ format_currency($showtime->box_price) }}</div>
             </div>
         </div>
     </div>
@@ -390,10 +390,11 @@ document.addEventListener('DOMContentLoaded', function() {
         $combosForJs = collect($combos ?? [])->map(function($combo) {
             return [
                 'id' => $combo->id,
-                'title' => $combo->title,
+                'title' => $combo->name,
                 'description' => $combo->description ?? '',
                 'price' => (float)$combo->price,
                 'image_url' => $combo->image_path ? asset('storage/' . $combo->image_path) : null,
+                'is_hidden' => $combo->is_hidden ?? false,
             ];
         })->toArray();
     @endphp
@@ -420,16 +421,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const price = parseFloat(combo.price) || 0;
             const title = (combo.title || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
             const description = combo.description ? (combo.description || '').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') : '';
-            const imageHtml = combo.image_url ? `<img src="${combo.image_url}" alt="${title}" class="img-fluid rounded" style="max-width: 100px; max-height: 100px; object-fit: cover;">` : '';
+            const imageHtml = combo.image_url ? `<img src="${combo.image_url}" alt="${title}" class="img-fluid rounded" style="max-width: 100px; max-height: 100px; object-fit: cover; ${combo.is_hidden ? 'opacity: 0.5;' : ''}">` : '';
             const pageNumber = Math.floor(index / combosPerPage) + 1;
             const displayStyle = pageNumber === 1 ? '' : 'display: none;';
+            const isHidden = combo.is_hidden || false;
+            const disabledStyle = isHidden ? 'opacity: 0.6; pointer-events: none;' : '';
+            const outOfStockBadge = isHidden ? '<span class="badge bg-danger ms-2">Hết hàng</span>' : '';
             
             comboModalBody += `
-            <div class="combo-item mb-3 p-3 border rounded" data-combo-page="${pageNumber}" style="${displayStyle}">
+            <div class="combo-item mb-3 p-3 border rounded ${isHidden ? 'bg-light' : ''}" data-combo-page="${pageNumber}" style="${displayStyle} ${disabledStyle}">
                 <div class="d-flex align-items-start gap-3">
                     ${imageHtml}
                     <div class="flex-grow-1">
-                        <h6 class="mb-1"><strong>${title}</strong></h6>
+                        <h6 class="mb-1"><strong>${title}</strong>${outOfStockBadge}</h6>
                         ${description ? `<p class="text-muted small mb-2">${description}</p>` : ''}
                         <div class="d-flex align-items-center justify-content-between">
                             <div>
@@ -443,6 +447,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                        id="combo${combo.id}Qty"
                                        data-combo-id="${combo.id}"
                                        data-combo-price="${combo.price}"
+                                       ${isHidden ? 'disabled' : ''}
                                        oninput="if(this.value < 0) this.value = 0;"
                                        onkeydown="if(event.key === '-' || event.key === 'e' || event.key === 'E' || event.key === '+' || event.key === '.') event.preventDefault();">
                             </div>
@@ -477,11 +482,25 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Bạn có muốn chọn thêm combo bắp nước?</h5>
+            <h5 class="modal-title">Chọn combo bắp nước</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            ${comboModalBody}
+            <div class="row">
+              <div class="col-md-3">
+                <div class="form-check mb-3">
+                  <input class="form-check-input" type="checkbox" id="requireComboCheckbox" checked>
+                  <label class="form-check-label" for="requireComboCheckbox">
+                    Yêu cầu có combo
+                  </label>
+                </div>
+              </div>
+              <div class="col-md-9">
+                <div id="comboListContainer">
+                  ${comboModalBody}
+                </div>
+              </div>
+            </div>
             <small class="text-muted d-block mt-3">Bạn có thể bỏ qua bước này và thanh toán ngay.</small>
           </div>
           <div class="modal-footer">
@@ -541,6 +560,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const comboModal = new bootstrap.Modal(document.getElementById('comboModal'));
     const confirmCombosBtn = document.getElementById('confirmCombosBtn');
+    
+    // Xử lý checkbox "yêu cầu combo" để ẩn/hiện danh sách combo
+    const requireComboCheckbox = document.getElementById('requireComboCheckbox');
+    const comboListContainer = document.getElementById('comboListContainer');
+    
+    if (requireComboCheckbox && comboListContainer) {
+        // Hàm để ẩn/hiện danh sách combo
+        function toggleComboList() {
+            if (requireComboCheckbox.checked) {
+                comboListContainer.style.display = '';
+                comboListContainer.style.visibility = 'visible';
+                comboListContainer.style.opacity = '1';
+            } else {
+                comboListContainer.style.display = 'none';
+                comboListContainer.style.visibility = 'hidden';
+                comboListContainer.style.opacity = '0';
+                // Reset tất cả số lượng combo về 0 khi ẩn
+                combosData.forEach(combo => {
+                    const qtyInput = document.getElementById(`combo${combo.id}Qty`);
+                    if (qtyInput) {
+                        qtyInput.value = 0;
+                    }
+                });
+            }
+        }
+        
+        // Thêm event listener cho checkbox
+        requireComboCheckbox.addEventListener('change', toggleComboList);
+        
+        // Khởi tạo trạng thái ban đầu khi modal được hiển thị
+        document.getElementById('comboModal').addEventListener('shown.bs.modal', function() {
+            toggleComboList();
+        });
+        
+        // Khởi tạo trạng thái ban đầu ngay lập tức
+        toggleComboList();
+    }
     
     // Thêm validation cho tất cả input số lượng combo để ngăn nhập số âm
     function validateComboQuantity() {
@@ -630,8 +686,13 @@ document.addEventListener('DOMContentLoaded', function() {
     confirmCombosBtn.addEventListener('click', function() {
         const combos = [];
         
-        // Lấy tất cả các input combo từ database
+        // Lấy tất cả các input combo từ database (bỏ qua combo bị ẩn)
         combosData.forEach(combo => {
+            // Bỏ qua combo bị ẩn
+            if (combo.is_hidden) {
+                return;
+            }
+            
             const qtyInput = document.getElementById(`combo${combo.id}Qty`);
             if (qtyInput) {
                 let quantity = parseInt(qtyInput.value || '0', 10);

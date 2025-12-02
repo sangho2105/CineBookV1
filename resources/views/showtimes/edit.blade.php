@@ -11,7 +11,7 @@
 
     <div class="mb-3">
         <label for="movie_id" class="form-label">Movie <span class="text-danger">*</span></label>
-        <select name="movie_id" id="movie_id" class="form-select @error('movie_id') is-invalid @enderror" required>
+        <select name="movie_id" id="movie_id" class="form-select @error('movie_id') is-invalid @enderror">
             <option value="">-- Select Movie --</option>
             @foreach($movies as $movie)
             <option value="{{ $movie->id }}" {{ (old('movie_id', $showtime->movie_id) == $movie->id) ? 'selected' : '' }}>
@@ -26,7 +26,7 @@
 
     <div class="mb-3">
         <label for="room_id" class="form-label">Phòng chiếu <span class="text-danger">*</span></label>
-        <select name="room_id" id="room_id" class="form-select @error('room_id') is-invalid @enderror" required>
+        <select name="room_id" id="room_id" class="form-select @error('room_id') is-invalid @enderror">
             <option value="">-- Chọn Phòng chiếu --</option>
             @foreach($rooms as $room)
             <option value="{{ $room->id }}" {{ (old('room_id', $showtime->room_id) == $room->id) ? 'selected' : '' }}>
@@ -43,7 +43,7 @@
         <div class="col-md-6">
             <label for="show_date" class="form-label">Show Date <span class="text-danger">*</span></label>
             <input type="date" name="show_date" id="show_date" class="form-control @error('show_date') is-invalid @enderror" 
-                   value="{{ old('show_date', $showtime->show_date->format('Y-m-d')) }}" min="{{ date('Y-m-d') }}" required>
+                   value="{{ old('show_date', $showtime->show_date->format('Y-m-d')) }}">
             @error('show_date')
             <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -61,7 +61,7 @@
                         $oldHour = '24';
                     }
                 @endphp
-                <select name="show_time_hour" id="show_time_hour" class="form-select @error('show_time') is-invalid @enderror" style="flex: 0 0 auto; width: 80px;" required>
+                <select name="show_time_hour" id="show_time_hour" class="form-select @error('show_time') is-invalid @enderror" style="flex: 0 0 auto; width: 80px;">
                     <option value="">Giờ</option>
                     @for($i = 1; $i <= 24; $i++)
                         <option value="{{ str_pad($i, 2, '0', STR_PAD_LEFT) }}" 
@@ -71,7 +71,7 @@
                     @endfor
                 </select>
                 <span class="fw-bold" style="flex: 0 0 auto;">:</span>
-                <select name="show_time_minute" id="show_time_minute" class="form-select @error('show_time') is-invalid @enderror" style="flex: 0 0 auto; width: 80px;" required>
+                <select name="show_time_minute" id="show_time_minute" class="form-select @error('show_time') is-invalid @enderror" style="flex: 0 0 auto; width: 80px;">
                     <option value="">Phút</option>
                     @for($i = 0; $i < 60; $i += 5)
                         <option value="{{ str_pad($i, 2, '0', STR_PAD_LEFT) }}" 
@@ -92,7 +92,7 @@
         <div class="col-md-4">
             <label for="gold_price" class="form-label">Gold Price (USD) <span class="text-danger">*</span></label>
             <input type="number" name="gold_price" id="gold_price" class="form-control @error('gold_price') is-invalid @enderror" 
-                   value="{{ old('gold_price', $showtime->gold_price) }}" min="0.01" max="1000" step="0.01" required readonly>
+                   value="{{ old('gold_price', $showtime->gold_price) }}" readonly>
             @error('gold_price')
             <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -100,7 +100,7 @@
         <div class="col-md-4">
             <label for="platinum_price" class="form-label">Platinum Price (USD) <span class="text-danger">*</span></label>
             <input type="number" name="platinum_price" id="platinum_price" class="form-control @error('platinum_price') is-invalid @enderror" 
-                   value="{{ old('platinum_price', $showtime->platinum_price) }}" min="0.01" max="1000" step="0.01" required readonly>
+                   value="{{ old('platinum_price', $showtime->platinum_price) }}" readonly>
             @error('platinum_price')
             <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -108,7 +108,7 @@
         <div class="col-md-4">
             <label for="box_price" class="form-label">Box Price (USD) <span class="text-danger">*</span></label>
             <input type="number" name="box_price" id="box_price" class="form-control @error('box_price') is-invalid @enderror" 
-                   value="{{ old('box_price', $showtime->box_price) }}" min="0.01" max="1000" step="0.01" required readonly>
+                   value="{{ old('box_price', $showtime->box_price) }}" readonly>
             @error('box_price')
             <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -148,7 +148,6 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             showTimeInput.value = '';
         }
-        validateDateTime();
     }
     
     showTimeHour.addEventListener('change', updateTimeInput);
@@ -168,38 +167,6 @@ document.addEventListener('DOMContentLoaded', function() {
             updateTimeInput();
         }
     @endif
-    
-    function validateDateTime() {
-        const showDate = showDateInput.value;
-        const hour = showTimeHour.value;
-        const minute = showTimeMinute.value;
-        
-        if (!showDate || !hour || !minute) {
-            showTimeInput.setCustomValidity('');
-            return;
-        }
-        
-        const today = new Date().toISOString().split('T')[0];
-        const now = new Date();
-        const selectedDate = new Date(showDate);
-        const selectedDateTime = new Date(selectedDate);
-        selectedDateTime.setHours(parseInt(hour), parseInt(minute), 0, 0);
-        
-        // Thời gian suất chiếu phải lớn hơn thời gian hiện tại ít nhất 1 giờ
-        const minimumDateTime = new Date(now.getTime() + 60 * 60 * 1000); // Thêm 1 giờ (60 phút * 60 giây * 1000 ms)
-        
-        if (showDate === today && selectedDateTime <= minimumDateTime) {
-            showTimeInput.setCustomValidity('Thời gian suất chiếu phải lớn hơn thời gian hiện tại ít nhất 1 giờ để khách hàng có thời gian mua vé.');
-            showTimeHour.setCustomValidity('Thời gian suất chiếu phải lớn hơn thời gian hiện tại ít nhất 1 giờ để khách hàng có thời gian mua vé.');
-            showTimeMinute.setCustomValidity('Thời gian suất chiếu phải lớn hơn thời gian hiện tại ít nhất 1 giờ để khách hàng có thời gian mua vé.');
-        } else {
-            showTimeInput.setCustomValidity('');
-            showTimeHour.setCustomValidity('');
-            showTimeMinute.setCustomValidity('');
-        }
-    }
-    
-    showDateInput.addEventListener('change', validateDateTime);
     
     // Tính giá tự động khi chọn Peak hour
     const goldPriceInput = document.getElementById('gold_price');

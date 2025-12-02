@@ -39,6 +39,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/movie/{movie}/book', [App\Http\Controllers\BookingController::class, 'selectShowtime'])->name('bookings.select-showtime');
     Route::get('/movie/{movie}/book/modal', [App\Http\Controllers\BookingController::class, 'selectShowtimeModal'])->name('bookings.select-showtime-modal');
     Route::get('/showtimes/{showtime}/select-seats', [App\Http\Controllers\BookingController::class, 'selectSeats'])->name('bookings.select-seats');
+    Route::post('/showtimes/{showtime}/confirm', [App\Http\Controllers\BookingController::class, 'confirm'])->name('bookings.confirm');
     Route::post('/showtimes/{showtime}/bookings', [App\Http\Controllers\BookingController::class, 'store'])->name('bookings.store');
     Route::get('/bookings/{booking}/payment', [App\Http\Controllers\BookingController::class, 'payment'])->name('bookings.payment');
     Route::get('/bookings/{booking}', [App\Http\Controllers\BookingController::class, 'show'])->name('bookings.show');
@@ -93,4 +94,13 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
     // Route cho quản lý Combo
     Route::resource('combos', \App\Http\Controllers\Admin\ComboController::class);
+    Route::post('combos/update-order', [\App\Http\Controllers\Admin\ComboController::class, 'updateOrder'])->name('combos.update-order');
+
+    // Route cho quản lý Bình luận
+    Route::get('comments', [\App\Http\Controllers\Admin\CommentController::class, 'index'])->name('comments.index');
+    Route::delete('comments/{comment}', [\App\Http\Controllers\Admin\CommentController::class, 'destroy'])->name('comments.destroy');
+
+    // Route cho quản lý User
+    Route::get('users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('users.index');
+    Route::get('users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'show'])->name('users.show');
 });

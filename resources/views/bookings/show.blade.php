@@ -51,7 +51,7 @@
                             </h5>
                             <div class="mb-3">
                                 <p class="mb-1 text-muted small">Rạp chiếu</p>
-                                <p class="mb-0 fw-bold">{{ $booking->showtime->theater->name ?? 'N/A' }}</p>
+                                <p class="mb-0 fw-bold">CineBook Center</p>
                                 @if($booking->showtime->theater)
                                     <p class="text-muted small mb-0">
                                         <i class="bi bi-geo-alt"></i> 
@@ -134,7 +134,7 @@
                                 <i class="bi bi-calendar-check"></i> Ngày đặt vé
                             </p>
                             <p class="mb-0 fw-bold">
-                                {{ $booking->booking_date->format('d/m/Y H:i') }}
+                                {{ $booking->booking_date ? $booking->booking_date->setTimezone('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') : 'Chưa thanh toán' }}
                             </p>
                         </div>
                         <div class="col-md-4 text-md-end">

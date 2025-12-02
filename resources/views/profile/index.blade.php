@@ -41,9 +41,7 @@
                                 <tr>
                                     <td>
                                         <strong>{{ $booking->showtime->movie->title ?? '' }}</strong>
-                                        @if($booking->showtime->theater)
-                                            <div class="text-muted small">{{ $booking->showtime->theater->name }}</div>
-                                        @endif
+                                        <div class="text-muted small">CineBook Center</div>
                                     </td>
                                     <td>
                                         {{ optional($booking->showtime->show_date)->format('d/m/Y') }}

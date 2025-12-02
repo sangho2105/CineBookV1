@@ -23,7 +23,7 @@
             <div class="card mb-4">
                 <div class="card-body">
                     <h5 class="card-title mb-3">{{ $booking->showtime->movie->title }}</h5>
-                    <p class="mb-1"><strong>Phòng chiếu:</strong> {{ $booking->showtime->room ? $booking->showtime->room->name : ($booking->showtime->theater ? $booking->showtime->theater->name : 'N/A') }}</p>
+                    <p class="mb-1"><strong>Phòng chiếu:</strong> {{ $booking->showtime->room ? $booking->showtime->room->name : 'CineBook Center' }}</p>
                     <p class="mb-1"><strong>Ngày:</strong> {{ $booking->showtime->show_date->format('d/m/Y') }}</p>
                     <p class="mb-1"><strong>Giờ:</strong> {{ $booking->showtime->getFormattedShowTime('H:i') }}</p>
                     <p class="mb-1">

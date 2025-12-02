@@ -63,22 +63,34 @@ class HomeController extends Controller
         $ratingAverage = round($ratingsQuery->avg('score') ?? 0, 1);
         $ratingCount = $ratingsQuery->count();
 
-        // Eligibility: user đã thanh toán completed cho phim này?
+        // Eligibility: user đã thanh toán completed cho phim này VÀ suất chiếu đã kết thúc?
         $canRate = false;
+        $hasCompletedBooking = false;
         $isFavorited = false;
         $favoritesCount = $movie->favorites()->count();
         
         if (auth()->check()) {
-            $canRate = \App\Models\Booking::where('user_id', auth()->id())
+            // Kiểm tra xem user có booking đã thanh toán không
+            $completedBookings = \App\Models\Booking::where('user_id', auth()->id())
                 ->where('payment_status', 'completed')
                 ->whereHas('showtime', function ($q) use ($movie) {
                     $q->where('movie_id', $movie->id);
                 })
-                ->exists();
+                ->with('showtime.movie')
+                ->get();
+            
+            $hasCompletedBooking = $completedBookings->isNotEmpty();
+            
+            // Kiểm tra xem có booking nào mà suất chiếu đã kết thúc không
+            $eligibleBooking = $completedBookings->first(function ($booking) {
+                return $booking->showtime && $booking->showtime->hasEnded();
+            });
+            
+            $canRate = $eligibleBooking !== null;
             
             $isFavorited = $movie->favorites()->where('user_id', auth()->id())->exists();
         }
 
-        return view('pages.movie-details', compact('movie', 'comments', 'ratingAverage', 'ratingCount', 'canRate', 'isFavorited', 'favoritesCount'));
+        return view('pages.movie-details', compact('movie', 'comments', 'ratingAverage', 'ratingCount', 'canRate', 'hasCompletedBooking', 'isFavorited', 'favoritesCount'));
     }
 }

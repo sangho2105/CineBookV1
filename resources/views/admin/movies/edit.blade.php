@@ -21,7 +21,7 @@
         
         <div class="mb-3">
             <label for="title" class="form-label">Tên Phim <span class="text-danger">*</span></label>
-            <input type="text" class="form-control @error('title') is-invalid @enderror" id="title" name="title" value="{{ old('title', $movie->title) }}" required>
+            <input type="text" class="form-control @error('title') is-invalid @enderror" id="title" name="title" value="{{ old('title', $movie->title) }}">
             @error('title')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -52,7 +52,7 @@
             </div>
             <div>
                 <label for="poster_url" class="form-label">Nhập URL ảnh mới:</label>
-                <input type="url" class="form-control @error('poster_url') is-invalid @enderror" id="poster_url" name="poster_url" value="{{ old('poster_url', filter_var($movie->poster_url, FILTER_VALIDATE_URL) ? $movie->poster_url : '') }}" placeholder="https://example.com/poster.jpg">
+                <input type="text" class="form-control @error('poster_url') is-invalid @enderror" id="poster_url" name="poster_url" value="{{ old('poster_url', filter_var($movie->poster_url, FILTER_VALIDATE_URL) ? $movie->poster_url : '') }}" placeholder="https://example.com/poster.jpg">
                 @error('poster_url')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -68,7 +68,7 @@
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label for="genre" class="form-label">Thể loại <span class="text-danger">*</span></label>
-                <input type="text" class="form-control @error('genre') is-invalid @enderror" id="genre" name="genre" value="{{ old('genre', $movie->genre) }}" required>
+                <input type="text" class="form-control @error('genre') is-invalid @enderror" id="genre" name="genre" value="{{ old('genre', $movie->genre) }}">
                 @error('genre')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -86,7 +86,7 @@
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label for="language" class="form-label">Ngôn ngữ <span class="text-danger">*</span></label>
-                <input type="text" class="form-control @error('language') is-invalid @enderror" id="language" name="language" value="{{ old('language', $movie->language) }}" required>
+                <input type="text" class="form-control @error('language') is-invalid @enderror" id="language" name="language" value="{{ old('language', $movie->language) }}">
                 @error('language')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -104,7 +104,7 @@
         <div class="row">
             <div class="col-md-4 mb-3">
                 <label for="duration_minutes" class="form-label">Thời lượng (phút) <span class="text-danger">*</span></label>
-                <input type="number" class="form-control @error('duration_minutes') is-invalid @enderror" id="duration_minutes" name="duration_minutes" value="{{ old('duration_minutes', $movie->duration_minutes) }}" min="1" required>
+                <input type="number" class="form-control @error('duration_minutes') is-invalid @enderror" id="duration_minutes" name="duration_minutes" value="{{ old('duration_minutes', $movie->duration_minutes) }}">
                 @error('duration_minutes')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -112,7 +112,7 @@
             
             <div class="col-md-4 mb-3">
                 <label for="release_date" class="form-label">Ngày phát hành <span class="text-danger">*</span></label>
-                <input type="date" class="form-control @error('release_date') is-invalid @enderror" id="release_date" name="release_date" value="{{ old('release_date', $movie->release_date ? \Carbon\Carbon::parse($movie->release_date)->format('Y-m-d') : '') }}" required>
+                <input type="date" class="form-control @error('release_date') is-invalid @enderror" id="release_date" name="release_date" value="{{ old('release_date', $movie->release_date ? \Carbon\Carbon::parse($movie->release_date)->format('Y-m-d') : '') }}">
                 @error('release_date')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -120,7 +120,7 @@
             
             <div class="col-md-4 mb-3">
                 <label for="status" class="form-label">Trạng thái <span class="text-danger">*</span></label>
-                <select class="form-select @error('status') is-invalid @enderror" id="status" name="status" required>
+                <select class="form-select @error('status') is-invalid @enderror" id="status" name="status">
                     <option value="">-- Chọn trạng thái --</option>
                     <option value="upcoming" {{ old('status', $movie->status) == 'upcoming' ? 'selected' : '' }}>Sắp chiếu</option>
                     <option value="now_showing" {{ old('status', $movie->status) == 'now_showing' ? 'selected' : '' }}>Đang chiếu</option>
@@ -149,7 +149,7 @@
         
         <div class="mb-3">
             <label for="trailer_url" class="form-label">Link Trailer</label>
-            <input type="url" class="form-control @error('trailer_url') is-invalid @enderror" id="trailer_url" name="trailer_url" value="{{ old('trailer_url', $movie->trailer_url) }}">
+            <input type="text" class="form-control @error('trailer_url') is-invalid @enderror" id="trailer_url" name="trailer_url" value="{{ old('trailer_url', $movie->trailer_url) }}">
             @error('trailer_url')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror

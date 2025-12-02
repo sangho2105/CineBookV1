@@ -311,6 +311,11 @@
                         <span class="price-value discount-amount">-${{ number_format($ticketInfo['discount_amount'], 2, '.', ',') }}</span>
                     </div>
                 @endif
+                @if(isset($ticketInfo['has_gift_promotion']) && $ticketInfo['has_gift_promotion'] === true)
+                    <div class="price-row" style="color: #e74c3c; font-weight: bold; font-size: 14px; margin-top: 8px;">
+                        *Áp dụng tặng quà
+                    </div>
+                @endif
                 <div class="price-row total">
                     <span class="price-label">Tổng cộng:</span>
                     <span class="price-value">${{ number_format($ticketInfo['total'], 2, '.', ',') }}</span>

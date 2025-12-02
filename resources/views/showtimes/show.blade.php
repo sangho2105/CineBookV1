@@ -15,7 +15,7 @@
                 <strong>Movie:</strong> {{ $showtime->movie->title }}
             </div>
             <div class="col-md-6 mb-3">
-                <strong>Phòng chiếu:</strong> {{ $showtime->room ? $showtime->room->name . ' (' . $showtime->room->total_seats . ' ghế)' : ($showtime->theater ? $showtime->theater->name . ' - ' . $showtime->theater->city : 'N/A') }}
+                <strong>Phòng chiếu:</strong> {{ $showtime->room ? $showtime->room->name . ' (' . $showtime->room->total_seats . ' ghế)' : 'CineBook Center' }}
             </div>
             <div class="col-md-6 mb-3">
                 <strong>Show Date:</strong> {{ $showtime->show_date->format('d/m/Y') }}

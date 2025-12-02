@@ -28,7 +28,17 @@
     </div>
 
     @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     @endif
 
     @if($promotions->isEmpty())
@@ -88,11 +98,16 @@
                                 <a href="{{ route('admin.promotions.edit', $promotion) }}" class="btn btn-sm btn-warning" title="Sửa">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <form action="{{ route('admin.promotions.destroy', $promotion) }}" method="POST" class="d-inline" onsubmit="return confirm('Bạn chắc chắn muốn xóa khuyến mãi này?');">
+                                @php
+                                    $isCurrentlyActive = $promotion->isCurrentlyActive();
+                                @endphp
+                                <form action="{{ route('admin.promotions.destroy', $promotion) }}" method="POST" class="d-inline" 
+                                      onsubmit="return confirm('{{ $isCurrentlyActive ? 'Sự kiện đang trong thời gian hoạt động. Bạn có chắc chắn muốn ẩn sự kiện này?' : 'Bạn chắc chắn muốn xóa khuyến mãi này?' }}');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger" title="Xóa">
-                                        <i class="bi bi-trash"></i>
+                                    <button type="submit" class="btn btn-sm {{ $isCurrentlyActive ? 'btn-secondary' : 'btn-danger' }}" 
+                                            title="{{ $isCurrentlyActive ? 'Ẩn sự kiện' : 'Xóa khuyến mãi' }}">
+                                        <i class="bi {{ $isCurrentlyActive ? 'bi-eye-slash' : 'bi-trash' }}"></i>
                                     </button>
                                 </form>
                             </td>
@@ -207,16 +222,30 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: JSON.stringify({ order: order })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.message || 'Network response was not ok');
+                });
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
-                // Có thể hiển thị thông báo thành công nếu muốn
-                console.log('Thứ tự đã được cập nhật');
+                // Thứ tự đã được cập nhật thành công, không cần thông báo
+                return;
+            } else {
+                throw new Error(data.message || 'Cập nhật thất bại');
             }
         })
         .catch(error => {
             console.error('Lỗi cập nhật thứ tự:', error);
-            alert('Có lỗi xảy ra khi cập nhật thứ tự. Vui lòng thử lại.');
+            // Chỉ hiển thị alert nếu có lỗi thực sự
+            if (error.message) {
+                alert('Có lỗi xảy ra khi cập nhật thứ tự: ' + error.message);
+            } else {
+                alert('Có lỗi xảy ra khi cập nhật thứ tự. Vui lòng thử lại.');
+            }
         });
     }
 });

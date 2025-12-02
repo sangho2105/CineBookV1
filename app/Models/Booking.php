@@ -15,6 +15,8 @@ class Booking extends Model
         'total_amount',
         'payment_status',
         'booking_id_unique',
+        'applied_promotion_id',
+        'has_gift_promotion',
     ];
     
     protected $casts = [
@@ -42,6 +44,12 @@ class Booking extends Model
     public function combos()
     {
         return $this->hasMany(BookingCombo::class);
+    }
+    
+    // Relationship với Promotion
+    public function appliedPromotion()
+    {
+        return $this->belongsTo(Promotion::class, 'applied_promotion_id');
     }
     
     // Tạo booking ID unique tự động

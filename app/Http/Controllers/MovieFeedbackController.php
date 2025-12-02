@@ -52,6 +52,8 @@ class MovieFeedbackController extends Controller
         if ($comment->movie_id !== $movie->id) {
             abort(404);
         }
+        // Chỉ cho phép user xóa comment của chính họ
+        // Admin xóa comment thông qua trang quản lý admin
         if ($comment->user_id !== Auth::id()) {
             abort(403, 'Bạn không có quyền xóa bình luận này.');
         }
@@ -66,16 +68,22 @@ class MovieFeedbackController extends Controller
             'score' => 'required|integer|min:1|max:5',
         ]);
 
-        // Chỉ cho phép chấm điểm nếu user có booking đã thanh toán cho movie này
-        $eligible = Booking::where('user_id', Auth::id())
+        // Chỉ cho phép chấm điểm nếu:
+        // 1. User có booking đã thanh toán cho movie này
+        // 2. Suất chiếu của booking đó đã kết thúc
+        $eligibleBooking = Booking::where('user_id', Auth::id())
             ->where('payment_status', 'completed')
             ->whereHas('showtime', function ($q) use ($movie) {
                 $q->where('movie_id', $movie->id);
             })
-            ->exists();
+            ->with('showtime.movie')
+            ->get()
+            ->first(function ($booking) {
+                return $booking->showtime && $booking->showtime->hasEnded();
+            });
 
-        if (!$eligible) {
-            return back()->withErrors(['score' => 'Bạn cần hoàn tất thanh toán vé của phim này trước khi chấm điểm.']);
+        if (!$eligibleBooking) {
+            return back()->withErrors(['score' => 'Bạn chỉ có thể đánh giá phim sau khi suất chiếu đã kết thúc.']);
         }
 
         DB::transaction(function () use ($movie, $validated) {

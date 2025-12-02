@@ -4,10 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Combo;
-use App\Models\ComboItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
 
 class ComboController extends Controller
 {
@@ -46,14 +44,14 @@ class ComboController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'image' => 'nullable|image|max:4096',
-            'price' => 'required|numeric|min:0.01',
+            'price' => ['required', 'numeric', 'min:0.01', 'regex:/^\d+(\.\d{1,2})?$/'],
             'is_active' => 'nullable|boolean',
             'sort_order' => 'nullable|integer|min:0',
-            'items' => 'required|array|min:1',
-            'items.*.item_type' => 'required|string|in:popcorn,drink,food',
-            'items.*.item_name' => 'required|string|max:255',
-            'items.*.size' => 'nullable|string|max:50',
-            'items.*.quantity' => 'required|integer|min:1',
+        ], [
+            'price.required' => 'Vui lòng nhập giá combo.',
+            'price.numeric' => 'Giá phải là số.',
+            'price.min' => 'Giá phải lớn hơn 0.',
+            'price.regex' => 'Giá không hợp lệ. Vui lòng nhập số thập phân với tối đa 2 chữ số sau dấu phẩy (ví dụ: 5.00, 10.50).',
         ]);
 
         // Xử lý upload ảnh
@@ -67,23 +65,7 @@ class ComboController extends Controller
         // Xóa key image vì đã chuyển thành image_path
         unset($validatedData['image']);
 
-        // Lưu items
-        $items = $validatedData['items'];
-        unset($validatedData['items']);
-
-        DB::transaction(function () use ($validatedData, $items) {
-            $combo = Combo::create($validatedData);
-            
-            foreach ($items as $item) {
-                ComboItem::create([
-                    'combo_id' => $combo->id,
-                    'item_type' => $item['item_type'],
-                    'item_name' => $item['item_name'],
-                    'size' => $item['size'] ?? null,
-                    'quantity' => $item['quantity'],
-                ]);
-            }
-        });
+        Combo::create($validatedData);
 
         return redirect()->route('admin.combos.index')
             ->with('success', 'Combo đã được tạo thành công!');
@@ -114,14 +96,14 @@ class ComboController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'image' => 'nullable|image|max:4096',
-            'price' => 'required|numeric|min:0.01',
+            'price' => ['required', 'numeric', 'min:0.01', 'regex:/^\d+(\.\d{1,2})?$/'],
             'is_active' => 'nullable|boolean',
             'sort_order' => 'nullable|integer|min:0',
-            'items' => 'required|array|min:1',
-            'items.*.item_type' => 'required|string|in:popcorn,drink,food',
-            'items.*.item_name' => 'required|string|max:255',
-            'items.*.size' => 'nullable|string|max:50',
-            'items.*.quantity' => 'required|integer|min:1',
+        ], [
+            'price.required' => 'Vui lòng nhập giá combo.',
+            'price.numeric' => 'Giá phải là số.',
+            'price.min' => 'Giá phải lớn hơn 0.',
+            'price.regex' => 'Giá không hợp lệ. Vui lòng nhập số thập phân với tối đa 2 chữ số sau dấu phẩy (ví dụ: 5.00, 10.50).',
         ]);
 
         // Xử lý upload ảnh mới
@@ -140,27 +122,7 @@ class ComboController extends Controller
         // Xóa key image vì đã chuyển thành image_path
         unset($validatedData['image']);
 
-        // Lưu items
-        $items = $validatedData['items'];
-        unset($validatedData['items']);
-
-        DB::transaction(function () use ($validatedData, $items, $combo) {
-            $combo->update($validatedData);
-            
-            // Xóa items cũ
-            $combo->items()->delete();
-            
-            // Tạo items mới
-            foreach ($items as $item) {
-                ComboItem::create([
-                    'combo_id' => $combo->id,
-                    'item_type' => $item['item_type'],
-                    'item_name' => $item['item_name'],
-                    'size' => $item['size'] ?? null,
-                    'quantity' => $item['quantity'],
-                ]);
-            }
-        });
+        $combo->update($validatedData);
 
         return redirect()->route('admin.combos.index')
             ->with('success', 'Combo đã được cập nhật thành công!');
@@ -171,14 +133,57 @@ class ComboController extends Controller
      */
     public function destroy(Combo $combo)
     {
-        // Xóa ảnh khỏi storage
-        if ($combo->image_path) {
-            Storage::disk('public')->delete($combo->image_path);
+        // Kiểm tra xem combo đã có khách hàng đặt hay chưa
+        $hasBookings = $combo->hasBookings();
+
+        if ($hasBookings) {
+            // Nếu đã có khách hàng đặt, không cho xóa, chỉ cho ẩn
+            $combo->update(['is_hidden' => true]);
+            
+            return redirect()->route('admin.combos.index')
+                ->with('error', 'Combo này đã có khách hàng đặt. Không thể xóa, chỉ có thể ẩn. Combo đã được ẩn và khách hàng sẽ thấy combo hiển thị "hết hàng".');
+        } else {
+            // Nếu chưa có khách hàng đặt, xóa hoàn toàn
+            // Xóa ảnh khỏi storage
+            if ($combo->image_path) {
+                Storage::disk('public')->delete($combo->image_path);
+            }
+
+            $combo->delete();
+
+            return redirect()->route('admin.combos.index')
+                ->with('success', 'Combo này chưa được đặt hàng và đã được xóa thành công!');
         }
+    }
 
-        $combo->delete();
+    /**
+     * Update the sort order of combos via AJAX.
+     */
+    public function updateOrder(Request $request)
+    {
+        try {
+            $request->validate([
+                'order' => 'required|array',
+                'order.*' => 'required|integer|exists:combos,id',
+            ]);
 
-        return redirect()->route('admin.combos.index')
-            ->with('success', 'Combo đã được xóa thành công!');
+            foreach ($request->order as $index => $comboId) {
+                Combo::where('id', $comboId)->update(['sort_order' => $index + 1]);
+            }
+
+            return response()->json(['success' => true, 'message' => 'Thứ tự đã được cập nhật thành công.']);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Dữ liệu không hợp lệ.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Lỗi cập nhật thứ tự combos: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi cập nhật thứ tự.'
+            ], 500);
+        }
     }
 }

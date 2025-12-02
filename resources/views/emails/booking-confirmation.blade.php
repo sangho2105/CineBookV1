@@ -137,7 +137,7 @@
 
             <div class="info-row">
                 <span class="info-label">Rạp:</span>
-                <span class="info-value">{{ $booking->showtime->theater->name ?? 'N/A' }}</span>
+                <span class="info-value">CineBook Center</span>
             </div>
 
             <div class="info-row">
@@ -181,6 +181,14 @@
                     ${{ number_format($booking->total_amount, 2, '.', ',') }}
                 </span>
             </div>
+            
+            @if(!empty($ticketInfo['has_gift_promotion']))
+            <div class="info-row" style="background-color: #fff3cd; border-left-color: #ffc107;">
+                <span class="info-value" style="color: #e74c3c; font-weight: bold; font-size: 16px;">
+                    ***Áp dụng tặng quà
+                </span>
+            </div>
+            @endif
         </div>
 
         <div class="button-container">

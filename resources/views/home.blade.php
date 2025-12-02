@@ -60,7 +60,7 @@
 <div class="home-movie-selection my-5">
         <div class="movie-selection-header">
             <div class="header-dots"></div>
-            <h2 class="movie-selection-title">MOVIE SELECTION</h2>
+            <h2 class="movie-selection-title">ĐANG CHIẾU</h2>
             <div class="header-dots"></div>
         </div>
         @if($nowShowingMovies->isNotEmpty())

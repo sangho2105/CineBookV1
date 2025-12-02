@@ -68,7 +68,7 @@
             <tr>
                 <td>{{ ($showtimes->currentPage() - 1) * $showtimes->perPage() + $loop->iteration }}</td>
                 <td>{{ $showtime->movie->title }}</td>
-                <td>{{ $showtime->room ? $showtime->room->name . ' (' . $showtime->room->total_seats . ' ghế)' : ($showtime->theater ? $showtime->theater->name : 'N/A') }}</td>
+                <td>{{ $showtime->room ? $showtime->room->name . ' (' . $showtime->room->total_seats . ' ghế)' : 'CineBook Center' }}</td>
                 <td>{{ $showtime->show_date->format('d/m/Y') }}</td>
                 <td>{{ $startTime }} - {{ $endTime }}</td>
                 <td>

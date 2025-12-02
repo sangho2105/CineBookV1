@@ -437,9 +437,15 @@
                         <small class="text-muted d-block mt-2">Bạn có thể cập nhật điểm nếu đổi ý.</small>
                     </form>
                 @else
-                    <div class="alert alert-warning">
-                        Bạn cần hoàn tất thanh toán vé của phim này để có thể chấm điểm.
-                    </div>
+                    @if(isset($hasCompletedBooking) && $hasCompletedBooking)
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Bạn đã mua vé phim này. Vui lòng đợi suất chiếu kết thúc để có thể đánh giá.
+                        </div>
+                    @else
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i> Bạn cần hoàn tất thanh toán vé của phim này để có thể chấm điểm.
+                        </div>
+                    @endif
                 @endif
             @else
                 <div class="alert alert-info">
