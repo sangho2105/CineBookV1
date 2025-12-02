@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Thanh toán vé')
+@section('title', 'Payment')
 
 @section('content')
 <div class="container my-5">
     <div class="row">
         <div class="col-lg-8">
-            <h2 class="mb-3">Thanh toán</h2>
+            <h2 class="mb-3">Payment</h2>
             @if(session('success'))
                 <div class="alert alert-success">{{ session('success') }}</div>
             @endif
@@ -23,22 +23,22 @@
             <div class="card mb-4">
                 <div class="card-body">
                     <h5 class="card-title mb-3">{{ $booking->showtime->movie->title }}</h5>
-                    <p class="mb-1"><strong>Phòng chiếu:</strong> {{ $booking->showtime->room ? $booking->showtime->room->name : 'CineBook Center' }}</p>
-                    <p class="mb-1"><strong>Ngày:</strong> {{ $booking->showtime->show_date->format('d/m/Y') }}</p>
-                    <p class="mb-1"><strong>Giờ:</strong> {{ $booking->showtime->getFormattedShowTime('H:i') }}</p>
+                    <p class="mb-1"><strong>Room:</strong> {{ $booking->showtime->room ? $booking->showtime->room->name : 'CineBook Center' }}</p>
+                    <p class="mb-1"><strong>Date:</strong> {{ $booking->showtime->show_date->format('d/m/Y') }}</p>
+                    <p class="mb-1"><strong>Time:</strong> {{ $booking->showtime->getFormattedShowTime('H:i') }}</p>
                     <p class="mb-1">
-                        <strong>Ghế:</strong>
+                        <strong>Seats:</strong>
                         @foreach($booking->seats as $seat)
                             <span class="badge bg-secondary me-1">{{ $seat->seat_number }} ({{ $seat->seat_category }})</span>
                         @endforeach
                     </p>
-                    <p class="mt-2"><strong>Tổng tiền:</strong> {{ format_currency($booking->total_amount) }}</p>
+                    <p class="mt-2"><strong>Total Amount:</strong> {{ format_currency($booking->total_amount) }}</p>
                     <p class="mt-2">
-                        <strong>Trạng thái:</strong>
+                        <strong>Status:</strong>
                         @if($booking->payment_status === 'completed')
-                            <span class="badge bg-success">Đã thanh toán</span>
+                            <span class="badge bg-success">Paid</span>
                         @else
-                            <span class="badge bg-warning text-dark">Chưa thanh toán</span>
+                            <span class="badge bg-warning text-dark">Unpaid</span>
                         @endif
                     </p>
                 </div>
@@ -55,20 +55,20 @@
                 <div class="mt-3">
                     <form action="{{ route('bookings.pay', $booking->id) }}" method="POST">
                         @csrf
-                        <button type="submit" class="btn btn-outline-secondary btn-sm">Thanh toán (giả lập)</button>
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">Pay (Simulated)</button>
                     </form>
                 </div>
             @else
-                <a href="{{ route('movie.show', $booking->showtime->movie->id) }}" class="btn btn-success">Quay lại phim</a>
+                <a href="{{ route('movie.show', $booking->showtime->movie->id) }}" class="btn btn-success">Back to Movie</a>
             @endif
         </div>
         <div class="col-lg-4">
             <div class="card">
-                <div class="card-header">Ghi chú</div>
+                <div class="card-header">Note</div>
                 <div class="card-body">
-                    <p>- Đây là trang thanh toán giả lập để hoàn tất quy trình.</p>
-                    <p>- Sau khi “Thanh toán”, trạng thái vé sẽ chuyển sang “Đã thanh toán”.</p>
-                    <p>- Khi đó bạn có thể chấm điểm cho phim này.</p>
+                    <p>- This is a simulated payment page to complete the process.</p>
+                    <p>- After "Pay", the ticket status will change to "Paid".</p>
+                    <p>- You can then rate this movie.</p>
                 </div>
             </div>
         </div>
@@ -107,9 +107,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (result.status === 'COMPLETED') {
                     window.location.href = "{{ route('bookings.ticket', $booking->id) }}";
                 } else {
-                    alert('Thanh toán chưa hoàn tất. Vui lòng thử lại.');
+                    alert('Payment not completed. Please try again.');
                 }
-            }).catch(() => alert('Có lỗi khi xử lý thanh toán.'));
+            }).catch(() => alert('An error occurred while processing payment.'));
         }
     }).render('#paypal-button-container');
 });

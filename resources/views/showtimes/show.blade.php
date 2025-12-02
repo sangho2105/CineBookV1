@@ -15,7 +15,7 @@
                 <strong>Movie:</strong> {{ $showtime->movie->title }}
             </div>
             <div class="col-md-6 mb-3">
-                <strong>Phòng chiếu:</strong> {{ $showtime->room ? $showtime->room->name . ' (' . $showtime->room->total_seats . ' ghế)' : 'CineBook Center' }}
+                <strong>Room:</strong> {{ $showtime->room ? $showtime->room->name . ' (' . $showtime->room->total_seats . ' seats)' : 'CineBook Center' }}
             </div>
             <div class="col-md-6 mb-3">
                 <strong>Show Date:</strong> {{ $showtime->show_date->format('d/m/Y') }}
@@ -57,7 +57,7 @@
                 <strong>Box Price:</strong> {{ format_currency($showtime->box_price) }}
             </div>
             <div class="col-md-6 mb-3">
-                <strong>Peak Hour:</strong> {{ $showtime->is_peak_hour ? 'Có' : 'Không' }}
+                <strong>Peak Hour:</strong> {{ $showtime->is_peak_hour ? 'Yes' : 'No' }}
             </div>
             <div class="col-md-6 mb-3">
                 <strong>Created At:</strong> {{ $showtime->created_at->format('d/m/Y H:i:s') }}
@@ -68,8 +68,8 @@
         </div>
 
         <div class="mt-3">
-            <a href="{{ route('admin.showtimes.edit', $showtime) }}" class="btn btn-warning">Sửa</a>
-            <a href="{{ route('admin.showtimes.index') }}" class="btn btn-secondary">Quay lại</a>
+            <a href="{{ route('admin.showtimes.edit', $showtime) }}" class="btn btn-warning">Edit</a>
+            <a href="{{ route('admin.showtimes.index') }}" class="btn btn-secondary">Back</a>
         </div>
     </div>
 </div>
@@ -77,11 +77,11 @@
 @if($showtime->room && $seats->isNotEmpty())
 <div class="card mt-4">
     <div class="card-header">
-        <h5 class="mb-0">Sơ đồ ghế - {{ $showtime->room->name }}</h5>
+        <h5 class="mb-0">Seat Map - {{ $showtime->room->name }}</h5>
     </div>
     <div class="card-body">
         <div class="screen text-center mb-3">
-            <div class="screen-bar">MÀN HÌNH</div>
+            <div class="screen-bar">SCREEN</div>
         </div>
 
         <div class="seatmap-wrapper position-relative mb-3">
@@ -105,7 +105,7 @@
                             @endphp
                             <div class="seat {{ $categoryClass }} {{ $isBooked ? 'seat-booked' : 'seat-available' }} {{ $isCoupleRow ? 'seat-couple' : '' }}"
                                  style="{{ $isCoupleRow ? 'grid-column: span 2;' : '' }}"
-                                 title="{{ $seat->seat_number }} - {{ $isBooked ? 'Đã đặt' : 'Trống' }}">
+                                 title="{{ $seat->seat_number }} - {{ $isBooked ? 'Booked' : 'Available' }}">
                                 {{ str_replace($rowLabel, '', $seat->seat_number) }}
                             </div>
                         @endforeach
@@ -117,19 +117,19 @@
         <div class="legend mt-3">
             <div class="d-flex align-items-center mb-2">
                 <span class="legend-box seat-regular me-2"></span>
-                <span>Ghế thường (Gold) - Trống</span>
+                <span>Regular Seat (Gold) - Available</span>
             </div>
             <div class="d-flex align-items-center mb-2">
                 <span class="legend-box seat-vip me-2"></span>
-                <span>Ghế VIP (Platinum) - Trống</span>
+                <span>VIP Seat (Platinum) - Available</span>
             </div>
             <div class="d-flex align-items-center mb-2">
                 <span class="legend-box seat-sweet me-2"></span>
-                <span>Ghế cặp đôi (Box) - Trống</span>
+                <span>Couple Seat (Box) - Available</span>
             </div>
             <div class="d-flex align-items-center">
                 <span class="legend-box seat-booked me-2"></span>
-                <span>Ghế đã đặt</span>
+                <span>Booked Seat</span>
             </div>
         </div>
     </div>

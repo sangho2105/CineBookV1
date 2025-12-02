@@ -129,31 +129,20 @@ class ComboController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Toggle ẩn/hiện combo thay vì xóa
      */
-    public function destroy(Combo $combo)
+    public function toggleHidden($id)
     {
-        // Kiểm tra xem combo đã có khách hàng đặt hay chưa
-        $hasBookings = $combo->hasBookings();
+        $combo = Combo::findOrFail($id);
+        $combo->is_hidden = !$combo->is_hidden;
+        $combo->save();
 
-        if ($hasBookings) {
-            // Nếu đã có khách hàng đặt, không cho xóa, chỉ cho ẩn
-            $combo->update(['is_hidden' => true]);
-            
-            return redirect()->route('admin.combos.index')
-                ->with('error', 'Combo này đã có khách hàng đặt. Không thể xóa, chỉ có thể ẩn. Combo đã được ẩn và khách hàng sẽ thấy combo hiển thị "hết hàng".');
-        } else {
-            // Nếu chưa có khách hàng đặt, xóa hoàn toàn
-            // Xóa ảnh khỏi storage
-            if ($combo->image_path) {
-                Storage::disk('public')->delete($combo->image_path);
-            }
+        $status = $combo->is_hidden ? 'hidden' : 'shown';
+        $message = $combo->is_hidden 
+            ? "Combo '{$combo->name}' has been hidden successfully!" 
+            : "Combo '{$combo->name}' has been shown successfully!";
 
-            $combo->delete();
-
-            return redirect()->route('admin.combos.index')
-                ->with('success', 'Combo này chưa được đặt hàng và đã được xóa thành công!');
-        }
+        return redirect()->route('admin.combos.index')->with('success', $message);
     }
 
     /**

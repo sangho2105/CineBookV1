@@ -43,10 +43,11 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="age" class="form-label">Age</label>
-                        <input type="number" class="form-control @error('age') is-invalid @enderror"
-                            id="age" name="age" value="{{ old('age', $user->age) }}" min="1" max="120">
-                        @error('age')
+                        <label for="date_of_birth" class="form-label">Date of Birth</label>
+                        <input type="date" class="form-control @error('date_of_birth') is-invalid @enderror"
+                            id="date_of_birth" name="date_of_birth" value="{{ old('date_of_birth', $user->date_of_birth) }}" 
+                            max="{{ date('Y-m-d', strtotime('-1 day')) }}">
+                        @error('date_of_birth')
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
@@ -80,14 +81,14 @@
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="changePasswordCheck" name="change_password">
                             <label class="form-check-label" for="changePasswordCheck">
-                                Tôi muốn thay đổi mật khẩu
+                                I want to change my password
                             </label>
                         </div>
                     </div>
 
                     <div id="passwordFields" style="display: none;">
                         <div class="mb-3">
-                            <label for="password" class="form-label">Mật khẩu mới <span class="text-danger">*</span></label>
+                            <label for="password" class="form-label">New Password <span class="text-danger">*</span></label>
                             <input type="password" class="form-control @error('password') is-invalid @enderror"
                                 id="password" name="password">
                             @error('password')
@@ -96,7 +97,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="password_confirmation" class="form-label">Xác nhận mật khẩu mới <span class="text-danger">*</span></label>
+                            <label for="password_confirmation" class="form-label">Confirm New Password <span class="text-danger">*</span></label>
                             <input type="password" class="form-control"
                                 id="password_confirmation" name="password_confirmation">
                         </div>

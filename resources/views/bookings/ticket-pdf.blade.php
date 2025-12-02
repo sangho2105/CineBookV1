@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Vé Xem Phim - {{ $booking->booking_id_unique }}</title>
+    <title>Movie Ticket - {{ $booking->booking_id_unique }}</title>
     <style>
         /* Reset và cấu hình cơ bản */
         * {
@@ -276,23 +276,23 @@
             <!-- Thông tin chiếu -->
             <div class="info-section">
                 <div class="info-row">
-                    <span class="info-label">Phòng:{{ $booking->showtime->room->name ?? 'N/A' }}</span>
+                    <span class="info-label">Room:{{ $booking->showtime->room->name ?? 'N/A' }}</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label">Ngày: {{ $booking->showtime->show_date->format('d/m/Y') }} | {{ $ticketInfo['start_time'] }}-{{ $ticketInfo['end_time'] }}</span>
+                    <span class="info-label">Date: {{ $booking->showtime->show_date->format('d/m/Y') }} | {{ $ticketInfo['start_time'] }}-{{ $ticketInfo['end_time'] }}</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label">Ghế: @foreach($ticketInfo['seat_details'] as $seat)
+                    <span class="info-label">Seats: @foreach($ticketInfo['seat_details'] as $seat)
                             <span class="seat-number">{{ $seat['number'] }}</span><span class="seat-category">({{ $seat['category'] }})</span>@if(!$loop->last), @endif
                         @endforeach</span>
                 </div>
             </div>
 
-            <!-- Tổng tiền -->
+            <!-- Total amount -->
             <div class="price-section">
-                <div class="section-title">Tổng tiền</div>
+                <div class="section-title">Total Amount</div>
                 <div class="price-row">
-                    <span class="price-label">Tiền vé:</span>
+                    <span class="price-label">Ticket:</span>
                     <span class="price-value">${{ number_format($ticketInfo['ticket_price'], 2, '.', ',') }}</span>
                 </div>
                 @if($ticketInfo['combo_price'] > 0)
@@ -303,17 +303,17 @@
                 @endif
                 @if($ticketInfo['discount_amount'] > 0)
                     <div class="price-row">
-                        <span class="price-label">KM:</span>
+                        <span class="price-label">Promo:</span>
                         <span class="price-value discount-amount">-${{ number_format($ticketInfo['discount_amount'], 2, '.', ',') }}</span>
                     </div>
                 @endif
                 @if(isset($ticketInfo['has_gift_promotion']) && $ticketInfo['has_gift_promotion'] === true)
                     <div class="price-row" style="color: #e74c3c; font-weight: bold; font-size: 8px; margin-top: 2mm;">
-                        *Áp dụng tặng quà
+                        *Gift Applied
                     </div>
                 @endif
                 <div class="price-row total">
-                    <span class="price-label">Tổng:</span>
+                    <span class="price-label">Total:</span>
                     <span class="price-value">${{ number_format($ticketInfo['total'], 2, '.', ',') }}</span>
                 </div>
             </div>
@@ -321,7 +321,7 @@
 
         <!-- Footer: Mã đặt chỗ & Mã vạch -->
         <div class="ticket-footer">
-            <div class="booking-label">Mã đặt chỗ</div>
+            <div class="booking-label">Booking Code</div>
             <div class="booking-code">{{ $booking->booking_id_unique }}</div>
             
             @if(isset($barcodeHtml) && !empty($barcodeHtml))

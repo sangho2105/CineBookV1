@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vé Xem Phim - {{ $booking->booking_id_unique }}</title>
+    <title>Movie Ticket - {{ $booking->booking_id_unique }}</title>
     <!-- JsBarcode Library -->
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <style>
@@ -280,44 +280,44 @@
             <!-- Thông tin chiếu -->
             <div class="info-section">
                 <div class="info-row">
-                    <span class="info-label">Phòng: {{ $booking->showtime->room->name ?? 'N/A' }}</span>
+                    <span class="info-label">Room: {{ $booking->showtime->room->name ?? 'N/A' }}</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label">Ngày: {{ $booking->showtime->show_date->format('d/m/Y') }} | {{ $ticketInfo['start_time'] }} - {{ $ticketInfo['end_time'] }}</span>
+                    <span class="info-label">Date: {{ $booking->showtime->show_date->format('d/m/Y') }} | {{ $ticketInfo['start_time'] }} - {{ $ticketInfo['end_time'] }}</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label">Ghế: @foreach($ticketInfo['seat_details'] as $seat)
+                    <span class="info-label">Seats: @foreach($ticketInfo['seat_details'] as $seat)
                             <span class="seat-number">{{ $seat['number'] }}</span><span class="seat-category">({{ $seat['category'] }})</span>@if(!$loop->last), @endif
                         @endforeach</span>
                 </div>
             </div>
 
-            <!-- Tổng tiền -->
+            <!-- Total amount -->
             <div class="price-section">
-                <div class="section-title">Tổng tiền</div>
+                <div class="section-title">Total Amount</div>
                 <div class="price-row">
-                    <span class="price-label">Tiền vé:</span>
+                    <span class="price-label">Ticket Price:</span>
                     <span class="price-value">${{ number_format($ticketInfo['ticket_price'], 2, '.', ',') }}</span>
                 </div>
                 @if($ticketInfo['combo_price'] > 0)
                     <div class="price-row">
-                        <span class="price-label">Tiền combo:</span>
+                        <span class="price-label">Combo Price:</span>
                         <span class="price-value">${{ number_format($ticketInfo['combo_price'], 2, '.', ',') }}</span>
                     </div>
                 @endif
                 @if($ticketInfo['discount_amount'] > 0)
                     <div class="price-row">
-                        <span class="price-label">Khuyến mãi:</span>
+                        <span class="price-label">Promotion:</span>
                         <span class="price-value discount-amount">-${{ number_format($ticketInfo['discount_amount'], 2, '.', ',') }}</span>
                     </div>
                 @endif
                 @if(isset($ticketInfo['has_gift_promotion']) && $ticketInfo['has_gift_promotion'] === true)
                     <div class="price-row" style="color: #e74c3c; font-weight: bold; font-size: 14px; margin-top: 8px;">
-                        *Áp dụng tặng quà
+                        *Gift Applied
                     </div>
                 @endif
                 <div class="price-row total">
-                    <span class="price-label">Tổng cộng:</span>
+                    <span class="price-label">Total:</span>
                     <span class="price-value">${{ number_format($ticketInfo['total'], 2, '.', ',') }}</span>
                 </div>
             </div>
@@ -325,7 +325,7 @@
 
         <!-- Footer: Mã đặt chỗ & Mã vạch -->
         <div class="ticket-footer">
-            <div class="booking-label">Mã đặt chỗ / Booking Code</div>
+            <div class="booking-label">Booking Code</div>
             <div class="booking-code">{{ $booking->booking_id_unique }}</div>
             @if($booking->booking_date)
                 @php
@@ -336,7 +336,7 @@
                     // Convert từ UTC (hoặc timezone hiện tại) sang Asia/Ho_Chi_Minh
                     $bookingDate = $bookingDate->setTimezone('Asia/Ho_Chi_Minh');
                 @endphp
-                <div class="booking-label" style="margin-top: 12px;">Ngày đặt vé</div>
+                <div class="booking-label" style="margin-top: 12px;">Booking Date</div>
                 <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 12px;">
                     {{ $bookingDate->format('d/m/Y H:i') }}
                 </div>
@@ -352,9 +352,9 @@
 
             <div class="action-buttons">
                 <a href="{{ route('bookings.ticket.download', $booking->id) }}" class="download-btn">
-                    Tải vé PDF / Download PDF
+                    Download PDF
                 </a>
-                <a href="{{ route('home') }}" class="home-link">Về trang chủ / Home</a>
+                <a href="{{ route('home') }}" class="home-link">Home</a>
             </div>
         </div>
     </div>
@@ -380,7 +380,7 @@
                         lineColor: "#000000"
                     });
                 } catch (error) {
-                    console.error('Lỗi tạo mã vạch:', error);
+                    console.error('Error creating barcode:', error);
                     // Nếu JsBarcode lỗi, hiển thị fallback
                     if (barcodeElement) barcodeElement.style.display = 'none';
                     if (fallbackElement) fallbackElement.style.display = 'block';

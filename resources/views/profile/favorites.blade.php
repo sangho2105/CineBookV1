@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Phim yêu thích - CineBook')
+@section('title', 'Favorite Movies - CineBook')
 
 @push('css')
 <link rel="stylesheet" href="{{ asset('css/search.css') }}">
@@ -22,10 +22,10 @@
                         </a>
                     </li>
                     <li class="breadcrumb-item">
-                        <a href="{{ route('profile.index') }}">Hồ sơ</a>
+                        <a href="{{ route('profile.index') }}">Profile</a>
                     </li>
                     <li class="breadcrumb-item active" aria-current="page">
-                        Phim yêu thích
+                        Favorite Movies
                     </li>
                 </ol>
             </nav>
@@ -37,8 +37,8 @@
         <div class="page-header mb-4">
             <div class="d-flex align-items-start justify-content-between position-relative">
                 <div class="flex-grow-1">
-                    <h1 class="page-title mb-0">Phim yêu thích của tôi</h1>
-                    <p class="page-subtitle mb-0">Danh sách các phim bạn đã thích ({{ $favoriteMovies->total() }} phim)</p>
+                    <h1 class="page-title mb-0">My Favorite Movies</h1>
+                    <p class="page-subtitle mb-0">List of movies you have liked ({{ $favoriteMovies->total() }} movies)</p>
                 </div>
                 <div class="title-underline-full"></div>
             </div>
@@ -101,13 +101,13 @@
                         
                         <div class="movie-details">
                             <p class="detail-item">
-                                <strong>Thể loại:</strong> {{ $movie->genre ?? 'Chưa cập nhật' }}
+                                <strong>Genre:</strong> {{ $movie->genre ?? 'Not updated' }}
                             </p>
                             <p class="detail-item">
-                                <strong>Thời lượng:</strong> {{ $movie->duration_minutes ?? 0 }} phút
+                                <strong>Duration:</strong> {{ $movie->duration_minutes ?? 0 }} minutes
                             </p>
                             <p class="detail-item">
-                                <strong>Khởi chiếu:</strong> {{ \Carbon\Carbon::parse($movie->release_date)->format('d-m-Y') }}
+                                <strong>Release Date:</strong> {{ \Carbon\Carbon::parse($movie->release_date)->format('d-m-Y') }}
                             </p>
                         </div>
                         
@@ -117,15 +117,15 @@
                                     data-movie-id="{{ $movie->id }}" 
                                     data-like-url="{{ route('movie.favorite.toggle', $movie->id) }}">
                                 <i class="bi bi-hand-thumbs-up-fill"></i> 
-                                <span class="like-text">Đã thích</span>
+                                <span class="like-text">Liked</span>
                                 <span class="like-count">{{ $movie->favorites_count ?? 0 }}</span>
                             </button>
                             @if($movie->showtimes->isNotEmpty())
                                 <button type="button" class="btn-buy-ticket" data-booking-movie-id="{{ $movie->id }}" data-bs-toggle="modal" data-bs-target="#bookingModal">
-                                    MUA VÉ
+                                    BUY TICKET
                                 </button>
                             @else
-                                <button class="btn-buy-ticket" disabled>MUA VÉ</button>
+                                <button class="btn-buy-ticket" disabled>BUY TICKET</button>
                             @endif
                         </div>
                     </div>
@@ -134,7 +134,7 @@
                 <div class="col-12">
                     <div class="alert alert-warning text-center">
                         <i class="bi bi-exclamation-triangle"></i> 
-                        Bạn chưa có phim yêu thích nào. Hãy thích các phim bạn quan tâm!
+                        You don't have any favorite movies yet. Like the movies you're interested in!
                     </div>
                 </div>
             @endforelse
@@ -152,7 +152,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Xử lý click nút like
+    // Handle like button click
     document.querySelectorAll('.btn-like[data-like-url]').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const likeText = this.querySelector('.like-text');
             const likeCount = this.querySelector('.like-count');
             
-            // Disable button trong lúc xử lý
+            // Disable button while processing
             this.disabled = true;
             
             fetch(url, {
@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Nếu unlike thì xóa phim khỏi danh sách
+                    // If unlike, remove movie from list
                     if (!data.isLiked) {
                         const movieCardElement = this.closest('.movie-card');
                         if (movieCardElement) {
@@ -183,27 +183,27 @@ document.addEventListener('DOMContentLoaded', function() {
                             movieCardElement.style.opacity = '0';
                             setTimeout(() => {
                                 movieCardElement.remove();
-                                // Kiểm tra nếu không còn phim nào
+                                // Check if no movies left
                                 if (document.querySelectorAll('.movie-card').length === 0) {
                                     location.reload();
                                 }
                             }, 300);
                         }
                     } else {
-                        // Cập nhật UI nếu like lại
+                        // Update UI if liked again
                         this.classList.add('liked');
                         icon.classList.remove('bi-hand-thumbs-up');
                         icon.classList.add('bi-hand-thumbs-up-fill');
-                        likeText.textContent = 'Đã thích';
+                        likeText.textContent = 'Liked';
                         likeCount.textContent = data.likeCount;
                     }
                 } else {
-                    alert(data.message || 'Có lỗi xảy ra');
+                    alert(data.message || 'An error occurred');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Có lỗi xảy ra khi xử lý yêu cầu');
+                alert('An error occurred while processing the request');
             })
             .finally(() => {
                 this.disabled = false;

@@ -44,8 +44,27 @@ class RoomController extends Controller
             return $showtime->show_date->format('Y-m-d');
         });
 
-        // Sắp xếp theo key (ngày) và chuyển sang array để lấy keys
-        $sortedDates = $scheduleByDate->keys()->sort()->values();
+        // Lấy ngày hiện tại để phân loại
+        $today = \Carbon\Carbon::today()->format('Y-m-d');
+        
+        // Tách thành 2 nhóm: ngày hiện tại/tương lai và ngày đã qua
+        $upcomingDates = collect();
+        $pastDates = collect();
+        
+        foreach ($scheduleByDate->keys() as $date) {
+            if ($date >= $today) {
+                $upcomingDates->push($date);
+            } else {
+                $pastDates->push($date);
+            }
+        }
+        
+        // Sắp xếp: upcoming tăng dần (gần nhất trước), past giảm dần (gần nhất trước)
+        $upcomingDates = $upcomingDates->sort()->values();
+        $pastDates = $pastDates->sortDesc()->values();
+        
+        // Gộp lại: upcoming trước, past sau
+        $sortedDates = $upcomingDates->merge($pastDates);
         
         // Phân trang: 6 ngày mỗi trang
         $perPage = 6;

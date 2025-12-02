@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Vé điện tử')
+@section('title', 'E-Ticket')
 
 @section('content')
 <div class="container my-5">
@@ -8,10 +8,10 @@
         <div class="col-lg-10">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2 class="mb-0">
-                    <i class="bi bi-ticket-perforated"></i> Vé điện tử
+                    <i class="bi bi-ticket-perforated"></i> E-Ticket
                 </h2>
                 <a href="{{ route('profile.index') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left"></i> Quay lại
+                    <i class="bi bi-arrow-left"></i> Back
                 </a>
             </div>
 
@@ -29,28 +29,28 @@
                             </p>
                         </div>
                         <div class="col-md-6 text-md-end">
-                            <p class="text-muted mb-1 small">Mã đặt vé</p>
+                            <p class="text-muted mb-1 small">Booking ID</p>
                             <h5 class="mb-0">
                                 <code class="fs-4">{{ $booking->booking_id_unique }}</code>
                             </h5>
                             <p class="mt-2 mb-0">
                                 @if($booking->payment_status === 'completed')
-                                    <span class="badge bg-success fs-6">Đã thanh toán</span>
+                                    <span class="badge bg-success fs-6">Paid</span>
                                 @else
-                                    <span class="badge bg-warning text-dark fs-6">Chờ thanh toán</span>
+                                    <span class="badge bg-warning text-dark fs-6">Pending Payment</span>
                                 @endif
                             </p>
                         </div>
                     </div>
 
                     <div class="row g-4">
-                        <!-- Thông tin suất chiếu -->
+                        <!-- Showtime information -->
                         <div class="col-md-6">
                             <h5 class="mb-3">
-                                <i class="bi bi-info-circle"></i> Thông tin suất chiếu
+                                <i class="bi bi-info-circle"></i> Showtime Information
                             </h5>
                             <div class="mb-3">
-                                <p class="mb-1 text-muted small">Rạp chiếu</p>
+                                <p class="mb-1 text-muted small">Theater</p>
                                 <p class="mb-0 fw-bold">CineBook Center</p>
                                 @if($booking->showtime->theater)
                                     <p class="text-muted small mb-0">
@@ -61,12 +61,12 @@
                             </div>
                             @if($booking->showtime->room)
                                 <div class="mb-3">
-                                    <p class="mb-1 text-muted small">Phòng chiếu</p>
+                                    <p class="mb-1 text-muted small">Room</p>
                                     <p class="mb-0 fw-bold">{{ $booking->showtime->room->name ?? 'N/A' }}</p>
                                 </div>
                             @endif
                             <div class="mb-3">
-                                <p class="mb-1 text-muted small">Ngày & Giờ</p>
+                                <p class="mb-1 text-muted small">Date & Time</p>
                                 <p class="mb-0 fw-bold">
                                     {{ optional($booking->showtime->show_date)->format('d/m/Y') }} 
                                     @php
@@ -84,10 +84,10 @@
                             </div>
                         </div>
 
-                        <!-- Thông tin ghế -->
+                        <!-- Seat information -->
                         <div class="col-md-6">
                             <h5 class="mb-3">
-                                <i class="bi bi-grid-3x3-gap"></i> Ghế đã đặt
+                                <i class="bi bi-grid-3x3-gap"></i> Booked Seats
                             </h5>
                             <div class="d-flex flex-wrap gap-2 mb-3">
                                 @foreach($booking->seats as $seat)
@@ -98,27 +98,27 @@
                                 @endforeach
                             </div>
                             <div class="mb-3">
-                                <p class="mb-1 text-muted small">Tổng số ghế</p>
-                                <p class="mb-0 fw-bold">{{ $booking->seats->count() }} ghế</p>
+                                <p class="mb-1 text-muted small">Total Seats</p>
+                                <p class="mb-0 fw-bold">{{ $booking->seats->count() }} seats</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Combos (nếu có) -->
+                    <!-- Combos (if any) -->
                     @if($booking->combos->isNotEmpty())
                         <div class="row mt-4 pt-3 border-top">
                             <div class="col-12">
                                 <h5 class="mb-3">
-                                    <i class="bi bi-bag"></i> Combo đã mua
+                                    <i class="bi bi-bag"></i> Purchased Combos
                                 </h5>
                                 <div class="table-responsive">
                                     <table class="table table-sm">
                                         <thead>
                                             <tr>
-                                                <th>Tên combo</th>
-                                                <th class="text-center">Số lượng</th>
-                                                <th class="text-end">Đơn giá</th>
-                                                <th class="text-end">Thành tiền</th>
+                                                <th>Combo Name</th>
+                                                <th class="text-center">Quantity</th>
+                                                <th class="text-end">Unit Price</th>
+                                                <th class="text-end">Subtotal</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -137,11 +137,11 @@
                         </div>
                     @endif
 
-                    <!-- Tổng tiền -->
+                    <!-- Total amount -->
                     <div class="row mt-4 pt-3 border-top">
                         <div class="col-md-8">
                             <p class="mb-1 text-muted small">
-                                <i class="bi bi-calendar-check"></i> Ngày đặt vé
+                                <i class="bi bi-calendar-check"></i> Booking Date
                             </p>
                             <p class="mb-0 fw-bold">
                                 @if($booking->booking_date)
@@ -155,41 +155,41 @@
                                     @endphp
                                     {{ $bookingDate->format('d/m/Y H:i') }}
                                 @else
-                                    Chưa thanh toán
+                                    Unpaid
                                 @endif
                             </p>
                         </div>
                         <div class="col-md-4 text-md-end">
-                            <p class="mb-1 text-muted small">Tổng tiền</p>
+                            <p class="mb-1 text-muted small">Total Amount</p>
                             <h4 class="mb-0 text-primary">
                                 {{ format_currency($booking->total_amount) }}
                             </h4>
                         </div>
                     </div>
 
-                    <!-- Lưu ý -->
+                    <!-- Notes -->
                     <div class="alert alert-info mt-4 mb-0">
                         <h6 class="alert-heading">
-                            <i class="bi bi-info-circle"></i> Lưu ý
+                            <i class="bi bi-info-circle"></i> Notes
                         </h6>
                         <ul class="mb-0 small">
-                            <li>Vui lòng đến rạp trước 15 phút để làm thủ tục vào rạp.</li>
-                            <li>Mang theo mã đặt vé này hoặc CMND/CCCD để đối chiếu khi vào rạp.</li>
-                            <li>Vé đã thanh toán không thể hoàn tiền hoặc đổi suất chiếu.</li>
+                            <li>Please arrive at the theater 15 minutes early to complete check-in procedures.</li>
+                            <li>Bring this booking ID or your ID card for verification when entering the theater.</li>
+                            <li>Paid tickets cannot be refunded or exchanged for another showtime.</li>
                         </ul>
                     </div>
 
-                    <!-- Nút hành động -->
+                    <!-- Action buttons -->
                     @if($booking->payment_status !== 'completed')
                         <div class="mt-4 text-center">
                             <a href="{{ route('bookings.payment', $booking) }}" class="btn btn-primary btn-lg">
-                                <i class="bi bi-credit-card"></i> Thanh toán ngay
+                                <i class="bi bi-credit-card"></i> Pay Now
                             </a>
                         </div>
                     @else
                         <div class="mt-4 text-center">
                             <a href="{{ route('bookings.ticket', $booking) }}" class="btn btn-success btn-lg">
-                                <i class="bi bi-ticket-perforated"></i> Xem vé điện tử
+                                <i class="bi bi-ticket-perforated"></i> View E-Ticket
                             </a>
                         </div>
                     @endif

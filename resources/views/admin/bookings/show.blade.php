@@ -7,7 +7,7 @@
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <h1 class="mb-0">Chi tiết Vé #{{ $booking->booking_id_unique }}</h1>
                 <a href="{{ route('admin.bookings.index') }}" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left"></i> Quay lại
+                    <i class="bi bi-arrow-left"></i> Quay lại danh sách
                 </a>
             </div>
         </div>

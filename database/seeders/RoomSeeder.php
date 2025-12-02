@@ -18,7 +18,7 @@ class RoomSeeder extends Seeder
         // 1 hàng đôi (G): 4 ghế đôi = 4 ghế (chiếm 8 vị trí)
         Room::create([
             'room_number' => 1,
-            'name' => 'Phòng 1',
+            'name' => 'Room 1',
             'total_seats' => 52,
             'layout' => [
                 ['row_letter' => 'A', 'seat_type' => 'normal', 'seat_count' => 8],
@@ -37,7 +37,7 @@ class RoomSeeder extends Seeder
         // 1 hàng đôi (I): 4 ghế đôi = 4 ghế (chiếm 8 vị trí)
         Room::create([
             'room_number' => 2,
-            'name' => 'Phòng 2',
+            'name' => 'Room 2',
             'total_seats' => 65,
             'layout' => [
                 ['row_letter' => 'A', 'seat_type' => 'normal', 'seat_count' => 8],
@@ -58,7 +58,7 @@ class RoomSeeder extends Seeder
         // 1 hàng đôi (H): 4 ghế đôi = 4 ghế (chiếm 8 vị trí)
         Room::create([
             'room_number' => 3,
-            'name' => 'Phòng 3',
+            'name' => 'Room 3',
             'total_seats' => 52,
             'layout' => [
                 ['row_letter' => 'A', 'seat_type' => 'normal', 'seat_count' => 8],
@@ -78,7 +78,7 @@ class RoomSeeder extends Seeder
         // 1 hàng đôi (J): 3 ghế đôi = 3 ghế (chiếm 6 vị trí)
         Room::create([
             'room_number' => 4,
-            'name' => 'Phòng 4',
+            'name' => 'Room 4',
             'total_seats' => 65,
             'layout' => [
                 ['row_letter' => 'A', 'seat_type' => 'normal', 'seat_count' => 8],
@@ -100,7 +100,7 @@ class RoomSeeder extends Seeder
         // 1 hàng đôi (G): 4 ghế đôi = 4 ghế (chiếm 8 vị trí)
         Room::create([
             'room_number' => 5,
-            'name' => 'Phòng 5',
+            'name' => 'Room 5',
             'total_seats' => 44,
             'layout' => [
                 ['row_letter' => 'A', 'seat_type' => 'normal', 'seat_count' => 6],
@@ -119,7 +119,7 @@ class RoomSeeder extends Seeder
         // 1 hàng đôi (H): 3 ghế đôi = 3 ghế (chiếm 6 vị trí)
         Room::create([
             'room_number' => 6,
-            'name' => 'Phòng 6',
+            'name' => 'Room 6',
             'total_seats' => 45,
             'layout' => [
                 ['row_letter' => 'A', 'seat_type' => 'normal', 'seat_count' => 6],

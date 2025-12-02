@@ -6,35 +6,35 @@
         <div class="col-lg-8">
             <div class="card shadow">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Xác nhận đặt vé</h4>
+                    <h4 class="mb-0">Confirm Booking</h4>
                 </div>
                 <div class="card-body">
-                    {{-- Thông tin phim và suất chiếu --}}
+                    {{-- Movie and showtime information --}}
                     <div class="mb-4">
-                        <h5 class="mb-3">Thông tin vé</h5>
+                        <h5 class="mb-3">Ticket Information</h5>
                         <div class="row">
                             <div class="col-md-6">
-                                <p><strong>Phim:</strong> {{ $showtime->movie->title }}</p>
-                                <p><strong>Rạp:</strong> CineBook Center</p>
-                                <p><strong>Phòng:</strong> {{ $showtime->room->name }}</p>
+                                <p><strong>Movie:</strong> {{ $showtime->movie->title }}</p>
+                                <p><strong>Theater:</strong> CineBook Center</p>
+                                <p><strong>Room:</strong> {{ $showtime->room->name }}</p>
                             </div>
                             <div class="col-md-6">
-                                <p><strong>Ngày chiếu:</strong> {{ $showtime->show_date->format('d/m/Y') }}</p>
-                                <p><strong>Giờ chiếu:</strong> {{ $showtime->getFormattedShowTime('H:i') }}</p>
+                                <p><strong>Show Date:</strong> {{ $showtime->show_date->format('d/m/Y') }}</p>
+                                <p><strong>Show Time:</strong> {{ $showtime->getFormattedShowTime('H:i') }}</p>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Thông tin ghế --}}
+                    {{-- Seat information --}}
                     <div class="mb-4">
-                        <h5 class="mb-3">Ghế đã chọn</h5>
+                        <h5 class="mb-3">Selected Seats</h5>
                         <div class="table-responsive">
                             <table class="table table-bordered">
                                 <thead>
                                     <tr>
-                                        <th>Ghế</th>
-                                        <th>Loại</th>
-                                        <th class="text-end">Giá</th>
+                                        <th>Seat</th>
+                                        <th>Type</th>
+                                        <th class="text-end">Price</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -43,11 +43,11 @@
                                             <td>{{ $detail['seat']->seat_number }}</td>
                                             <td>
                                                 @if($detail['seat']->seat_category == 'Gold')
-                                                    Ghế thường (Gold)
+                                                    Regular Seat (Gold)
                                                 @elseif($detail['seat']->seat_category == 'Platinum')
-                                                    Ghế VIP (Platinum)
+                                                    VIP Seat (Platinum)
                                                 @else
-                                                    Ghế cặp đôi (Box)
+                                                    Couple Seat (Box)
                                                 @endif
                                             </td>
                                             <td class="text-end">${{ number_format($detail['price'], 2) }}</td>
@@ -56,7 +56,7 @@
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <th colspan="2" class="text-end">Tổng tiền vé:</th>
+                                        <th colspan="2" class="text-end">Total Ticket Price:</th>
                                         <th class="text-end">${{ number_format($ticketPrice, 2) }}</th>
                                     </tr>
                                 </tfoot>
@@ -64,18 +64,18 @@
                         </div>
                     </div>
 
-                    {{-- Thông tin combo --}}
+                    {{-- Combo information --}}
                     @if(!empty($comboDetails))
                     <div class="mb-4">
-                        <h5 class="mb-3">Combo đã chọn</h5>
+                        <h5 class="mb-3">Selected Combos</h5>
                         <div class="table-responsive">
                             <table class="table table-bordered">
                                 <thead>
                                     <tr>
                                         <th>Combo</th>
-                                        <th>Số lượng</th>
-                                        <th class="text-end">Đơn giá</th>
-                                        <th class="text-end">Thành tiền</th>
+                                        <th>Quantity</th>
+                                        <th class="text-end">Unit Price</th>
+                                        <th class="text-end">Subtotal</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -90,7 +90,7 @@
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <th colspan="3" class="text-end">Tổng tiền combo:</th>
+                                        <th colspan="3" class="text-end">Total Combo Price:</th>
                                         <th class="text-end">${{ number_format($comboPrice, 2) }}</th>
                                     </tr>
                                 </tfoot>
@@ -99,10 +99,10 @@
                     </div>
                     @endif
 
-                    {{-- Khuyến mãi --}}
+                    {{-- Promotions --}}
                     @if(!empty($promotionDetails) || $hasGiftPromotion)
                     <div class="mb-4">
-                        <h5 class="mb-3">Khuyến mãi</h5>
+                        <h5 class="mb-3">Promotions</h5>
                         <div class="table-responsive">
                             <table class="table table-bordered">
                                 <tbody>
@@ -111,19 +111,19 @@
                                             <td>
                                                 <strong>{{ $promo['name'] }}</strong>
                                                 @if($promo['type'] == 'gift')
-                                                    <span class="badge bg-success ms-2">Tặng quà</span>
+                                                    <span class="badge bg-success ms-2">Gift</span>
                                                 @elseif($promo['type'] == 'discount_gift')
-                                                    <span class="badge bg-primary ms-2">Giảm {{ $promo['percentage'] }}%</span>
-                                                    <span class="badge bg-success ms-2">Tặng quà</span>
+                                                    <span class="badge bg-primary ms-2">Discount {{ $promo['percentage'] }}%</span>
+                                                    <span class="badge bg-success ms-2">Gift</span>
                                                 @else
-                                                    <span class="badge bg-primary ms-2">Giảm {{ $promo['percentage'] }}%</span>
+                                                    <span class="badge bg-primary ms-2">Discount {{ $promo['percentage'] }}%</span>
                                                 @endif
                                             </td>
                                             <td class="text-end">
                                                 @if($promo['type'] == 'discount' || $promo['type'] == 'discount_gift')
                                                     -${{ number_format($promo['discount'], 2) }}
                                                 @else
-                                                    Miễn phí
+                                                    Free
                                                 @endif
                                             </td>
                                         </tr>
@@ -132,7 +132,7 @@
                                 @if($discountAmount > 0)
                                 <tfoot>
                                     <tr>
-                                        <th>Tổng giảm giá:</th>
+                                        <th>Total Discount:</th>
                                         <th class="text-end text-danger">-${{ number_format($discountAmount, 2) }}</th>
                                     </tr>
                                 </tfoot>
@@ -142,15 +142,15 @@
                     </div>
                     @endif
 
-                    {{-- Tổng tiền --}}
+                    {{-- Total amount --}}
                     <div class="mb-4 p-3 bg-light rounded">
                         <div class="d-flex justify-content-between align-items-center">
-                            <h4 class="mb-0">Tổng tiền phải thanh toán:</h4>
+                            <h4 class="mb-0">Total Amount to Pay:</h4>
                             <h4 class="mb-0 text-primary">${{ number_format($finalTotal, 2) }}</h4>
                         </div>
                     </div>
 
-                    {{-- Form xác nhận --}}
+                    {{-- Confirmation form --}}
                     <form action="{{ route('bookings.store', $showtime) }}" method="POST">
                         @csrf
                         <input type="hidden" name="selected_seats" value="{{ json_encode($selectedSeatIds) }}">
@@ -173,8 +173,8 @@
                         @endif
                         
                         <div class="d-flex gap-2 justify-content-end">
-                            <a href="{{ route('bookings.select-seats', $showtime) }}" class="btn btn-secondary">Quay lại</a>
-                            <button type="submit" class="btn btn-primary btn-lg">Xác nhận và thanh toán</button>
+                            <a href="{{ route('bookings.select-seats', $showtime) }}" class="btn btn-secondary">Back</a>
+                            <button type="submit" class="btn btn-primary btn-lg">Confirm and Pay</button>
                         </div>
                     </form>
                 </div>

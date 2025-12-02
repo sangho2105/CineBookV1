@@ -4,7 +4,7 @@
 <div class="container">
     <div class="row mb-4">
         <div class="col-md-12">
-            <h2>Quản lý Phòng chiếu</h2>
+            <h2>Rooms</h2>
         </div>
     </div>
 
@@ -23,13 +23,13 @@
                     <div class="card-body">
                         <h5 class="card-title">{{ $room->name }}</h5>
                         <p class="card-text">
-                            <strong>Tổng số ghế:</strong> {{ $room->total_seats }} ghế<br>
-                            <strong>Số hàng:</strong> {{ count($room->layout) }} hàng
+                            <strong>Total Seats:</strong> {{ $room->total_seats }} seats<br>
+                            <strong>Number of Rows:</strong> {{ count($room->layout) }} rows
                         </p>
                         <div class="d-flex gap-2" style="flex-wrap: nowrap;">
-                            <a href="{{ route('admin.rooms.show', $room) }}" class="btn btn-primary btn-sm" style="white-space: nowrap; flex: 0 0 auto;">Xem sơ đồ phòng</a>
+                            <a href="{{ route('admin.rooms.show', $room) }}" class="btn btn-primary btn-sm" style="white-space: nowrap; flex: 0 0 auto;">View Room Layout</a>
                             <a href="{{ route('admin.rooms.schedule', $room) }}" class="btn btn-info btn-sm" style="white-space: nowrap; flex: 0 0 auto;">
-                                <i class="bi bi-calendar-event"></i> Xem lịch chiếu
+                                <i class="bi bi-calendar-event"></i> View Schedule
                             </a>
                         </div>
                     </div>
@@ -39,7 +39,7 @@
         </div>
     @else
         <div class="alert alert-info">
-            Chưa có phòng chiếu nào. Vui lòng chạy seeder để tạo 6 phòng.
+            No rooms available. Please run seeder to create 6 rooms.
         </div>
     @endif
 </div>

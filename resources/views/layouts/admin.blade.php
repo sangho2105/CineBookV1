@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trang Admin</title>
+    <title>Admin Panel</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -428,43 +428,48 @@
         <h3>Admin Panel</h3>
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.bookings.*') ? 'active' : '' }}" href="{{ route('admin.bookings.index') }}">
-                    🎫 Thống kê
+                <a class="nav-link {{ request()->routeIs('admin.bookings.statistics') ? 'active' : '' }}" href="{{ route('admin.bookings.statistics') }}">
+                    📊 Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.bookings.index') || request()->routeIs('admin.bookings.show') ? 'active' : '' }}" href="{{ route('admin.bookings.index') }}">
+                    🎫 Tickets
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.movies.*') ? 'active' : '' }}" href="{{ route('admin.movies.index') }}">
-                    📽️ Quản lý Phim
+                    📽️ Movies
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.rooms.*') ? 'active' : '' }}" href="{{ route('admin.rooms.index') }}">
-                    🎭 Quản lý Phòng chiếu
+                    🎭 Rooms
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.showtimes.*') ? 'active' : '' }}" href="{{ route('admin.showtimes.index') }}">
-                    🕒 Quản lý Suất chiếu
+                    🕒 Showtimes
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.promotions.*') ? 'active' : '' }}" href="{{ route('admin.promotions.index') }}">
-                    🎉 Khuyến mãi &amp; Sự kiện
+                    🎉 Promotions
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.combos.*') ? 'active' : '' }}" href="{{ route('admin.combos.index') }}">
-                    🍿 Quản lý Combo
+                    🍿 Combos
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.comments.*') ? 'active' : '' }}" href="{{ route('admin.comments.index') }}">
-                    💬 Quản lý Bình luận
+                    💬 Comments
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}">
-                    👥 Quản lý User
+                    👥 Users
                 </a>
             </li>
         </ul>

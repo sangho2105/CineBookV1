@@ -21,8 +21,9 @@ class SearchController extends Controller
             ->orderBy('city')
             ->pluck('city');
 
-        // Get all unique genres from movies
-        $genres = Movie::select('genre')
+        // Get all unique genres from movies (chỉ lấy từ phim chưa bị ẩn)
+        $genres = Movie::where('is_hidden', false)
+            ->select('genre')
             ->distinct()
             ->orderBy('genre')
             ->get()
@@ -35,8 +36,9 @@ class SearchController extends Controller
             ->sort()
             ->values();
 
-        // Get all unique languages from movies
-        $languages = Movie::select('language')
+        // Get all unique languages from movies (chỉ lấy từ phim chưa bị ẩn)
+        $languages = Movie::where('is_hidden', false)
+            ->select('language')
             ->whereNotNull('language')
             ->where('language', '!=', '')
             ->distinct()
@@ -64,8 +66,8 @@ class SearchController extends Controller
         // Get all theaters for filter
         $theaters = Theater::orderBy('name')->get();
 
-        // Initialize query
-        $query = Movie::query();
+        // Initialize query - chỉ lấy phim chưa bị ẩn
+        $query = Movie::where('is_hidden', false);
 
         // Apply search keyword filter
         if ($request->filled('keyword')) {
@@ -184,8 +186,11 @@ class SearchController extends Controller
     {
         $keyword = $request->keyword;
         
-        $movies = Movie::where('title', 'like', "%{$keyword}%")
-            ->orWhere('genre', 'like', "%{$keyword}%")
+        $movies = Movie::where('is_hidden', false)
+            ->where(function($q) use ($keyword) {
+                $q->where('title', 'like', "%{$keyword}%")
+                  ->orWhere('genre', 'like', "%{$keyword}%");
+            })
             ->limit(10)
             ->get(['id', 'title', 'genre', 'poster_url']);
 

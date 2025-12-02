@@ -5,14 +5,14 @@
     <div class="row mb-4">
         <div class="col-md-12">
             <div class="d-flex justify-content-between align-items-center mb-2">
-                <h2 class="mb-0">Lịch chiếu - {{ $room->name }}</h2>
+                <h2 class="mb-0">Schedule - {{ $room->name }}</h2>
                 <a href="{{ route('admin.rooms.index') }}" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left"></i> Quay lại
+                    <i class="bi bi-arrow-left"></i> Back
                 </a>
             </div>
             <p class="text-muted mb-0">
-                <strong>Tổng số ghế:</strong> {{ $room->total_seats }} ghế | 
-                <strong>Số hàng:</strong> {{ count($room->layout) }} hàng
+                <strong>Total Seats:</strong> {{ $room->total_seats }} seats | 
+                <strong>Number of Rows:</strong> {{ count($room->layout) }} rows
             </p>
         </div>
     </div>
@@ -34,14 +34,15 @@
             @foreach($paginatedSchedule as $date => $dayShowtimes)
                 @php
                     $dateFormatted = \Carbon\Carbon::parse($date)->format('d/m/Y');
-                    $dayName = \Carbon\Carbon::parse($date)->locale('vi')->dayName;
+                    $dayName = \Carbon\Carbon::parse($date)->locale('en')->dayName;
                     $collapseId = 'collapse' . str_replace(['-', '/'], '', $date);
                     $headingId = 'heading' . str_replace(['-', '/'], '', $date);
                     // Chỉ mở nếu là ngày hiện tại và ngày hiện tại có trong danh sách
                     $isToday = ($date === $today);
+                    $isPast = ($date < $today);
                     $shouldOpen = $isToday && $todayInSchedule;
                 @endphp
-                <div class="accordion-item mb-3">
+                <div class="accordion-item mb-3 {{ $isPast ? 'opacity-75' : '' }}">
                     <h2 class="accordion-header" id="{{ $headingId }}">
                         <button class="accordion-button {{ $shouldOpen ? '' : 'collapsed' }}" type="button" 
                                 data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}" 
@@ -50,9 +51,11 @@
                             <i class="bi bi-calendar-event me-2"></i>
                             <strong>{{ $dateFormatted }} ({{ $dayName }})</strong>
                             @if($isToday)
-                                <span class="badge bg-success ms-2">Hôm nay</span>
+                                <span class="badge bg-success ms-2">Today</span>
+                            @elseif($isPast)
+                                <span class="badge bg-secondary ms-2">Past</span>
                             @endif
-                            <span class="badge bg-primary ms-2">{{ count($dayShowtimes) }} suất</span>
+                            <span class="badge bg-primary ms-2">{{ count($dayShowtimes) }} showtimes</span>
                         </button>
                     </h2>
                     <div id="{{ $collapseId }}" 
@@ -64,12 +67,12 @@
                                 <table class="table table-hover mb-0">
                                     <thead>
                                         <tr>
-                                            <th style="width: 12%;">Giờ chiếu</th>
-                                            <th style="width: 35%;">Tên phim</th>
-                                            <th style="width: 12%;">Thời lượng</th>
-                                            <th style="width: 18%;">Khoảng thời gian</th>
-                                            <th style="width: 10%;">Giờ kết thúc</th>
-                                            <th style="width: 13%;">Trạng thái phim</th>
+                                            <th style="width: 12%;">Show Time</th>
+                                            <th style="width: 35%;">Movie Title</th>
+                                            <th style="width: 12%;">Duration</th>
+                                            <th style="width: 18%;">Time Range</th>
+                                            <th style="width: 10%;">End Time</th>
+                                            <th style="width: 13%;">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -121,7 +124,7 @@
                                                 <td>
                                                     <strong>{{ $showtime->movie->title }}</strong>
                                                 </td>
-                                                <td>{{ $duration }} phút</td>
+                                                <td>{{ $duration }} minutes</td>
                                                 <td>
                                                     <span class="badge bg-info">
                                                         {{ $startTime }} - {{ $endTime }}
@@ -135,15 +138,15 @@
                                                 <td>
                                                     @if($showStatus === 'ended')
                                                         <span class="badge bg-secondary">
-                                                            <i class="bi bi-x-circle"></i> Đã kết thúc
+                                                            <i class="bi bi-x-circle"></i> Ended
                                                         </span>
                                                     @elseif($showStatus === 'showing')
                                                         <span class="badge bg-success">
-                                                            <i class="bi bi-play-circle"></i> Đang chiếu
+                                                            <i class="bi bi-play-circle"></i> Showing
                                                         </span>
                                                     @else
                                                         <span class="badge bg-warning text-dark">
-                                                            <i class="bi bi-clock"></i> Sắp chiếu
+                                                            <i class="bi bi-clock"></i> Upcoming
                                                         </span>
                                                     @endif
                                                 </td>
@@ -165,20 +168,20 @@
 
         <div class="alert alert-info mt-3">
             <i class="bi bi-info-circle"></i>
-            <strong>Tổng số suất chiếu:</strong> {{ $showtimes->count() }} suất | 
-            <strong>Tổng số ngày:</strong> {{ $paginatedSchedule->total() }} ngày
+            <strong>Total Showtimes:</strong> {{ $showtimes->count() }} showtimes | 
+            <strong>Total Days:</strong> {{ $paginatedSchedule->total() }} days
         </div>
     @else
         <div class="alert alert-warning">
             <i class="bi bi-exclamation-triangle"></i>
-            Phòng <strong>{{ $room->name }}</strong> chưa có lịch chiếu nào.
+            Room <strong>{{ $room->name }}</strong> has no schedule available.
         </div>
     @endif
     
     <div class="alert alert-light border mt-3">
         <small class="text-muted">
             <i class="bi bi-arrow-clockwise"></i> 
-            Trang sẽ tự động cập nhật mỗi 60 giây để hiển thị trạng thái mới nhất.
+            Page will automatically refresh every 60 seconds to display the latest status.
         </small>
     </div>
 </div>

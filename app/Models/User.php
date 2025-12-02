@@ -23,6 +23,7 @@ class User extends Authenticatable
         'password',
         'phone',
         'age',
+        'date_of_birth',
         'preferred_language',
         'preferred_city',
         'role',
@@ -45,6 +46,7 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'date_of_birth' => 'date',
     ];
     public function bookings()
     {

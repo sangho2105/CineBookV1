@@ -6,20 +6,27 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
     {
         Schema::table('movies', function (Blueprint $table) {
-            if (!Schema::hasColumn('movies', 'rated')) {
-                $table->string('rated', 255)->nullable()->after('rating_average');
-            }
+            $table->boolean('is_hidden')->default(false)->after('status');
         });
     }
 
-    public function down(): void
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
     {
         Schema::table('movies', function (Blueprint $table) {
-            $table->dropColumn('rated');
+            $table->dropColumn('is_hidden');
         });
     }
 };
-

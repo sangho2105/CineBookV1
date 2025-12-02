@@ -3,7 +3,7 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3">Quản lý Bình luận</h1>
+        <h1 class="h3">Comments</h1>
     </div>
 
     @if (session('success'))
@@ -18,30 +18,30 @@
         <div class="card-body">
             <form method="GET" action="{{ route('admin.comments.index') }}" class="row g-3">
                 <div class="col-md-4">
-                    <label for="movie_id" class="form-label">Lọc theo phim</label>
+                    <label for="movie_id" class="form-label">Filter by Movie</label>
                     <select name="movie_id" id="movie_id" class="form-select">
-                        <option value="">-- Tất cả phim --</option>
+                        <option value="">-- All Movies --</option>
                         @foreach($movies as $movie)
                             <option value="{{ $movie->id }}" {{ request('movie_id') == $movie->id ? 'selected' : '' }}>
                                 {{ $movie->title }} 
-                                ({{ $movie->status == 'now_showing' ? 'Đang chiếu' : 'Sắp chiếu' }})
+                                ({{ $movie->status == 'now_showing' ? 'Now Showing' : 'Coming Soon' }})
                             </option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label for="search" class="form-label">Tìm theo tên/email user</label>
+                    <label for="search" class="form-label">Search by User Name/Email</label>
                     <input type="text" name="search" id="search" class="form-control" 
-                           value="{{ request('search') }}" placeholder="Nhập tên hoặc email...">
+                           value="{{ request('search') }}" placeholder="Enter name or email...">
                 </div>
                 <div class="col-md-4">
-                    <label for="content_search" class="form-label">Tìm theo nội dung</label>
+                    <label for="content_search" class="form-label">Search by Content</label>
                     <input type="text" name="content_search" id="content_search" class="form-control" 
-                           value="{{ request('content_search') }}" placeholder="Nhập nội dung...">
+                           value="{{ request('content_search') }}" placeholder="Enter content...">
                 </div>
                 <div class="col-12">
-                    <button type="submit" class="btn btn-primary">Lọc</button>
-                    <a href="{{ route('admin.comments.index') }}" class="btn btn-secondary">Xóa bộ lọc</a>
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                    <a href="{{ route('admin.comments.index') }}" class="btn btn-secondary">Clear Filters</a>
                 </div>
             </form>
         </div>
@@ -57,10 +57,10 @@
                             <tr>
                                 <th>ID</th>
                                 <th>User</th>
-                                <th>Phim</th>
-                                <th>Nội dung</th>
-                                <th>Ngày đăng</th>
-                                <th>Thao tác</th>
+                                <th>Movie</th>
+                                <th>Content</th>
+                                <th>Posted Date</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -78,7 +78,7 @@
                                         @if($comment->movie)
                                             <br>
                                             <small class="text-muted">
-                                                {{ $comment->movie->status == 'now_showing' ? 'Đang chiếu' : 'Sắp chiếu' }}
+                                                {{ $comment->movie->status == 'now_showing' ? 'Now Showing' : 'Coming Soon' }}
                                             </small>
                                         @endif
                                     </td>
@@ -96,11 +96,11 @@
                                         <form action="{{ route('admin.comments.destroy', $comment) }}" 
                                               method="POST" 
                                               class="d-inline"
-                                              onsubmit="return confirm('Bạn có chắc chắn muốn xóa bình luận này?');">
+                                              onsubmit="return confirm('Are you sure you want to delete this comment?');">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-danger">
-                                                <i class="bi bi-trash"></i> Xóa
+                                                <i class="bi bi-trash"></i> Delete
                                             </button>
                                         </form>
                                     </td>
@@ -116,7 +116,7 @@
                 </div>
             @else
                 <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i> Không tìm thấy bình luận nào.
+                    <i class="bi bi-info-circle"></i> No comments found.
                 </div>
             @endif
         </div>

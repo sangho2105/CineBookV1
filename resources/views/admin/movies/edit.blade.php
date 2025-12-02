@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container">
-    <h1>Sửa Phim</h1>
+    <h1>Edit Movie</h1>
 
     {{-- Hiển thị lỗi validation --}}
     @if ($errors->any())
@@ -58,7 +58,7 @@
                 @enderror
             </div>
             <div id="poster-preview" class="mt-2" style="display: none;">
-                <label class="form-label">Xem trước ảnh mới:</label>
+                <label class="form-label">Preview new image:</label>
                 <div>
                     <img id="preview-poster-img" src="" alt="Preview" class="img-fluid rounded" style="max-height: 300px;">
                 </div>
@@ -163,8 +163,8 @@
             @enderror
         </div>
         
-        <button type="submit" class="btn btn-primary">Cập nhật</button>
-        <a href="{{ route('admin.movies.index') }}" class="btn btn-secondary">Hủy</a>
+        <button type="submit" class="btn btn-primary">Update</button>
+        <a href="{{ route('admin.movies.index') }}" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
 

@@ -15,21 +15,24 @@ class HomeController extends Controller
         Movie::refreshStatuses();
         $today = Carbon::today();
 
-        // 1. Lấy 5 phim "Nổi bật" (lấy phim mới nhất đang chiếu)
+        // 1. Lấy 5 phim "Nổi bật" (lấy phim mới nhất đang chiếu) - chỉ lấy phim chưa bị ẩn
         $featuredMovies = Movie::where('release_date', '<=', $today)
+                                ->where('is_hidden', false)
                                 ->orderBy('release_date', 'desc')
                                 ->take(5)
                                 ->get();
                                 
-        // 2. Lấy 12 phim "Đang chiếu"
+        // 2. Lấy 12 phim "Đang chiếu" - chỉ lấy phim chưa bị ẩn
         $nowShowingMovies = Movie::where('release_date', '<=', $today)
+                                  ->where('is_hidden', false)
                                   ->with('showtimes')
                                   ->orderBy('release_date', 'desc')
                                   ->take(12)
                                   ->get();
 
-        // 3. Lấy 12 phim "Sắp chiếu"
+        // 3. Lấy 12 phim "Sắp chiếu" - chỉ lấy phim chưa bị ẩn
         $comingSoonMovies = Movie::where('release_date', '>', $today)
+                                  ->where('is_hidden', false)
                                   ->orderBy('release_date', 'asc')
                                   ->take(12)
                                   ->get();
@@ -50,6 +53,11 @@ class HomeController extends Controller
     }
     public function show(Movie $movie)
     {
+        // Kiểm tra nếu phim bị ẩn và user không phải admin thì không cho xem
+        if ($movie->is_hidden && (!auth()->check() || auth()->user()->role !== 'admin')) {
+            abort(404, 'Phim không tồn tại hoặc đã bị ẩn');
+        }
+        
         $movie->load(['showtimes.theater']);
 
         // Lấy bình luận mới nhất

@@ -237,14 +237,14 @@ class BookingController extends Controller
         
         // Kiểm tra time hợp lệ
         if (empty($timeStr)) {
-            abort(403, 'Thời gian suất chiếu không hợp lệ.');
+            abort(403, 'Invalid showtime time.');
         }
         
         $timeParts = explode(':', $timeStr);
         
         // Kiểm tra format hợp lệ
         if (count($timeParts) < 2) {
-            abort(403, 'Định dạng thời gian không hợp lệ.');
+            abort(403, 'Invalid time format.');
         }
         
         $hour = (int)($timeParts[0] ?? 0);
@@ -252,7 +252,7 @@ class BookingController extends Controller
         
         // Validate range
         if ($hour < 0 || $hour > 23 || $minute < 0 || $minute > 59) {
-            abort(403, 'Thời gian không hợp lệ.');
+            abort(403, 'Invalid time.');
         }
         
         // Tạo datetime từ các thành phần riêng biệt
@@ -266,13 +266,13 @@ class BookingController extends Controller
         );
         
         if ($showDateTime->lte($now)) {
-            abort(403, 'Suất chiếu này đã qua, không thể đặt vé.');
+            abort(403, 'This showtime has passed, cannot book tickets.');
         }
         
         $showtime->load(['movie', 'room']);
         
         if (!$showtime->room) {
-            abort(404, 'Phòng chiếu không tồn tại cho suất chiếu này.');
+            abort(404, 'Room does not exist for this showtime.');
         }
         
         $room = $showtime->room;
@@ -332,7 +332,7 @@ class BookingController extends Controller
         }
         
         // Lấy các combo đang hoạt động từ database
-        $combos = \App\Models\Combo::active()->orderBy('id')->get();
+        $combos = \App\Models\Combo::active()->visible()->orderBy('id')->get();
         
         // Debug: Log số lượng combo (có thể xóa sau)
         \Log::info('Combos loaded: ' . $combos->count());
@@ -374,7 +374,7 @@ class BookingController extends Controller
         );
         
         if ($showDateTime->lte($now)) {
-            return back()->withErrors(['error' => 'Suất chiếu này đã bắt đầu chiếu, không thể đặt vé.']);
+            return back()->withErrors(['error' => 'This showtime has already started, cannot book tickets.']);
         }
         
         $request->validate([
@@ -385,13 +385,13 @@ class BookingController extends Controller
         $selectedSeatIds = json_decode($request->selected_seats, true);
 
         if (empty($selectedSeatIds)) {
-            return back()->withErrors(['selected_seats' => 'Vui lòng chọn ít nhất một ghế!']);
+            return back()->withErrors(['selected_seats' => 'Please select at least one seat!']);
         }
 
         // Validate ids tồn tại
         $validSeatCount = Seat::whereIn('id', $selectedSeatIds)->count();
         if ($validSeatCount !== count($selectedSeatIds)) {
-            return back()->withErrors(['selected_seats' => 'Ghế không hợp lệ, vui lòng thử lại.']);
+            return back()->withErrors(['selected_seats' => 'Invalid seats, please try again.']);
         }
 
         // Kiểm tra xem các ghế có available không
@@ -406,7 +406,7 @@ class BookingController extends Controller
 
         $conflictingSeats = array_intersect($selectedSeatIds, $bookedSeatIds);
         if (!empty($conflictingSeats)) {
-            return back()->withErrors(['selected_seats' => 'Một số ghế đã được đặt rồi!']);
+            return back()->withErrors(['selected_seats' => 'Some seats have already been booked!']);
         }
 
         // Lấy thông tin ghế
@@ -804,12 +804,12 @@ class BookingController extends Controller
         $selectedSeatIds = json_decode($request->selected_seats, true);
         
         if (empty($selectedSeatIds)) {
-            return back()->withErrors(['selected_seats' => 'Vui lòng chọn ít nhất một ghế!']);
+            return back()->withErrors(['selected_seats' => 'Please select at least one seat!']);
         }
         // Validate ids tồn tại
         $validSeatCount = Seat::whereIn('id', $selectedSeatIds)->count();
         if ($validSeatCount !== count($selectedSeatIds)) {
-            return back()->withErrors(['selected_seats' => 'Ghế không hợp lệ, vui lòng thử lại.']);
+            return back()->withErrors(['selected_seats' => 'Invalid seats, please try again.']);
         }
         
         // Kiểm tra xem các ghế có available không
@@ -824,7 +824,7 @@ class BookingController extends Controller
         
         $conflictingSeats = array_intersect($selectedSeatIds, $bookedSeatIds);
         if (!empty($conflictingSeats)) {
-            return back()->withErrors(['selected_seats' => 'Một số ghế đã được đặt rồi!']);
+            return back()->withErrors(['selected_seats' => 'Some seats have already been booked!']);
         }
         
         // Tính tổng tiền
@@ -906,18 +906,18 @@ class BookingController extends Controller
                 }
                 // Không có approve url → đẩy về trang thanh toán nội bộ kèm thông báo
                 return redirect()->route('bookings.payment', $booking)
-                    ->withErrors(['error' => 'Không tạo được đơn PayPal (approve url trống). Vui lòng thanh toán qua nút PayPal trên trang tiếp theo.']);
+                    ->withErrors(['error' => 'Could not create PayPal order (approve url is empty). Please pay via PayPal button on the next page.']);
             } catch (\Throwable $e) {
                 // Bỏ qua và rơi xuống trang thanh toán nội bộ nếu PayPal lỗi
                 return redirect()->route('bookings.payment', $booking)
-                    ->withErrors(['error' => 'Lỗi tạo PayPal Order: ' . $e->getMessage()]);
+                    ->withErrors(['error' => 'Error creating PayPal Order: ' . $e->getMessage()]);
             }
             // Fallback: về trang thanh toán nội bộ có PayPal Buttons
             return redirect()->route('bookings.payment', $booking)
-                ->with('success', 'Chọn ghế thành công! Vui lòng thanh toán.');
+                ->with('success', 'Seats selected successfully! Please proceed to payment.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Có lỗi xảy ra khi đặt vé!']);
+            return back()->withErrors(['error' => 'An error occurred while booking tickets!']);
         }
     }
 
@@ -976,7 +976,7 @@ class BookingController extends Controller
             \Log::error('Lỗi gửi email xác nhận đặt vé: ' . $e->getMessage());
         }
         
-        return redirect()->route('bookings.ticket', $booking)->with('success', 'Thanh toán thành công!');
+        return redirect()->route('bookings.ticket', $booking)->with('success', 'Payment successful!');
     }
 
     // ===== PayPal Integration =====
@@ -1160,7 +1160,7 @@ class BookingController extends Controller
         $orderId = $request->query('token'); // PayPal returns ?token={ORDER_ID}
         if (!$orderId) {
             return redirect()->route('bookings.payment', $booking->id)
-                ->withErrors(['error' => 'Thiếu mã đơn PayPal']);
+                ->withErrors(['error' => 'Missing PayPal order ID']);
         }
         // Capture and redirect back to payment page
         request()->merge(['orderID' => $orderId]);
@@ -1168,10 +1168,10 @@ class BookingController extends Controller
         $json = $result->getData(true);
         if (($json['status'] ?? '') === 'COMPLETED') {
             return redirect()->route('bookings.ticket', $booking->id)
-                ->with('success', 'Thanh toán thành công!');
+                ->with('success', 'Payment successful!');
         }
         return redirect()->route('bookings.payment', $booking->id)
-            ->withErrors(['error' => 'Thanh toán chưa hoàn tất, vui lòng thử lại.']);
+            ->withErrors(['error' => 'Payment not completed, please try again.']);
     }
 
     // Xem chi tiết vé điện tử

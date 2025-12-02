@@ -160,7 +160,7 @@
                         </a>
                     </li>
                     <li class="breadcrumb-item">
-                        <a href="{{ route('search') }}">Phim</a>
+                        <a href="{{ route('search') }}">Movies</a>
                     </li>
                     <li class="breadcrumb-item active" aria-current="page">
                         {{ $movie->title }}
@@ -175,7 +175,7 @@
     {{-- Container lớn đóng khung toàn bộ nội dung --}}
     <div class="movie-content-wrapper" style="border: none; border-radius: 0; padding: 30px; background-color: #F5F5DC; box-shadow: none;">
         {{-- Tiêu đề và HR --}}
-        <h2 class="mb-3" style="font-size: 1.5rem; font-weight: bold; color: #333;">Nội Dung Phim</h2>
+        <h2 class="mb-3" style="font-size: 1.5rem; font-weight: bold; color: #333;">Movie Details</h2>
         <hr class="mb-4">
 
     <div class="row">
@@ -195,43 +195,43 @@
             <div class="movie-info-details mb-4">
                 <div class="mb-3">
                     <p class="mb-2" style="font-size: 0.95rem;">
-                        <strong>Đạo diễn:</strong> 
-                        <span>{{ $movie->director ?? 'Chưa cập nhật' }}</span>
+                        <strong>Director:</strong> 
+                        <span>{{ $movie->director ?? 'Not updated' }}</span>
                     </p>
                 </div>
 
                 <div class="mb-3">
                     <p class="mb-2" style="font-size: 0.95rem;">
-                        <strong>Diễn viên:</strong> 
-                        <span>{{ $movie->cast ?? 'Chưa cập nhật' }}</span>
+                        <strong>Cast:</strong> 
+                        <span>{{ $movie->cast ?? 'Not updated' }}</span>
                     </p>
                 </div>
 
                 <div class="mb-3">
                     <p class="mb-2" style="font-size: 0.95rem;">
-                        <strong>Thể loại:</strong> 
-                        <span>{{ $movie->genre ?? 'Chưa cập nhật' }}</span>
+                        <strong>Genre:</strong> 
+                        <span>{{ $movie->genre ?? 'Not updated' }}</span>
                     </p>
                 </div>
 
                 <div class="mb-3">
                     <p class="mb-2" style="font-size: 0.95rem;">
-                        <strong>Khởi chiếu:</strong> 
+                        <strong>Release Date:</strong> 
                         <span>{{ \Carbon\Carbon::parse($movie->release_date)->format('d/m/Y') }}</span>
                     </p>
                 </div>
 
                 <div class="mb-3">
                     <p class="mb-2" style="font-size: 0.95rem;">
-                        <strong>Thời lượng:</strong> 
-                        <span>{{ $movie->duration_minutes ?? 0 }} phút</span>
+                        <strong>Duration:</strong> 
+                        <span>{{ $movie->duration_minutes ?? 0 }} minutes</span>
                     </p>
                 </div>
 
                 <div class="mb-3">
                     <p class="mb-2" style="font-size: 0.95rem;">
-                        <strong>Ngôn ngữ:</strong> 
-                        <span>{{ $movie->language ?? 'Chưa cập nhật' }}</span>
+                        <strong>Language:</strong> 
+                        <span>{{ $movie->language ?? 'Not updated' }}</span>
                     </p>
                 </div>
 
@@ -242,15 +242,15 @@
                         <span>
                             {{ $movie->rated }} - 
                             @if($movie->rated == 'K')
-                                PHIM ĐƯỢC PHỔ BIẾN ĐẾN NGƯỜI XEM DƯỚI 13 TUỔI VÀ CÓ NGƯỜI BẢO HỘ ĐI KÈM
+                                FILM DISTRIBUTED TO VIEWERS UNDER 13 YEARS OLD WITH ACCOMPANYING GUARDIAN
                             @elseif($movie->rated == 'T13')
-                                PHIM DÀNH CHO NGƯỜI XEM TỪ 13 TUỔI TRỞ LÊN
+                                FILM FOR VIEWERS AGED 13 AND ABOVE
                             @elseif($movie->rated == 'T16')
-                                PHIM DÀNH CHO NGƯỜI XEM TỪ 16 TUỔI TRỞ LÊN
+                                FILM FOR VIEWERS AGED 16 AND ABOVE
                             @elseif($movie->rated == 'T18')
-                                PHIM DÀNH CHO NGƯỜI XEM TỪ 18 TUỔI TRỞ LÊN
+                                FILM FOR VIEWERS AGED 18 AND ABOVE
                             @elseif($movie->rated == 'P')
-                                PHIM DÀNH CHO MỌI ĐỐI TƯỢNG
+                                FILM FOR ALL AUDIENCES
                             @else
                                 {{ $movie->rated }}
                             @endif
@@ -264,12 +264,12 @@
             <div class="mt-2 mb-3">
                 @if($movie->showtimes->isNotEmpty())
                     @auth
-                        <button type="button" class="btn btn-danger btn-lg px-5" style="font-weight: bold; font-size: 1rem;" data-booking-movie-id="{{ $movie->id }}" data-bs-toggle="modal" data-bs-target="#bookingModal">MUA VÉ</button>
+                        <button type="button" class="btn btn-danger btn-lg px-5" style="font-weight: bold; font-size: 1rem;" data-booking-movie-id="{{ $movie->id }}" data-bs-toggle="modal" data-bs-target="#bookingModal">BUY TICKET</button>
                     @else
-                        <a href="{{ route('login', ['redirect' => url()->current()]) }}" class="btn btn-danger btn-lg px-5" style="font-weight: bold; font-size: 1rem;">MUA VÉ</a>
+                        <a href="{{ route('login', ['redirect' => url()->current()]) }}" class="btn btn-danger btn-lg px-5" style="font-weight: bold; font-size: 1rem;">BUY TICKET</a>
                     @endauth
                 @else
-                    <button class="btn btn-danger btn-lg px-5" style="font-weight: bold; font-size: 1rem;" disabled>MUA VÉ</button>
+                    <button class="btn btn-danger btn-lg px-5" style="font-weight: bold; font-size: 1rem;" disabled>BUY TICKET</button>
                 @endif
             </div>
 
@@ -277,7 +277,7 @@
             <div class="d-flex justify-content-center my-2">
                 <div class="movie-detail-tabs">
                     <button class="tab-btn active" data-tab="details">
-                        <i class="bi bi-hand-index"></i>Chi tiết
+                        <i class="bi bi-hand-index"></i>Details
                     </button>
                     <span class="tab-separator">|</span>
                     <button class="tab-btn" data-tab="trailer">
@@ -290,9 +290,9 @@
             <div id="details-content" class="tab-content active">
                 <hr class="my-4">
 
-                <h4 class="mt-4 mb-3" style="font-size: 1.1rem;">Tóm tắt nội dung</h4>
+                <h4 class="mt-4 mb-3" style="font-size: 1.1rem;">Synopsis</h4>
                 <p style="font-size: 0.95rem; line-height: 1.6; color: #333;">
-                    {{ $movie->synopsis ?? 'Chưa có thông tin tóm tắt.' }}
+                    {{ $movie->synopsis ?? 'No synopsis available.' }}
                 </p>
             </div>
 
@@ -326,12 +326,12 @@
                         @elseif($isMp4)
                             <video class="w-100 rounded shadow-sm" controls preload="metadata">
                                 <source src="{{ $url }}" type="video/mp4">
-                                Trình duyệt của bạn không hỗ trợ phát video.
+                                Your browser does not support video playback.
                             </video>
                         @endif
                         @else
                             <div class="text-center py-5">
-                                <p class="text-muted" style="font-size: 0.95rem;">Phim này chưa có trailer.</p>
+                                <p class="text-muted" style="font-size: 0.95rem;">This movie has no trailer available.</p>
                             </div>
                         @endif
                 </div>
@@ -343,21 +343,21 @@
     {{-- Bình luận & Đánh giá --}}
     <div class="row mt-5">
         <div class="col-md-8">
-            <h4 class="mb-3" style="font-size: 1.1rem;">Bình luận</h4>
+            <h4 class="mb-3" style="font-size: 1.1rem;">Comments</h4>
             @auth
                 <form action="{{ route('movie.comment.store', $movie->id) }}" method="POST" class="mb-4">
                     @csrf
                     <div class="mb-3">
-                        <textarea name="content" id="content" rows="3" class="form-control @error('content') is-invalid @enderror" placeholder="Chia sẻ cảm nhận của bạn về phim...">{{ old('content') }}</textarea>
+                        <textarea name="content" id="content" rows="3" class="form-control @error('content') is-invalid @enderror" placeholder="Share your thoughts about the movie...">{{ old('content') }}</textarea>
                         @error('content')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <button type="submit" class="btn btn-primary">Gửi bình luận</button>
+                    <button type="submit" class="btn btn-primary">Post Comment</button>
                 </form>
             @else
                 <div class="alert alert-info">
-                    Vui lòng <a href="{{ route('login') }}">đăng nhập</a> để bình luận.
+                    Please <a href="{{ route('login') }}">login</a> to comment.
                 </div>
             @endauth
 
@@ -365,19 +365,19 @@
                 <div class="mb-3 p-3 border rounded">
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <strong>{{ $comment->user->name ?? 'Người dùng' }}</strong>
+                            <strong>{{ $comment->user->name ?? 'User' }}</strong>
                             <small class="text-muted">{{ $comment->created_at->diffForHumans() }}</small>
                         </div>
                         @auth
                             @if(auth()->id() === ($comment->user_id ?? null))
                                 <div class="ms-2">
                                     <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#edit-comment-{{ $comment->id }}">
-                                        Sửa
+                                        Edit
                                     </button>
-                                    <form action="{{ route('movie.comment.delete', [$movie->id, $comment->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('Xóa bình luận này?');">
+                                    <form action="{{ route('movie.comment.delete', [$movie->id, $comment->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this comment?');">
                                         @csrf
                                         @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger" type="submit">Xóa</button>
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
                                     </form>
                                 </div>
                             @endif
@@ -394,15 +394,15 @@
                                     <div class="mb-2">
                                         <textarea name="content" rows="3" class="form-control">{{ old('content', $comment->content) }}</textarea>
                                     </div>
-                                    <button type="submit" class="btn btn-sm btn-primary">Lưu</button>
-                                    <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="collapse" data-bs-target="#edit-comment-{{ $comment->id }}">Hủy</button>
+                                    <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                                    <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="collapse" data-bs-target="#edit-comment-{{ $comment->id }}">Cancel</button>
                                 </form>
                             </div>
                         @endif
                     @endauth
                 </div>
             @empty
-                <p class="text-muted">Chưa có bình luận nào. Hãy là người đầu tiên!</p>
+                <p class="text-muted">No comments yet. Be the first to comment!</p>
             @endforelse
 
             @if(method_exists($comments, 'links'))
@@ -412,10 +412,10 @@
             @endif
         </div>
         <div class="col-md-4">
-            <h4 class="mb-3" style="font-size: 1.1rem;">Đánh giá</h4>
+            <h4 class="mb-3" style="font-size: 1.1rem;">Ratings</h4>
             <p class="mb-2">
                 <span class="h5 mb-0" style="font-size: 1rem;">⭐ {{ number_format($ratingAverage ?? 0, 1) }}/5.0</span>
-                <small class="text-muted">({{ $ratingCount ?? 0 }} lượt)</small>
+                <small class="text-muted">({{ $ratingCount ?? 0 }} ratings)</small>
             </p>
 
             @auth
@@ -423,33 +423,33 @@
                     <form action="{{ route('movie.rating.store', $movie->id) }}" method="POST" class="mt-3">
                         @csrf
                         <div class="input-group">
-                            <label class="input-group-text" for="score">Chấm điểm</label>
+                            <label class="input-group-text" for="score">Rate</label>
                             <select class="form-select @error('score') is-invalid @enderror" id="score" name="score" required>
                                 @for($i = 5; $i >= 1; $i--)
                                     <option value="{{ $i }}">{{ $i }} / 5</option>
                                 @endfor
                             </select>
-                            <button class="btn btn-success" type="submit">Gửi</button>
+                            <button class="btn btn-success" type="submit">Submit</button>
                             @error('score')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
-                        <small class="text-muted d-block mt-2">Bạn có thể cập nhật điểm nếu đổi ý.</small>
+                        <small class="text-muted d-block mt-2">You can update your rating if you change your mind.</small>
                     </form>
                 @else
                     @if(isset($hasCompletedBooking) && $hasCompletedBooking)
                         <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i> Bạn đã mua vé phim này. Vui lòng đợi suất chiếu kết thúc để có thể đánh giá.
+                            <i class="bi bi-info-circle"></i> You have purchased tickets for this movie. Please wait for the showtime to end to rate.
                         </div>
                     @else
                         <div class="alert alert-warning">
-                            <i class="bi bi-exclamation-triangle"></i> Bạn cần hoàn tất thanh toán vé của phim này để có thể chấm điểm.
+                            <i class="bi bi-exclamation-triangle"></i> You need to complete payment for tickets of this movie to rate.
                         </div>
                     @endif
                 @endif
             @else
                 <div class="alert alert-info">
-                    Vui lòng <a href="{{ route('login') }}">đăng nhập</a> để chấm điểm.
+                    Please <a href="{{ route('login') }}">login</a> to rate.
                 </div>
             @endauth
         </div>

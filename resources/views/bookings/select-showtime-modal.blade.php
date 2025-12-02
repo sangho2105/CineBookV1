@@ -1,6 +1,6 @@
 <div class="booking-modal-content">
     <div class="date-selector">
-        <h4 class="mb-3">Chọn ngày</h4>
+        <h4 class="mb-3">Select Date</h4>
         <div class="date-grid">
             @foreach($availableDates as $date)
                 @php
@@ -20,11 +20,11 @@
     </div>
 
     <div class="showtime-section">
-        <h4 class="mb-3">Chọn suất chiếu - {{ $selectedDateCarbon->format('d/m/Y') }}</h4>
+        <h4 class="mb-3">Select Showtime - {{ $selectedDateCarbon->format('d/m/Y') }}</h4>
         
         @if($showtimesByRoom->isEmpty())
             <div class="no-showtimes">
-                Không có suất chiếu nào cho ngày này.
+                No showtimes available for this date.
             </div>
         @else
             @foreach($showtimesByRoom as $roomId => $roomShowtimes)
@@ -32,7 +32,7 @@
                     $room = $roomShowtimes->first()->room;
                 @endphp
                 <div class="room-name">
-                    {{ $room ? $room->name : 'Phòng chiếu' }}
+                    {{ $room ? $room->name : 'Room' }}
                 </div>
                 <div class="showtime-grid">
                     @foreach($roomShowtimes as $showtime)

@@ -1,30 +1,30 @@
 @extends('layouts.admin')
 
-@section('title', 'Quản lý Combo')
+@section('title', 'Combos')
 
 @section('content')
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Quản lý Combo</h1>
+        <h1>Combos</h1>
         <div class="d-flex gap-2 align-items-center">
             <form method="GET" action="{{ route('admin.combos.index') }}" class="d-flex gap-2 align-items-center">
                 <div class="position-relative">
                     <input type="text" 
                            class="form-control" 
                            name="search" 
-                           placeholder="Tìm kiếm theo tên combo..." 
+                           placeholder="Search by combo name..." 
                            value="{{ request('search') }}"
                            style="width: 250px; padding-right: 35px;">
                     <i class="bi bi-search position-absolute" style="right: 10px; top: 50%; transform: translateY(-50%); color: #6c757d; pointer-events: none;"></i>
                 </div>
                 @if(request('search'))
-                <a href="{{ route('admin.combos.index') }}" class="btn btn-sm btn-outline-secondary" title="Xóa bộ lọc">
+                <a href="{{ route('admin.combos.index') }}" class="btn btn-sm btn-outline-secondary" title="Clear Filters">
                     <i class="bi bi-x-circle"></i>
                 </a>
                 @endif
             </form>
             <a href="{{ route('admin.combos.create') }}" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> Thêm Combo Mới
+                <i class="bi bi-plus-circle"></i> Add New Combo
             </a>
         </div>
     </div>
@@ -45,20 +45,20 @@
 
     @if($combos->isEmpty())
         <div class="alert alert-info">
-            Chưa có combo nào. Hãy thêm combo mới để hiển thị.
+            No combos available. Please add new combos to display.
         </div>
     @else
         <div class="table-responsive">
             <table class="table table-striped align-middle">
                 <thead>
                     <tr>
-                        <th style="width: 80px;">STT</th>
-                        <th style="width: 150px;">Ảnh</th>
-                        <th>Tên Combo</th>
-                        <th>Mô tả</th>
-                        <th style="width: 120px;">Giá</th>
-                        <th style="width: 120px;">Trạng thái</th>
-                        <th style="width: 220px;" class="text-end">Hành động</th>
+                        <th style="width: 80px;">No.</th>
+                        <th style="width: 150px;">Image</th>
+                        <th>Combo Name</th>
+                        <th>Description</th>
+                        <th style="width: 120px;">Price</th>
+                        <th style="width: 120px;">Status</th>
+                        <th style="width: 220px;" class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="sortable-combos">
@@ -68,7 +68,7 @@
                         $startNumber = ($currentPage - 1) * $perPage;
                     @endphp
                     @foreach($combos as $combo)
-                        <tr data-id="{{ $combo->id }}" class="sortable-row" style="cursor: move;">
+                        <tr data-id="{{ $combo->id }}" class="sortable-row {{ $combo->is_hidden ? 'text-muted' : '' }}" style="cursor: move;">
                             <td class="text-center">
                                 <span class="text-muted fw-bold">{{ $startNumber + $loop->iteration }}</span>
                             </td>
@@ -85,10 +85,13 @@
                             </td>
                             <td>
                                 <strong>{{ $combo->name }}</strong>
+                                @if($combo->is_hidden)
+                                    <span class="badge bg-secondary ms-2">Hidden</span>
+                                @endif
                             </td>
                             <td>
                                 <div class="text-muted small">
-                                    {{ Str::limit($combo->description ?? 'Không có mô tả', 80) }}
+                                    {{ Str::limit($combo->description ?? 'No description', 80) }}
                                 </div>
                             </td>
                             <td>
@@ -96,26 +99,26 @@
                             </td>
                             <td>
                                 @if($combo->is_hidden)
-                                    <span class="badge bg-warning">Đã ẩn</span>
+                                    <span class="badge bg-warning">Hidden</span>
                                 @elseif($combo->is_active)
-                                    <span class="badge bg-success">Đang hoạt động</span>
+                                    <span class="badge bg-success">Active</span>
                                 @else
-                                    <span class="badge bg-secondary">Tạm ngưng</span>
+                                    <span class="badge bg-secondary">Inactive</span>
                                 @endif
                             </td>
                             <td class="text-end">
-                                <a href="{{ route('admin.combos.show', $combo) }}" class="btn btn-sm btn-info" title="Xem chi tiết">
+                                <a href="{{ route('admin.combos.show', $combo) }}" class="btn btn-sm btn-info" title="View Details">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a href="{{ route('admin.combos.edit', $combo) }}" class="btn btn-sm btn-warning" title="Sửa">
+                                <a href="{{ route('admin.combos.edit', $combo) }}" class="btn btn-sm btn-warning" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <form action="{{ route('admin.combos.destroy', $combo) }}" method="POST" class="d-inline" 
-                                      onsubmit="return confirm('{{ $combo->hasBookings() ? 'Combo này đã có khách hàng đặt. Không thể xóa, chỉ có thể ẩn. Bạn có chắc chắn muốn ẩn combo này?' : 'Combo này chưa được đặt hàng và có thể xóa. Bạn chắc chắn muốn xóa combo này?' }}');">
+                                <form action="{{ route('admin.combos.toggleHidden', $combo->id) }}" method="POST" class="d-inline">
                                     @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-danger" title="{{ $combo->hasBookings() ? 'Ẩn combo' : 'Xóa combo' }}">
-                                        <i class="bi bi-trash"></i>
+                                    <button type="submit" class="btn btn-sm {{ $combo->is_hidden ? 'btn-success' : 'btn-warning' }}" 
+                                            onclick="return confirm('Are you sure you want to {{ $combo->is_hidden ? 'show' : 'hide' }} this combo?')" 
+                                            title="{{ $combo->is_hidden ? 'Show Combo' : 'Hide Combo' }}">
+                                        <i class="bi {{ $combo->is_hidden ? 'bi-eye' : 'bi-eye-slash' }}"></i>
                                     </button>
                                 </form>
                             </td>
@@ -248,12 +251,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            console.error('Lỗi cập nhật thứ tự:', error);
-            // Chỉ hiển thị alert nếu có lỗi thực sự
+            console.error('Error updating order:', error);
+            // Only show alert if there's a real error
             if (error.message) {
-                alert('Có lỗi xảy ra khi cập nhật thứ tự: ' + error.message);
+                alert('An error occurred while updating order: ' + error.message);
             } else {
-                alert('Có lỗi xảy ra khi cập nhật thứ tự. Vui lòng thử lại.');
+                alert('An error occurred while updating order. Please try again.');
             }
         });
     }

@@ -3,13 +3,13 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3">Thêm khuyến mãi mới</h1>
-        <a href="{{ route('admin.promotions.index') }}" class="btn btn-outline-secondary">Quay lại danh sách</a>
+        <h1 class="h3">Add New Promotion</h1>
+        <a href="{{ route('admin.promotions.index') }}" class="btn btn-outline-secondary">Back to List</a>
     </div>
 
     @if ($errors->any())
         <div class="alert alert-danger">
-            <strong>Đã có lỗi xảy ra!</strong>
+            <strong>An error occurred!</strong>
             <ul class="mb-0 mt-2">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>

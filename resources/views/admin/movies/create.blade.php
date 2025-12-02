@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container">
-    <h1>Thêm Phim Mới</h1>
+    <h1>Add New Movie</h1>
 
     {{-- Hiển thị lỗi validation --}}
     @if ($errors->any())
@@ -19,7 +19,7 @@
         @csrf
         
         <div class="mb-3">
-            <label for="title" class="form-label">Tên Phim <span class="text-danger">*</span></label>
+            <label for="title" class="form-label">Movie Title <span class="text-danger">*</span></label>
             <input type="text" class="form-control @error('title') is-invalid @enderror" id="title" name="title" value="{{ old('title') }}">
             @error('title')
                 <div class="invalid-feedback">{{ $message }}</div>
@@ -27,17 +27,17 @@
         </div>
         
         <div class="mb-3">
-            <label class="form-label">Ảnh Poster <span class="text-danger">*</span></label>
+            <label class="form-label">Poster Image <span class="text-danger">*</span></label>
             <div class="mb-2">
-                <label for="poster" class="form-label">Chọn ảnh từ máy tính:</label>
+                <label for="poster" class="form-label">Choose image from computer:</label>
                 <input type="file" class="form-control @error('poster') is-invalid @enderror" id="poster" name="poster" accept="image/jpeg,image/png,image/webp">
-                <small class="text-muted">Chấp nhận ảnh JPG, PNG, WEBP tối đa 4MB.</small>
+                <small class="text-muted">Accepts JPG, PNG, WEBP images up to 4MB.</small>
                 @error('poster')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
             <div id="poster-preview" class="mt-2" style="display: none;">
-                <label class="form-label">Xem trước:</label>
+                <label class="form-label">Preview:</label>
                 <div>
                     <img id="preview-poster-img" src="" alt="Preview" class="img-fluid rounded" style="max-height: 300px;">
                 </div>
@@ -46,16 +46,16 @@
         
         <div class="row">
             <div class="col-md-6 mb-3">
-                <label for="genre" class="form-label">Thể loại <span class="text-danger">*</span></label>
-                <input type="text" class="form-control @error('genre') is-invalid @enderror" id="genre" name="genre" value="{{ old('genre') }}" placeholder="Ví dụ: Hành động, Kinh dị">
+                <label for="genre" class="form-label">Genre <span class="text-danger">*</span></label>
+                <input type="text" class="form-control @error('genre') is-invalid @enderror" id="genre" name="genre" value="{{ old('genre') }}" placeholder="Example: Action, Horror">
                 @error('genre')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
             
             <div class="col-md-6 mb-3">
-                <label for="director" class="form-label">Đạo diễn</label>
-                <input type="text" class="form-control @error('director') is-invalid @enderror" id="director" name="director" value="{{ old('director') }}" placeholder="Ví dụ: Christopher Nolan">
+                <label for="director" class="form-label">Director</label>
+                <input type="text" class="form-control @error('director') is-invalid @enderror" id="director" name="director" value="{{ old('director') }}" placeholder="Example: Christopher Nolan">
                 @error('director')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -64,16 +64,16 @@
 
         <div class="row">
             <div class="col-md-6 mb-3">
-                <label for="language" class="form-label">Ngôn ngữ <span class="text-danger">*</span></label>
-                <input type="text" class="form-control @error('language') is-invalid @enderror" id="language" name="language" value="{{ old('language') }}" placeholder="Ví dụ: Tiếng Việt">
+                <label for="language" class="form-label">Language <span class="text-danger">*</span></label>
+                <input type="text" class="form-control @error('language') is-invalid @enderror" id="language" name="language" value="{{ old('language') }}" placeholder="Example: English">
                 @error('language')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
 
             <div class="col-md-6 mb-3">
-                <label for="cast" class="form-label">Diễn viên</label>
-                <textarea class="form-control @error('cast') is-invalid @enderror" id="cast" name="cast" rows="1" placeholder="Nhập danh sách diễn viên, cách nhau bằng dấu phẩy">{{ old('cast') }}</textarea>
+                <label for="cast" class="form-label">Cast</label>
+                <textarea class="form-control @error('cast') is-invalid @enderror" id="cast" name="cast" rows="1" placeholder="Enter cast list, separated by commas">{{ old('cast') }}</textarea>
                 @error('cast')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -82,7 +82,7 @@
         
         <div class="row">
             <div class="col-md-4 mb-3">
-                <label for="duration_minutes" class="form-label">Thời lượng (phút) <span class="text-danger">*</span></label>
+                <label for="duration_minutes" class="form-label">Duration (minutes) <span class="text-danger">*</span></label>
                 <input type="number" class="form-control @error('duration_minutes') is-invalid @enderror" id="duration_minutes" name="duration_minutes" value="{{ old('duration_minutes') }}">
                 @error('duration_minutes')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -90,7 +90,7 @@
             </div>
             
             <div class="col-md-4 mb-3">
-                <label for="release_date" class="form-label">Ngày phát hành <span class="text-danger">*</span></label>
+                <label for="release_date" class="form-label">Release Date <span class="text-danger">*</span></label>
                 <input type="date" class="form-control @error('release_date') is-invalid @enderror" id="release_date" name="release_date" value="{{ old('release_date') }}">
                 @error('release_date')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -98,12 +98,12 @@
             </div>
             
             <div class="col-md-4 mb-3">
-                <label for="status" class="form-label">Trạng thái <span class="text-danger">*</span></label>
+                <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
                 <select class="form-select @error('status') is-invalid @enderror" id="status" name="status">
-                    <option value="">-- Chọn trạng thái --</option>
-                    <option value="upcoming" {{ old('status') == 'upcoming' ? 'selected' : '' }}>Sắp chiếu</option>
-                    <option value="now_showing" {{ old('status') == 'now_showing' ? 'selected' : '' }}>Đang chiếu</option>
-                    <option value="ended" {{ old('status') == 'ended' ? 'selected' : '' }}>Đã kết thúc</option>
+                    <option value="">-- Select Status --</option>
+                    <option value="upcoming" {{ old('status') == 'upcoming' ? 'selected' : '' }}>Coming Soon</option>
+                    <option value="now_showing" {{ old('status') == 'now_showing' ? 'selected' : '' }}>Now Showing</option>
+                    <option value="ended" {{ old('status') == 'ended' ? 'selected' : '' }}>Ended</option>
                 </select>
                 @error('status')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -114,12 +114,12 @@
         <div class="mb-3">
             <label for="rated" class="form-label">Rated</label>
             <select class="form-select @error('rated') is-invalid @enderror" id="rated" name="rated">
-                <option value="">-- Chọn Rated --</option>
-                <option value="K" {{ old('rated') == 'K' ? 'selected' : '' }}>K - PHIM ĐƯỢC PHỔ BIẾN ĐẾN NGƯỜI XEM DƯỚI 13 TUỔI VÀ CÓ NGƯỜI BẢO HỘ ĐI KÈM</option>
-                <option value="T13" {{ old('rated') == 'T13' ? 'selected' : '' }}>T13 - PHIM DÀNH CHO NGƯỜI XEM TỪ 13 TUỔI TRỞ LÊN</option>
-                <option value="T16" {{ old('rated') == 'T16' ? 'selected' : '' }}>T16 - PHIM DÀNH CHO NGƯỜI XEM TỪ 16 TUỔI TRỞ LÊN</option>
-                <option value="T18" {{ old('rated') == 'T18' ? 'selected' : '' }}>T18 - PHIM DÀNH CHO NGƯỜI XEM TỪ 18 TUỔI TRỞ LÊN</option>
-                <option value="P" {{ old('rated') == 'P' ? 'selected' : '' }}>P - PHIM DÀNH CHO MỌI ĐỐI TƯỢNG</option>
+                <option value="">-- Select Rated --</option>
+                <option value="K" {{ old('rated') == 'K' ? 'selected' : '' }}>K - FILM DISTRIBUTED TO VIEWERS UNDER 13 YEARS OLD WITH ACCOMPANYING GUARDIAN</option>
+                <option value="T13" {{ old('rated') == 'T13' ? 'selected' : '' }}>T13 - FILM FOR VIEWERS AGED 13 AND ABOVE</option>
+                <option value="T16" {{ old('rated') == 'T16' ? 'selected' : '' }}>T16 - FILM FOR VIEWERS AGED 16 AND ABOVE</option>
+                <option value="T18" {{ old('rated') == 'T18' ? 'selected' : '' }}>T18 - FILM FOR VIEWERS AGED 18 AND ABOVE</option>
+                <option value="P" {{ old('rated') == 'P' ? 'selected' : '' }}>P - FILM FOR ALL AUDIENCES</option>
             </select>
             @error('rated')
                 <div class="invalid-feedback">{{ $message }}</div>
@@ -135,15 +135,15 @@
         </div>
         
         <div class="mb-3">
-            <label for="synopsis" class="form-label">Tóm tắt nội dung</label>
+            <label for="synopsis" class="form-label">Synopsis</label>
             <textarea class="form-control @error('synopsis') is-invalid @enderror" id="synopsis" name="synopsis" rows="4">{{ old('synopsis') }}</textarea>
             @error('synopsis')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
         
-        <button type="submit" class="btn btn-primary">Lưu</button>
-        <a href="{{ route('admin.movies.index') }}" class="btn btn-secondary">Hủy</a>
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="{{ route('admin.movies.index') }}" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
 

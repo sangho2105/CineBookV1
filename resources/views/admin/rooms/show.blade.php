@@ -3,42 +3,42 @@
 @section('content')
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Sơ đồ {{ $room->name }}</h2>
-        <a href="{{ route('admin.rooms.index') }}" class="btn btn-secondary">Quay lại danh sách</a>
+        <h2>Layout {{ $room->name }}</h2>
+        <a href="{{ route('admin.rooms.index') }}" class="btn btn-secondary">Back to List</a>
     </div>
 
     <div class="card mb-4">
         <div class="card-body">
-            <h5 class="card-title">Thông tin phòng</h5>
-            <p class="mb-1"><strong>Tổng số ghế:</strong> {{ $room->total_seats }} ghế</p>
-            <p class="mb-0"><strong>Số hàng:</strong> {{ count($room->layout) }} hàng</p>
+            <h5 class="card-title">Room Information</h5>
+            <p class="mb-1"><strong>Total Seats:</strong> {{ $room->total_seats }} seats</p>
+            <p class="mb-0"><strong>Number of Rows:</strong> {{ count($room->layout) }} rows</p>
         </div>
     </div>
 
-    {{-- Chú thích --}}
+    {{-- Legend --}}
     <div class="mb-4">
-        <h5>Chú thích:</h5>
+        <h5>Legend:</h5>
         <div class="d-flex gap-3 flex-wrap">
             <div class="d-flex align-items-center">
                 <div class="seat-preview seat-normal me-2"></div>
-                <span>Ghế thường</span>
+                <span>Regular Seat</span>
             </div>
             <div class="d-flex align-items-center">
                 <div class="seat-preview seat-vip me-2"></div>
-                <span>Ghế VIP</span>
+                <span>VIP Seat</span>
             </div>
             <div class="d-flex align-items-center">
                 <div class="seat-preview seat-couple me-2"></div>
-                <span>Ghế cặp đôi</span>
+                <span>Couple Seat</span>
             </div>
         </div>
     </div>
 
-    {{-- Sơ đồ phòng --}}
+    {{-- Room Layout --}}
     <div class="room-layout mb-4">
-        {{-- Màn hình --}}
+        {{-- Screen --}}
         <div class="screen-area text-center mb-4">
-            <div class="screen-display">MÀN HÌNH</div>
+            <div class="screen-display">SCREEN</div>
         </div>
 
         {{-- Các hàng ghế --}}
@@ -65,10 +65,10 @@
         </div>
     </div>
 
-    {{-- Thống kê --}}
+    {{-- Statistics --}}
     <div class="card">
         <div class="card-body">
-            <h5 class="card-title">Thống kê ghế</h5>
+            <h5 class="card-title">Seat Statistics</h5>
             @php
                 $normalCount = 0;
                 $vipCount = 0;
@@ -84,10 +84,10 @@
                 }
             @endphp
             <ul class="list-unstyled mb-0">
-                <li><strong>Ghế thường:</strong> {{ $normalCount }} ghế</li>
-                <li><strong>Ghế VIP:</strong> {{ $vipCount }} ghế</li>
-                <li><strong>Ghế cặp đôi:</strong> {{ $coupleCount }} ghế</li>
-                <li><strong>Tổng cộng:</strong> {{ $normalCount + $vipCount + $coupleCount }} ghế</li>
+                <li><strong>Regular Seats:</strong> {{ $normalCount }} seats</li>
+                <li><strong>VIP Seats:</strong> {{ $vipCount }} seats</li>
+                <li><strong>Couple Seats:</strong> {{ $coupleCount }} seats</li>
+                <li><strong>Total:</strong> {{ $normalCount + $vipCount + $coupleCount }} seats</li>
             </ul>
         </div>
     </div>

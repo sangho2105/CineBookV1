@@ -34,7 +34,7 @@
             </div>
 
             <div class="text-center">
-                <a href="{{ url()->previous() }}" class="btn btn-secondary">Quay lại</a>
+                <a href="{{ url()->previous() }}" class="btn btn-secondary">Back</a>
             </div>
         </div>
     </div>

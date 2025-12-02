@@ -64,10 +64,10 @@ class Promotion extends Model
     public function getCategoryLabelAttribute(): string
     {
         return match ($this->category) {
-            'discount' => 'Giảm giá',
-            'event' => 'Sự kiện',
-            'movie' => 'Phim',
-            default => 'Ưu đãi',
+            'discount' => 'Discount',
+            'event' => 'Event',
+            'movie' => 'Movie',
+            default => 'Promotion',
         };
     }
 
@@ -121,10 +121,10 @@ class Promotion extends Model
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
-            'active' => 'Đang kích hoạt',
-            'inactive' => 'Đã tắt',
-            'ended' => 'Đã kết thúc',
-            default => 'Không xác định',
+            'active' => 'Active',
+            'inactive' => 'Inactive',
+            'ended' => 'Ended',
+            default => 'Unknown',
         };
     }
 

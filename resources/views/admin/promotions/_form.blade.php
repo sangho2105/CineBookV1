@@ -1,10 +1,10 @@
 @php
     $promotion = $promotion ?? null;
     $categories = [
-        'promotion' => 'Ưu đãi',
-        'discount' => 'Giảm giá',
-        'event' => 'Sự kiện',
-        'movie' => 'Phim',
+        'promotion' => 'Promotion',
+        'discount' => 'Discount',
+        'event' => 'Event',
+        'movie' => 'Movie',
     ];
 
     $movies = $movies ?? collect();
@@ -17,13 +17,13 @@
 @csrf
 
 <div class="mb-3">
-    <label for="title" class="form-label">Tiêu đề</label>
+    <label for="title" class="form-label">Title</label>
     <input type="text" class="form-control" id="title" name="title"
            value="{{ old('title', $promotion->title ?? '') }}">
 </div>
 
 <div class="mb-3">
-    <label for="category" class="form-label">Loại</label>
+    <label for="category" class="form-label">Category</label>
     <select class="form-select" id="category" name="category">
         @foreach($categories as $value => $label)
             <option value="{{ $value }}"
@@ -35,9 +35,9 @@
 </div>
 
 <div class="mb-3 {{ old('category', $promotion->category ?? 'promotion') === 'movie' ? '' : 'd-none' }}" id="movie-select-wrapper">
-    <label for="movie_id" class="form-label">Chọn phim</label>
+    <label for="movie_id" class="form-label">Select Movie</label>
     <select class="form-select" id="movie_id" name="movie_id">
-        <option value="">-- Chọn phim --</option>
+        <option value="">-- Select Movie --</option>
         @foreach($movies as $movie)
             <option value="{{ $movie->id }}"
                 {{ (string) old('movie_id', $promotion->movie_id ?? '') === (string) $movie->id ? 'selected' : '' }}>
@@ -45,31 +45,31 @@
             </option>
         @endforeach
     </select>
-    <small class="text-muted">Bắt buộc khi loại là Phim.</small>
+    <small class="text-muted">Required when category is Movie.</small>
 </div>
 
 <div class="mb-3">
-    <label for="description" class="form-label">Mô tả</label>
+    <label for="description" class="form-label">Description</label>
     <textarea class="form-control" id="description" name="description" rows="3">{{ old('description', $promotion->description ?? '') }}</textarea>
 </div>
 
 <div class="mb-3">
-    <label for="conditions" class="form-label">Thông tin chung</label>
+    <label for="conditions" class="form-label">General Information</label>
     <textarea id="conditions" name="conditions" class="form-control" rows="10">{{ old('conditions', $promotion->conditions ?? '') }}</textarea>
-    <small class="text-muted">Thông tin này sẽ được hiển thị trên trang chi tiết của ưu đãi/sự kiện.</small>
+    <small class="text-muted">This information will be displayed on the promotion/event detail page.</small>
 </div>
 
 {{-- Phần quy tắc giảm giá chỉ hiển thị khi chọn "Ưu đãi" hoặc "Giảm giá" --}}
 <div class="mb-4 {{ in_array(old('category', $promotion->category ?? 'promotion'), ['promotion', 'discount']) ? '' : 'd-none' }}" id="discount-rules-wrapper">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <label class="form-label mb-0">Quy tắc giảm giá 
+        <label class="form-label mb-0">Discount Rules 
             @if(old('category', $promotion->category ?? 'promotion') === 'discount')
                 <span class="text-danger">*</span>
             @endif
         </label>
     </div>
     <small class="text-muted d-block mb-3">
-        Mỗi chương trình giảm giá chỉ có một quy tắc. Để trống nếu chỉ là ưu đãi thông thường.
+        Each discount program has only one rule. Leave blank if it's just a regular promotion.
     </small>
     
     <div id="discount-rules-container">
@@ -85,9 +85,9 @@
             }
             $discountPercentages = [5, 10, 15, 20, 25, 30];
             $appliesToOptions = [
-                'ticket' => 'Giá vé',
-                'combo' => 'Giá combo',
-                'total' => 'Tổng bill'
+                'ticket' => 'Ticket Price',
+                'combo' => 'Combo Price',
+                'total' => 'Total Bill'
             ];
         @endphp
         
@@ -98,34 +98,34 @@
         @endphp
         @if(empty($rule))
             <div class="alert alert-info">
-                <i class="bi bi-info-circle"></i> Chưa có quy tắc giảm giá nào. Quy tắc sẽ được tạo tự động khi bạn điền thông tin.
+                <i class="bi bi-info-circle"></i> No discount rules yet. Rules will be created automatically when you fill in the information.
             </div>
         @endif
         @if(!empty($rule) || $currentCategory === 'promotion' || $currentCategory === 'discount')
             <div class="card mb-3 discount-rule-item" data-index="{{ $index }}">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="mb-0">Quy tắc giảm giá</h6>
+                        <h6 class="mb-0">Discount Rule</h6>
                     </div>
                     
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Áp dụng cho phim</label>
+                            <label class="form-label">Apply to Movie</label>
                             <select class="form-select rule-movie-id" name="discount_rules[{{ $index }}][movie_id]">
-                                <option value="">-- Tất cả phim --</option>
+                                <option value="">-- All Movies --</option>
                                 @foreach($movies as $movie)
                                     <option value="{{ $movie->id }}" {{ (isset($rule['movie_id']) && $rule['movie_id'] == $movie->id) ? 'selected' : '' }}>
                                         {{ $movie->title }}
                                     </option>
                                 @endforeach
                             </select>
-                            <small class="text-muted">Chọn phim cụ thể hoặc để trống để áp dụng cho tất cả phim</small>
+                            <small class="text-muted">Select a specific movie or leave blank to apply to all movies</small>
                         </div>
                         
                         <div class="col-md-6">
-                            <label class="form-label">Mức giảm giá</label>
+                            <label class="form-label">Discount Percentage</label>
                             <select class="form-select rule-discount-percentage" name="discount_rules[{{ $index }}][discount_percentage]">
-                                <option value="">-- Không giảm giá --</option>
+                                <option value="">-- No Discount --</option>
                                 @foreach($discountPercentages as $percent)
                                     <option value="{{ $percent }}" {{ (isset($rule['discount_percentage']) && $rule['discount_percentage'] == $percent) ? 'selected' : '' }}>
                                         {{ $percent }}%
@@ -136,10 +136,10 @@
                         </div>
                         
                         <div class="col-md-6">
-                            <label class="form-label">Số vé tối thiểu</label>
+                            <label class="form-label">Minimum Tickets</label>
                             <input type="number" class="form-control rule-min-tickets" name="discount_rules[{{ $index }}][min_tickets]" 
                                    value="{{ $rule['min_tickets'] ?? 1 }}">
-                            <small class="text-muted">Số vé tối thiểu để áp dụng quy tắc này</small>
+                            <small class="text-muted">Minimum number of tickets to apply this rule</small>
                         </div>
                         
                         <div class="col-md-6">
@@ -171,13 +171,13 @@
                                        value="1"
                                        {{ (isset($rule['gift_only']) && $rule['gift_only']) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="gift_only_{{ $index }}">
-                                    Áp dụng tặng quà
+                                    Apply Gift
                                 </label>
-                                <small class="text-muted d-block mt-1">Nếu chọn, khách hàng sẽ được tặng quà. Nếu bỏ chọn, khách hàng sẽ không được tặng quà.</small>
+                                <small class="text-muted d-block mt-1">If selected, customers will receive a gift. If unchecked, customers will not receive a gift.</small>
                             </div>
                             {{-- Danh sách combo có sẵn - luôn hiển thị --}}
                             <div class="mt-3 requires-combo-select-wrapper" id="requires-combo-select-wrapper-{{ $index }}">
-                                <label class="form-label small"><strong>Danh sách combo có sẵn:</strong></label>
+                                <label class="form-label small"><strong>Available Combos:</strong></label>
                                 <div class="row g-2">
                                     @foreach($combos as $combo)
                                         <div class="col-md-6">
@@ -197,11 +197,11 @@
                                     @endforeach
                                     @if($combos->isEmpty())
                                         <div class="col-12">
-                                            <small class="text-muted">Chưa có combo nào. Vui lòng tạo combo trong <a href="{{ route('admin.combos.index') }}" target="_blank">Quản lý Combo</a>.</small>
+                                            <small class="text-muted">No combos available. Please create combos in <a href="{{ route('admin.combos.index') }}" target="_blank">Combo Management</a>.</small>
                                         </div>
                                     @endif
                                 </div>
-                                <small class="text-muted d-block mt-2">Chọn combo để yêu cầu và áp dụng giảm giá (nếu có). Nếu không chọn combo nào, sẽ yêu cầu bất kỳ combo nào</small>
+                                <small class="text-muted d-block mt-2">Select combos to require and apply discount (if any). If no combo is selected, any combo will be required</small>
                                 {{-- Hidden input để lưu combo_ids (sẽ được sync từ requires_combo_ids) --}}
                                 <input type="hidden" name="discount_rules[{{ $index }}][combo_ids_sync]" value="1">
                             </div>
@@ -215,23 +215,23 @@
 
 <div class="row g-3">
     <div class="col-md-6">
-        <label for="start_date" class="form-label">Ngày bắt đầu</label>
+        <label for="start_date" class="form-label">Start Date</label>
         <input type="date" class="form-control" id="start_date" name="start_date"
                value="{{ old('start_date', isset($promotion->start_date) ? $promotion->start_date->format('Y-m-d') : '') }}">
     </div>
     <div class="col-md-6">
-        <label for="end_date" class="form-label">Ngày kết thúc</label>
+        <label for="end_date" class="form-label">End Date</label>
         <input type="date" class="form-control" id="end_date" name="end_date"
                value="{{ old('end_date', isset($promotion->end_date) ? $promotion->end_date->format('Y-m-d') : '') }}">
     </div>
 </div>
 
 <div class="mb-3 mt-3">
-    <label for="image" class="form-label">Ảnh banner</label>
+    <label for="image" class="form-label">Banner Image</label>
     <input class="form-control" type="file" id="image" name="image" accept="image/jpeg,image/png,image/webp">
-    <small class="text-muted">Chấp nhận ảnh JPG, PNG, WEBP tối đa 4MB.</small>
+    <small class="text-muted">Accepts JPG, PNG, WEBP images up to 4MB.</small>
     <div id="image-preview" class="mt-2" style="display: none;">
-        <label class="form-label">Xem trước ảnh mới:</label>
+        <label class="form-label">Preview New Image:</label>
         <div>
             <img id="preview-img" src="" alt="Preview" class="img-fluid rounded" style="max-height: 200px;">
         </div>
@@ -241,7 +241,7 @@
 @isset($promotion)
     @if($promotion->image_url)
         <div class="mb-3" id="current-image-wrapper">
-            <label class="form-label">Ảnh hiện tại</label>
+            <label class="form-label">Current Image</label>
             <div>
                 <img src="{{ $promotion->image_url }}" alt="{{ $promotion->title }}" class="img-fluid rounded" style="max-height: 200px;">
             </div>
@@ -253,11 +253,11 @@
     <input type="hidden" name="is_active" value="0">
     <input class="form-check-input" type="checkbox" role="switch" id="is_active" name="is_active" value="1"
            {{ old('is_active', $promotion->is_active ?? true) ? 'checked' : '' }}>
-    <label class="form-check-label" for="is_active">Kích hoạt hiển thị</label>
+    <label class="form-check-label" for="is_active">Activate Display</label>
 </div>
 
-<button type="submit" class="btn btn-primary">Lưu</button>
-<a href="{{ route('admin.promotions.index') }}" class="btn btn-secondary">Hủy</a>
+<button type="submit" class="btn btn-primary">Save</button>
+<a href="{{ route('admin.promotions.index') }}" class="btn btn-secondary">Cancel</a>
 
 @push('scripts')
 <script>
@@ -307,8 +307,8 @@ document.addEventListener('DOMContentLoaded', function () {
         let ruleIndex = discountRulesContainer.querySelectorAll('.discount-rule-item').length;
         
         addRuleBtn.addEventListener('click', function() {
-            // Không cho phép thêm quy tắc mới
-            alert('Mỗi chương trình giảm giá chỉ có một quy tắc.');
+            // Do not allow adding new rules
+            alert('Each discount program has only one rule.');
             return;
             const category = categorySelect ? categorySelect.value : '';
             const isPromotionOrDiscount = category === 'promotion' || category === 'discount';
@@ -316,9 +316,9 @@ document.addEventListener('DOMContentLoaded', function () {
             
             const discountPercentages = [5, 10, 15, 20, 25, 30];
             const appliesToOptions = {
-                'ticket': 'Giá vé',
-                'combo': 'Giá combo',
-                'total': 'Tổng bill'
+                'ticket': 'Ticket Price',
+                'combo': 'Combo Price',
+                'total': 'Total Bill'
             };
             
             const combosData = @json($combos);
@@ -326,7 +326,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const comboIndexUrl = @json(route('admin.combos.index'));
             
             // Tạo HTML cho movie select
-            let movieOptionsHtml = '<option value="">-- Tất cả phim --</option>';
+            let movieOptionsHtml = '<option value="">-- All Movies --</option>';
             if (moviesData && moviesData.length > 0) {
                 moviesData.forEach(movie => {
                     movieOptionsHtml += `<option value="${movie.id}">${movie.title}</option>`;
@@ -355,7 +355,7 @@ document.addEventListener('DOMContentLoaded', function () {
             function createComboSelectHtml(ruleIndex, comboUrl) {
                 let html = '';
                 if (combosData && combosData.length > 0) {
-                    html = `<div class="mt-3 requires-combo-select-wrapper" id="requires-combo-select-wrapper-${ruleIndex}"><label class="form-label small"><strong>Danh sách combo có sẵn:</strong></label><div class="row g-2">`;
+                    html = `<div class="mt-3 requires-combo-select-wrapper" id="requires-combo-select-wrapper-${ruleIndex}"><label class="form-label small"><strong>Available Combos:</strong></label><div class="row g-2">`;
                     combosData.forEach(combo => {
                         html += `
                             <div class="col-md-6">
@@ -372,9 +372,9 @@ document.addEventListener('DOMContentLoaded', function () {
                             </div>
                         `;
                     });
-                    html += '</div><small class="text-muted d-block mt-2">Chọn combo để yêu cầu và áp dụng giảm giá (nếu có). Nếu không chọn combo nào, sẽ yêu cầu bất kỳ combo nào</small><input type="hidden" name="discount_rules[' + ruleIndex + '][combo_ids_sync]" value="1"></div>';
+                    html += '</div><small class="text-muted d-block mt-2">Select combos to require and apply discount (if any). If no combo is selected, any combo will be required</small><input type="hidden" name="discount_rules[' + ruleIndex + '][combo_ids_sync]" value="1"></div>';
                 } else {
-                    html = `<div class="mt-3 requires-combo-select-wrapper" id="requires-combo-select-wrapper-${ruleIndex}"><label class="form-label small"><strong>Danh sách combo có sẵn:</strong></label><small class="text-muted">Chưa có combo nào. Vui lòng tạo combo trong <a href="${comboUrl}" target="_blank">Quản lý Combo</a>.</small></div>`;
+                    html = `<div class="mt-3 requires-combo-select-wrapper" id="requires-combo-select-wrapper-${ruleIndex}"><label class="form-label small"><strong>Available Combos:</strong></label><small class="text-muted">No combos available. Please create combos in <a href="${comboUrl}" target="_blank">Combo Management</a>.</small></div>`;
                 }
                 return html;
             }
@@ -382,7 +382,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Tạo HTML cho combo select (dùng chung)
             const requiresComboSelectHtml = createComboSelectHtml(ruleIndex, comboIndexUrl);
             
-            let discountOptionsHtml = '<option value="">-- Không giảm giá --</option>';
+            let discountOptionsHtml = '<option value="">-- No Discount --</option>';
             discountPercentages.forEach(percent => {
                 discountOptionsHtml += `<option value="${percent}">${percent}%</option>`;
             });
@@ -391,33 +391,33 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="card mb-3 discount-rule-item" data-index="${ruleIndex}">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="mb-0">Quy tắc #${ruleIndex + 1}</h6>
+                            <h6 class="mb-0">Rule #${ruleIndex + 1}</h6>
                             <button type="button" class="btn btn-sm btn-danger remove-rule">
-                                <i class="bi bi-trash"></i> Xóa
+                                <i class="bi bi-trash"></i> Delete
                             </button>
                         </div>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">Áp dụng cho phim</label>
+                                <label class="form-label">Apply to Movie</label>
                                 <select class="form-select rule-movie-id" name="discount_rules[${ruleIndex}][movie_id]">
                                     ${movieOptionsHtml}
                                 </select>
-                                <small class="text-muted">Chọn phim cụ thể hoặc để trống để áp dụng cho tất cả phim</small>
+                                <small class="text-muted">Select a specific movie or leave blank to apply to all movies</small>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Mức giảm giá</label>
+                                <label class="form-label">Discount Percentage</label>
                                 <select class="form-select rule-discount-percentage" name="discount_rules[${ruleIndex}][discount_percentage]">
                                     ${discountOptionsHtml}
                                 </select>
-                                <small class="text-muted">Có thể để trống nếu chỉ là ưu đãi (tặng quà, v.v.)</small>
+                                <small class="text-muted">Can be left blank if it's just a promotion (gift, etc.)</small>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Số vé tối thiểu</label>
+                                <label class="form-label">Minimum Tickets</label>
                                 <input type="number" class="form-control rule-min-tickets" name="discount_rules[${ruleIndex}][min_tickets]" value="1">
-                                <small class="text-muted">Số vé tối thiểu để áp dụng quy tắc này</small>
+                                <small class="text-muted">Minimum number of tickets to apply this rule</small>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Áp dụng cho</label>
+                                <label class="form-label">Applies To</label>
                                 <div class="row g-2">
                                     ${appliesToHtml}
                                 </div>
@@ -429,9 +429,9 @@ document.addEventListener('DOMContentLoaded', function () {
                                            id="gift_only_${ruleIndex}" 
                                            value="1">
                                     <label class="form-check-label" for="gift_only_${ruleIndex}">
-                                        Áp dụng tặng quà
+                                        Apply Gift
                                     </label>
-                                    <small class="text-muted d-block mt-1">Nếu chọn, khách hàng sẽ được tặng quà. Nếu bỏ chọn, khách hàng sẽ không được tặng quà.</small>
+                                    <small class="text-muted d-block mt-1">If selected, customers will receive a gift. If unchecked, customers will not receive a gift.</small>
                                 </div>
                                 ${requiresComboSelectHtml}
                             </div>
@@ -458,7 +458,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const category = categorySelect ? categorySelect.value : '';
                 const isDiscount = category === 'discount';
                 if (isDiscount && ruleItems.length <= 1) {
-                    alert('Phải có ít nhất một quy tắc giảm giá.');
+                    alert('Must have at least one discount rule.');
                     return;
                 }
                 this.closest('.discount-rule-item').remove();
@@ -468,7 +468,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (remainingRules.length === 0 && !isDiscount) {
                     const container = document.getElementById('discount-rules-container');
                     if (container) {
-                        container.insertAdjacentHTML('afterbegin', '<div class="alert alert-info"><i class="bi bi-info-circle"></i> Chưa có quy tắc giảm giá nào. Nhấn "Thêm quy tắc" để thêm quy tắc mới (tùy chọn).</div>');
+                        container.insertAdjacentHTML('afterbegin', '<div class="alert alert-info"><i class="bi bi-info-circle"></i> No discount rules yet. Click "Add Rule" to add a new rule (optional).</div>');
                     }
                 }
             });
@@ -479,7 +479,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function renumberRules() {
         const ruleItems = document.querySelectorAll('.discount-rule-item');
         ruleItems.forEach((item, index) => {
-            item.querySelector('h6').textContent = `Quy tắc #${index + 1}`;
+            item.querySelector('h6').textContent = `Rule #${index + 1}`;
             const inputs = item.querySelectorAll('input, select');
             inputs.forEach(input => {
                 if (input.name) {
@@ -541,7 +541,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 const ruleItems = document.querySelectorAll('.discount-rule-item');
                 if (ruleItems.length === 0) {
                     e.preventDefault();
-                    alert('Vui lòng thêm ít nhất một quy tắc giảm giá.');
+                    alert('Please add at least one discount rule.');
                     return false;
                 }
                 
@@ -558,7 +558,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         // Có giảm giá, phải chọn applies_to
                         if (appliesToCheckboxes.length === 0) {
                             hasError = true;
-                            alert('Quy tắc #' + (index + 1) + ': Vui lòng chọn ít nhất một phần để áp dụng giảm giá.');
+                            alert('Rule #' + (index + 1) + ': Please select at least one part to apply discount.');
                         }
                         discountSelect.classList.remove('is-invalid');
                     } else {
@@ -627,7 +627,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (file) {
                 // Kiểm tra kích thước file (4MB)
                 if (file.size > 4 * 1024 * 1024) {
-                    alert('Kích thước ảnh không được vượt quá 4MB.');
+                    alert('Image size must not exceed 4MB.');
                     imageInput.value = '';
                     imagePreview.style.display = 'none';
                     if (currentImageWrapper) {
@@ -638,7 +638,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // Kiểm tra loại file
                 if (!file.type.match('image/(jpeg|png|webp)')) {
-                    alert('Chỉ chấp nhận ảnh định dạng JPG, PNG hoặc WEBP.');
+                    alert('Only JPG, PNG or WEBP image formats are accepted.');
                     imageInput.value = '';
                     imagePreview.style.display = 'none';
                     if (currentImageWrapper) {

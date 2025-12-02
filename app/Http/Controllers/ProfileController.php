@@ -15,13 +15,29 @@ class ProfileController extends Controller
     public function index()
     {
         $user = Auth::user(); // Get the logged-in user
-        // Lấy lịch sử đặt vé của user - sắp xếp theo thời gian gần nhất lên đầu
+        
+        // Get statistics
+        $totalBookings = $user->bookings()->count();
+        $totalTickets = $user->bookings()->withCount('seats')->get()->sum('seats_count');
+        $totalSpent = $user->bookings()->where('payment_status', 'completed')->sum('total_amount');
+        $favoriteMoviesCount = $user->favoritedMovies()->count();
+        
+        return view('profile.index', compact('user', 'totalBookings', 'totalTickets', 'totalSpent', 'favoriteMoviesCount'));
+    }
+
+    /**
+     * Display the user's booking history (tickets)
+     */
+    public function tickets()
+    {
+        $user = Auth::user();
+        // Get booking history - sorted by most recent first
         $bookings = $user->bookings()
             ->with(['showtime.movie', 'showtime.theater', 'showtime.room', 'seats'])
-            ->orderByDesc('created_at') // Sắp xếp theo created_at (thời gian đặt vé) mới nhất lên đầu
+            ->orderByDesc('created_at') // Sort by created_at (booking time) newest first
             ->get();
         
-        // Tính toán thông tin cho mỗi booking
+        // Calculate information for each booking
         $bookings->each(function ($booking) {
             if ($booking->showtime && $booking->showtime->movie) {
                 $showTimeStr = $booking->showtime->show_time;
@@ -37,7 +53,7 @@ class ProfileController extends Controller
             }
         });
         
-        return view('profile.index', compact('user', 'bookings'));
+        return view('profile.tickets', compact('user', 'bookings'));
     }
 
     /**

@@ -3,10 +3,10 @@
 @section('content')
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Chi tiết Phim</h1>
+        <h1>Movie Details</h1>
         <div>
-            <a href="{{ route('admin.movies.index') }}" class="btn btn-secondary">Quay lại danh sách</a>
-            <a href="{{ route('admin.movies.edit', $movie->id) }}" class="btn btn-warning">Sửa</a>
+            <a href="{{ route('admin.movies.index') }}" class="btn btn-secondary">Back to List</a>
+            <a href="{{ route('admin.movies.edit', $movie->id) }}" class="btn btn-warning">Edit</a>
         </div>
     </div>
 
@@ -20,7 +20,7 @@
                      style="max-height: 600px; width: 100%; object-fit: cover;">
             @else
                 <div class="bg-light rounded shadow-sm d-flex align-items-center justify-content-center" style="height: 600px;">
-                    <p class="text-muted">Chưa có poster</p>
+                    <p class="text-muted">No poster available</p>
                 </div>
             @endif
         </div>
@@ -35,13 +35,13 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <p class="mb-2">
-                                <strong>Thể loại:</strong> 
+                                <strong>Genre:</strong> 
                                 <span class="badge bg-primary">{{ $movie->genre }}</span>
                             </p>
                         </div>
                         <div class="col-md-6">
                             <p class="mb-2">
-                                <strong>Ngôn ngữ:</strong> 
+                                <strong>Language:</strong> 
                                 <span class="badge bg-secondary">{{ $movie->language }}</span>
                             </p>
                         </div>
@@ -50,8 +50,8 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <p class="mb-2">
-                                <strong>Thời lượng:</strong> 
-                                <span class="badge bg-info text-dark">{{ $movie->duration_minutes }} phút</span>
+                                <strong>Duration:</strong> 
+                                <span class="badge bg-info text-dark">{{ $movie->duration_minutes }} minutes</span>
                             </p>
                         </div>
                         <div class="col-md-6">
@@ -60,7 +60,7 @@
                                 @if($movie->rated)
                                     <span class="badge bg-secondary">{{ $movie->rated }}</span>
                                 @else
-                                    <span class="text-muted">Chưa cập nhật</span>
+                                    <span class="text-muted">Not updated</span>
                                 @endif
                             </p>
                         </div>
@@ -69,19 +69,19 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <p class="mb-2">
-                                <strong>Ngày phát hành:</strong> 
+                                <strong>Release Date:</strong> 
                                 {{ \Carbon\Carbon::parse($movie->release_date)->format('d/m/Y') }}
                             </p>
                         </div>
                         <div class="col-md-6">
                             <p class="mb-2">
-                                <strong>Trạng thái:</strong> 
+                                <strong>Status:</strong> 
                                 @if($movie->status === 'now_showing')
-                                    <span class="badge bg-success">Đang chiếu</span>
+                                    <span class="badge bg-success">Now Showing</span>
                                 @elseif($movie->status === 'upcoming')
-                                    <span class="badge bg-warning text-dark">Sắp chiếu</span>
+                                    <span class="badge bg-warning text-dark">Coming Soon</span>
                                 @else
-                                    <span class="badge bg-secondary">Đã kết thúc</span>
+                                    <span class="badge bg-secondary">Ended</span>
                                 @endif
                             </p>
                         </div>
@@ -92,36 +92,36 @@
                     {{-- Thông tin chi tiết --}}
                     <div class="mb-3">
                         <p class="mb-2">
-                            <strong>Đạo diễn:</strong> 
-                            {{ $movie->director ?? 'Chưa cập nhật' }}
+                            <strong>Director:</strong> 
+                            {{ $movie->director ?? 'Not updated' }}
                         </p>
                     </div>
 
                     <div class="mb-3">
                         <p class="mb-2">
-                            <strong>Diễn viên:</strong> 
-                            {{ $movie->cast ?? 'Chưa cập nhật' }}
+                            <strong>Cast:</strong> 
+                            {{ $movie->cast ?? 'Not updated' }}
                         </p>
                     </div>
 
                     <div class="mb-3">
                         <p class="mb-2">
-                            <strong>Link Trailer:</strong> 
+                            <strong>Trailer URL:</strong> 
                             @if($movie->trailer_url)
                                 <a href="{{ $movie->trailer_url }}" target="_blank" class="text-primary">{{ $movie->trailer_url }}</a>
                             @else
-                                <span class="text-muted">Chưa có</span>
+                                <span class="text-muted">Not available</span>
                             @endif
                         </p>
                     </div>
 
                     <hr>
 
-                    {{-- Tóm tắt nội dung --}}
+                    {{-- Synopsis --}}
                     <div class="mb-3">
-                        <h5 class="mb-2">Tóm tắt nội dung</h5>
+                        <h5 class="mb-2">Synopsis</h5>
                         <p class="text-muted">
-                            {{ $movie->synopsis ?? 'Chưa có thông tin tóm tắt.' }}
+                            {{ $movie->synopsis ?? 'No synopsis available.' }}
                         </p>
                     </div>
 
@@ -130,10 +130,10 @@
                     <div class="row text-muted small">
                         <div class="col-md-6">
                             <p class="mb-1"><strong>ID:</strong> {{ $movie->id }}</p>
-                            <p class="mb-1"><strong>Ngày tạo:</strong> {{ $movie->created_at->format('d/m/Y H:i') }}</p>
+                            <p class="mb-1"><strong>Created At:</strong> {{ $movie->created_at->format('d/m/Y H:i') }}</p>
                         </div>
                         <div class="col-md-6">
-                            <p class="mb-1"><strong>Cập nhật lần cuối:</strong> {{ $movie->updated_at->format('d/m/Y H:i') }}</p>
+                            <p class="mb-1"><strong>Last Updated:</strong> {{ $movie->updated_at->format('d/m/Y H:i') }}</p>
                         </div>
                     </div>
                 </div>
@@ -172,7 +172,7 @@
                         @elseif($isMp4)
                             <video class="w-100 rounded shadow-sm" controls preload="metadata">
                                 <source src="{{ $url }}" type="video/mp4">
-                                Trình duyệt của bạn không hỗ trợ phát video.
+                                Your browser does not support video playback.
                             </video>
                         @endif
                     </div>

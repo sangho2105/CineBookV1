@@ -3,7 +3,7 @@
 @section('title', 'Edit Showtime')
 
 @section('content')
-<h2>Quản lý suất chiếu</h2>
+<h2>Edit Showtime</h2>
 
 <form action="{{ route('admin.showtimes.update', $showtime) }}" method="POST">
     @csrf
@@ -25,12 +25,12 @@
     </div>
 
     <div class="mb-3">
-        <label for="room_id" class="form-label">Phòng chiếu <span class="text-danger">*</span></label>
+        <label for="room_id" class="form-label">Room <span class="text-danger">*</span></label>
         <select name="room_id" id="room_id" class="form-select @error('room_id') is-invalid @enderror">
-            <option value="">-- Chọn Phòng chiếu --</option>
+            <option value="">-- Select Room --</option>
             @foreach($rooms as $room)
             <option value="{{ $room->id }}" {{ (old('room_id', $showtime->room_id) == $room->id) ? 'selected' : '' }}>
-                {{ $room->name }} ({{ $room->total_seats }} ghế)
+                {{ $room->name }} ({{ $room->total_seats }} seats)
             </option>
             @endforeach
         </select>
@@ -62,7 +62,7 @@
                     }
                 @endphp
                 <select name="show_time_hour" id="show_time_hour" class="form-select @error('show_time') is-invalid @enderror" style="flex: 0 0 auto; width: 80px;">
-                    <option value="">Giờ</option>
+                    <option value="">Hour</option>
                     @for($i = 1; $i <= 24; $i++)
                         <option value="{{ str_pad($i, 2, '0', STR_PAD_LEFT) }}" 
                                 {{ $oldHour == str_pad($i, 2, '0', STR_PAD_LEFT) ? 'selected' : '' }}>
@@ -72,7 +72,7 @@
                 </select>
                 <span class="fw-bold" style="flex: 0 0 auto;">:</span>
                 <select name="show_time_minute" id="show_time_minute" class="form-select @error('show_time') is-invalid @enderror" style="flex: 0 0 auto; width: 80px;">
-                    <option value="">Phút</option>
+                    <option value="">Minute</option>
                     @for($i = 0; $i < 60; $i += 5)
                         <option value="{{ str_pad($i, 2, '0', STR_PAD_LEFT) }}" 
                                 {{ $oldMinute == str_pad($i, 2, '0', STR_PAD_LEFT) ? 'selected' : '' }}>
@@ -119,7 +119,7 @@
         <div class="form-check">
             <input type="checkbox" name="is_peak_hour" id="is_peak_hour" value="1" 
                    class="form-check-input" {{ (old('is_peak_hour', $showtime->is_peak_hour)) ? 'checked' : '' }}>
-            <label for="is_peak_hour" class="form-check-label">Giờ cao điểm</label>
+            <label for="is_peak_hour" class="form-check-label">Peak Hour</label>
         </div>
     </div>
 
@@ -150,8 +150,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    showTimeHour.addEventListener('change', updateTimeInput);
-    showTimeMinute.addEventListener('change', updateTimeInput);
+    // Xóa class is-invalid khi user thay đổi
+    function clearValidationErrors() {
+        showTimeHour.classList.remove('is-invalid');
+        showTimeMinute.classList.remove('is-invalid');
+        // Xóa thông báo lỗi nếu có
+        const errorDiv = showTimeHour.closest('.col-md-6').querySelector('.invalid-feedback.d-block');
+        if (errorDiv) {
+            errorDiv.remove();
+        }
+    }
+    
+    showTimeHour.addEventListener('change', function() {
+        updateTimeInput();
+        clearValidationErrors();
+    });
+    showTimeMinute.addEventListener('change', function() {
+        updateTimeInput();
+        clearValidationErrors();
+    });
     
     // Parse old value nếu có - chuyển đổi 00 thành 24 để hiển thị
     @if(old('show_time') || isset($showtime))

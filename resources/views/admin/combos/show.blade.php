@@ -5,12 +5,12 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3">Chi tiết Combo</h1>
+        <h1 class="h3">Combo Details</h1>
         <div class="d-flex gap-2">
             <a href="{{ route('admin.combos.edit', $combo) }}" class="btn btn-warning">
-                <i class="bi bi-pencil"></i> Sửa
+                <i class="bi bi-pencil"></i> Edit
             </a>
-            <a href="{{ route('admin.combos.index') }}" class="btn btn-outline-secondary">Quay lại danh sách</a>
+            <a href="{{ route('admin.combos.index') }}" class="btn btn-outline-secondary">Back to List</a>
         </div>
     </div>
 
@@ -20,50 +20,51 @@
                 <dt class="col-sm-3">ID:</dt>
                 <dd class="col-sm-9">{{ $combo->id }}</dd>
 
-                <dt class="col-sm-3">Tên Combo:</dt>
+                <dt class="col-sm-3">Combo Name:</dt>
                 <dd class="col-sm-9"><strong>{{ $combo->name }}</strong></dd>
 
-                <dt class="col-sm-3">Mô tả / Chi tiết:</dt>
-                <dd class="col-sm-9">{{ $combo->description ?? 'Không có mô tả' }}</dd>
+                <dt class="col-sm-3">Description / Details:</dt>
+                <dd class="col-sm-9">{{ $combo->description ?? 'No description' }}</dd>
 
-                <dt class="col-sm-3">Ảnh:</dt>
+                <dt class="col-sm-3">Image:</dt>
                 <dd class="col-sm-9">
                     @if($combo->image_path)
                         <img src="{{ $combo->image_url }}" alt="{{ $combo->name }}" 
                              class="img-fluid rounded" style="max-height: 300px;">
                     @else
-                        <span class="text-muted">Chưa có ảnh</span>
+                        <span class="text-muted">No image</span>
                     @endif
                 </dd>
 
-                <dt class="col-sm-3">Giá:</dt>
+                <dt class="col-sm-3">Price:</dt>
                 <dd class="col-sm-9">
                     <strong class="text-primary fs-5">{{ format_currency($combo->price) }}</strong>
                 </dd>
 
-                <dt class="col-sm-3">Trạng thái:</dt>
+                <dt class="col-sm-3">Status:</dt>
                 <dd class="col-sm-9">
                     @if($combo->is_active)
-                        <span class="badge bg-success">Đang hoạt động</span>
+                        <span class="badge bg-success">Active</span>
                     @else
-                        <span class="badge bg-secondary">Tạm ngưng</span>
+                        <span class="badge bg-secondary">Inactive</span>
                     @endif
                 </dd>
 
-                <dt class="col-sm-3">Ngày tạo:</dt>
+                <dt class="col-sm-3">Created At:</dt>
                 <dd class="col-sm-9">{{ $combo->created_at->format('d/m/Y H:i:s') }}</dd>
 
-                <dt class="col-sm-3">Ngày cập nhật:</dt>
+                <dt class="col-sm-3">Updated At:</dt>
                 <dd class="col-sm-9">{{ $combo->updated_at->format('d/m/Y H:i:s') }}</dd>
             </dl>
 
             <div class="mt-4">
-                <form action="{{ route('admin.combos.destroy', $combo) }}" method="POST" 
-                      onsubmit="return confirm('Bạn chắc chắn muốn xóa combo này?');" class="d-inline">
+                <form action="{{ route('admin.combos.toggleHidden', $combo->id) }}" method="POST" class="d-inline">
                     @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">
-                        <i class="bi bi-trash"></i> Xóa Combo
+                    <button type="submit" class="btn {{ $combo->is_hidden ? 'btn-success' : 'btn-warning' }}" 
+                            onclick="return confirm('Are you sure you want to {{ $combo->is_hidden ? 'show' : 'hide' }} this combo?')" 
+                            title="{{ $combo->is_hidden ? 'Show Combo' : 'Hide Combo' }}">
+                        <i class="bi {{ $combo->is_hidden ? 'bi-eye' : 'bi-eye-slash' }}"></i> 
+                        {{ $combo->is_hidden ? 'Show Combo' : 'Hide Combo' }}
                     </button>
                 </form>
             </div>

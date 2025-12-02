@@ -66,9 +66,13 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="age" class="form-label">Age</label>
-                        <input type="number" class="form-control" id="age" name="age" 
-                               value="{{ old('age') }}" min="1" max="120">
+                        <label for="date_of_birth" class="form-label">Date of Birth</label>
+                        <input type="date" class="form-control @error('date_of_birth') is-invalid @enderror" 
+                               id="date_of_birth" name="date_of_birth" 
+                               value="{{ old('date_of_birth') }}" max="{{ date('Y-m-d', strtotime('-1 day')) }}">
+                        @error('date_of_birth')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="mb-3">

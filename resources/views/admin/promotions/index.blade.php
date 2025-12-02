@@ -3,29 +3,29 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Khuyến mãi &amp; Sự kiện</h1>
+        <h1>Promotions</h1>
         <div class="d-flex gap-2 align-items-center">
             <form method="GET" action="{{ route('admin.promotions.index') }}" class="d-flex gap-2 align-items-center">
                 <div class="position-relative">
                     <input type="text" 
                            class="form-control" 
                            name="search" 
-                           placeholder="Tìm kiếm theo tên khuyến mãi..." 
+                           placeholder="Search by promotion name..." 
                            value="{{ request('search') }}"
                            style="width: 250px; padding-right: 35px;">
                     <i class="bi bi-search position-absolute" style="right: 10px; top: 50%; transform: translateY(-50%); color: #6c757d; pointer-events: none;"></i>
                 </div>
                 @if(request('search'))
-                <a href="{{ route('admin.promotions.index') }}" class="btn btn-sm btn-outline-secondary" title="Xóa bộ lọc">
+                <a href="{{ route('admin.promotions.index') }}" class="btn btn-sm btn-outline-secondary" title="Clear Filters">
                     <i class="bi bi-x-circle"></i>
                 </a>
                 @endif
             </form>
             <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#manageRulesModal">
-                <i class="bi bi-gear"></i> Quản lý quy tắc
+                <i class="bi bi-gear"></i> Manage Rules
             </button>
             <a href="{{ route('admin.promotions.create') }}" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> Thêm mới
+                <i class="bi bi-plus-circle"></i> Add New
             </a>
         </div>
     </div>
@@ -46,20 +46,20 @@
 
     @if($promotions->isEmpty())
         <div class="alert alert-info">
-            Chưa có khuyến mãi nào. Hãy thêm mới để hiển thị trên trang chủ.
+            No promotions available. Please add new promotions to display on the homepage.
         </div>
     @else
         <div class="table-responsive">
             <table class="table table-striped align-middle">
                 <thead>
                     <tr>
-                        <th style="width: 50px;">STT</th>
-                        <th>Ảnh</th>
-                        <th>Tiêu đề</th>
-                        <th>Loại</th>
-                        <th>Thời gian</th>
-                        <th>Trạng thái</th>
-                        <th class="text-end">Hành động</th>
+                        <th style="width: 50px;">No.</th>
+                        <th>Image</th>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Time Period</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="sortable-promotions">
@@ -81,7 +81,7 @@
                                 <div class="text-muted small">{{ Str::limit($promotion->description, 80) }}</div>
                                 @if($promotion->category === 'movie' && $promotion->movie)
                                     <div class="text-muted small mt-1">
-                                        <i class="bi bi-film"></i> Liên kết: {{ $promotion->movie->title }}
+                                        <i class="bi bi-film"></i> Linked: {{ $promotion->movie->title }}
                                     </div>
                                 @endif
                             </td>
@@ -91,25 +91,25 @@
                                 @if($promotion->end_date)
                                     &ndash; {{ $promotion->end_date->format('d/m/Y') }}
                                 @else
-                                    <span class="badge bg-secondary">Không giới hạn</span>
+                                    <span class="badge bg-secondary">Unlimited</span>
                                 @endif
                             </td>
                             <td>
                                 <span class="badge {{ $promotion->status_badge_class }}">{{ $promotion->status_label }}</span>
                             </td>
                             <td class="text-end">
-                                <a href="{{ route('admin.promotions.edit', $promotion) }}" class="btn btn-sm btn-warning" title="Sửa">
+                                <a href="{{ route('admin.promotions.edit', $promotion) }}" class="btn btn-sm btn-warning" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 @php
                                     $isCurrentlyActive = $promotion->isCurrentlyActive();
                                 @endphp
                                 <form action="{{ route('admin.promotions.destroy', $promotion) }}" method="POST" class="d-inline" 
-                                      onsubmit="return confirm('{{ $isCurrentlyActive ? 'Sự kiện đang trong thời gian hoạt động. Bạn có chắc chắn muốn ẩn sự kiện này?' : 'Bạn chắc chắn muốn xóa khuyến mãi này?' }}');">
+                                      onsubmit="return confirm('{{ $isCurrentlyActive ? 'This event is currently active. Are you sure you want to hide this event?' : 'Are you sure you want to delete this promotion?' }}');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm {{ $isCurrentlyActive ? 'btn-secondary' : 'btn-danger' }}" 
-                                            title="{{ $isCurrentlyActive ? 'Ẩn sự kiện' : 'Xóa khuyến mãi' }}">
+                                            title="{{ $isCurrentlyActive ? 'Hide Event' : 'Delete Promotion' }}">
                                         <i class="bi {{ $isCurrentlyActive ? 'bi-eye-slash' : 'bi-trash' }}"></i>
                                     </button>
                                 </form>
@@ -126,26 +126,26 @@
     @endif
 </div>
 
-<!-- Modal Quản lý quy tắc -->
+<!-- Modal Manage Rules -->
 <div class="modal fade" id="manageRulesModal" tabindex="-1" aria-labelledby="manageRulesModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="manageRulesModalLabel">Quản lý quy tắc áp dụng</h5>
+                <h5 class="modal-title" id="manageRulesModalLabel">Manage Application Rules</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <p class="text-muted mb-3">
-                    <i class="bi bi-info-circle"></i> Chọn các khuyến mãi/ưu đãi được áp dụng <strong>chung</strong> (có thể kết hợp với nhau) hoặc <strong>riêng</strong> (chỉ áp dụng một quy tắc).
+                    <i class="bi bi-info-circle"></i> Select promotions/discounts to be applied <strong>shared</strong> (can be combined) or <strong>exclusive</strong> (only one rule applies).
                 </p>
                 <div class="table-responsive">
                     <table class="table table-sm table-hover">
                         <thead>
                             <tr>
-                                <th style="width: 50px;">STT</th>
-                                <th>Tiêu đề</th>
-                                <th>Loại</th>
-                                <th class="text-center" style="width: 150px;">Áp dụng</th>
+                                <th style="width: 50px;">No.</th>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th class="text-center" style="width: 150px;">Apply Type</th>
                             </tr>
                         </thead>
                         <tbody id="rulesTableBody">
@@ -169,10 +169,10 @@
                                             @endphp
                                             <div class="text-muted small mt-1">
                                                 @if($hasDiscount)
-                                                    <span class="badge bg-primary">Giảm {{ $rule['discount_percentage'] }}%</span>
+                                                    <span class="badge bg-primary">{{ $rule['discount_percentage'] }}% Off</span>
                                                 @endif
                                                 @if($isGiftOnly)
-                                                    <span class="badge bg-success">Tặng quà</span>
+                                                    <span class="badge bg-success">Gift</span>
                                                 @endif
                                             </div>
                                         @endif
@@ -183,10 +183,10 @@
                                                 data-promotion-id="{{ $promo->id }}"
                                                 name="apply_type[{{ $promo->id }}]">
                                             <option value="shared" {{ ($promo->apply_type ?? 'shared') === 'shared' ? 'selected' : '' }}>
-                                                Chung
+                                                Shared
                                             </option>
                                             <option value="exclusive" {{ ($promo->apply_type ?? 'shared') === 'exclusive' ? 'selected' : '' }}>
-                                                Riêng
+                                                Exclusive
                                             </option>
                                         </select>
                                     </td>
@@ -197,9 +197,9 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-primary" id="saveRulesBtn">
-                    <i class="bi bi-save"></i> Lưu thay đổi
+                    <i class="bi bi-save"></i> Save Changes
                 </button>
             </div>
         </div>
@@ -322,12 +322,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            console.error('Lỗi cập nhật thứ tự:', error);
-            // Chỉ hiển thị alert nếu có lỗi thực sự
+            console.error('Error updating order:', error);
+            // Only show alert if there's a real error
             if (error.message) {
-                alert('Có lỗi xảy ra khi cập nhật thứ tự: ' + error.message);
+                alert('An error occurred while updating order: ' + error.message);
             } else {
-                alert('Có lỗi xảy ra khi cập nhật thứ tự. Vui lòng thử lại.');
+                alert('An error occurred while updating order. Please try again.');
             }
         });
     }
@@ -357,16 +357,16 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(result => {
                 if (result.success) {
-                    alert('Đã lưu quy tắc áp dụng thành công!');
+                    alert('Application rules saved successfully!');
                     const modal = bootstrap.Modal.getInstance(document.getElementById('manageRulesModal'));
                     modal.hide();
                 } else {
-                    alert('Có lỗi xảy ra: ' + (result.message || 'Vui lòng thử lại.'));
+                    alert('An error occurred: ' + (result.message || 'Please try again.'));
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Có lỗi xảy ra khi lưu quy tắc. Vui lòng thử lại.');
+                alert('An error occurred while saving rules. Please try again.');
             });
         });
     }

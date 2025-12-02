@@ -3,16 +3,16 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3">Chi tiết User</h1>
-        <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Quay lại danh sách</a>
+        <h1 class="h3">User Details</h1>
+        <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Back to List</a>
     </div>
 
     <div class="row">
-        {{-- Thông tin User --}}
+        {{-- User Information --}}
         <div class="col-md-6">
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0">Thông tin cá nhân</h5>
+                    <h5 class="mb-0">Personal Information</h5>
                 </div>
                 <div class="card-body">
                     <table class="table table-borderless">
@@ -21,7 +21,7 @@
                             <td>{{ $user->id }}</td>
                         </tr>
                         <tr>
-                            <th>Tên:</th>
+                            <th>Name:</th>
                             <td><strong>{{ $user->name }}</strong></td>
                         </tr>
                         <tr>
@@ -29,23 +29,23 @@
                             <td>{{ $user->email }}</td>
                         </tr>
                         <tr>
-                            <th>Số điện thoại:</th>
+                            <th>Phone:</th>
                             <td>{{ $user->phone ?? '-' }}</td>
                         </tr>
                         <tr>
-                            <th>Tuổi:</th>
+                            <th>Age:</th>
                             <td>{{ $user->age ?? '-' }}</td>
                         </tr>
                         <tr>
-                            <th>Thành phố ưa thích:</th>
+                            <th>Preferred City:</th>
                             <td>{{ $user->preferred_city ?? '-' }}</td>
                         </tr>
                         <tr>
-                            <th>Ngôn ngữ ưa thích:</th>
+                            <th>Preferred Language:</th>
                             <td>{{ $user->preferred_language ?? '-' }}</td>
                         </tr>
                         <tr>
-                            <th>Vai trò:</th>
+                            <th>Role:</th>
                             <td>
                                 @if($user->role === 'admin')
                                     <span class="badge bg-danger">Admin</span>
@@ -55,7 +55,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <th>Ngày đăng ký:</th>
+                            <th>Registration Date:</th>
                             <td>
                                 {{ $user->created_at->format('d/m/Y H:i:s') }}
                                 <br>
@@ -67,28 +67,28 @@
             </div>
         </div>
 
-        {{-- Thống kê --}}
+        {{-- Statistics --}}
         <div class="col-md-6">
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0">Thống kê</h5>
+                    <h5 class="mb-0">Statistics</h5>
                 </div>
                 <div class="card-body">
                     <table class="table table-borderless">
                         <tr>
-                            <th width="60%">Tổng số đặt vé:</th>
+                            <th width="60%">Total Bookings:</th>
                             <td><strong>{{ $stats['total_bookings'] }}</strong></td>
                         </tr>
                         <tr>
-                            <th>Đã thanh toán:</th>
+                            <th>Paid:</th>
                             <td><span class="badge bg-success">{{ $stats['completed_bookings'] }}</span></td>
                         </tr>
                         <tr>
-                            <th>Đang chờ thanh toán:</th>
+                            <th>Pending Payment:</th>
                             <td><span class="badge bg-warning">{{ $stats['pending_bookings'] }}</span></td>
                         </tr>
                         <tr>
-                            <th>Tổng chi tiêu:</th>
+                            <th>Total Spent:</th>
                             <td><strong class="text-success">${{ number_format($stats['total_spent'], 2) }}</strong></td>
                         </tr>
                     </table>
@@ -97,10 +97,10 @@
         </div>
     </div>
 
-    {{-- Danh sách đặt vé --}}
+    {{-- Booking History --}}
     <div class="card">
         <div class="card-header">
-            <h5 class="mb-0">Lịch sử đặt vé</h5>
+            <h5 class="mb-0">Booking History</h5>
         </div>
         <div class="card-body">
             @if($user->bookings->count() > 0)
@@ -108,14 +108,14 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Mã đặt vé</th>
-                                <th>Phim</th>
-                                <th>Ngày chiếu</th>
-                                <th>Phòng</th>
-                                <th>Số ghế</th>
-                                <th>Tổng tiền</th>
-                                <th>Trạng thái</th>
-                                <th>Ngày đặt</th>
+                                <th>Booking ID</th>
+                                <th>Movie</th>
+                                <th>Show Date</th>
+                                <th>Room</th>
+                                <th>Seats</th>
+                                <th>Total Amount</th>
+                                <th>Status</th>
+                                <th>Booking Date</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -142,16 +142,16 @@
                                         {{ $booking->showtime->room->name ?? 'N/A' }}
                                     </td>
                                     <td>
-                                        {{ $booking->seats->count() }} ghế
+                                        {{ $booking->seats->count() }} seats
                                     </td>
                                     <td>
                                         <strong>${{ number_format($booking->total_amount, 2) }}</strong>
                                     </td>
                                     <td>
                                         @if($booking->payment_status === 'completed')
-                                            <span class="badge bg-success">Đã thanh toán</span>
+                                            <span class="badge bg-success">Paid</span>
                                         @else
-                                            <span class="badge bg-warning">Chờ thanh toán</span>
+                                            <span class="badge bg-warning">Pending Payment</span>
                                         @endif
                                     </td>
                                     <td>
@@ -184,7 +184,7 @@
                 </div>
             @else
                 <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i> User này chưa có đặt vé nào.
+                    <i class="bi bi-info-circle"></i> This user has no bookings yet.
                 </div>
             @endif
         </div>

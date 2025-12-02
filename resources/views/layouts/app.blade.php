@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -74,40 +74,40 @@
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('home') }}">
-                            <i class="bi bi-house-door"></i> Trang chủ
+                            <i class="bi bi-house-door"></i> Home
                         </a>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="moviesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-film"></i> Phim
+                            <i class="bi bi-film"></i> Movies
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="moviesDropdown">
                             <li>
                                 <a class="dropdown-item" href="{{ route('search', ['status' => 'now_showing']) }}">
-                                    <i class="bi bi-camera-reels"></i> Phim đang chiếu
+                                    <i class="bi bi-camera-reels"></i> Now Showing
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" href="{{ route('search', ['status' => 'upcoming']) }}">
-                                    <i class="bi bi-calendar-event"></i> Phim sắp chiếu
+                                    <i class="bi bi-calendar-event"></i> Coming Soon
                                 </a>
                             </li>
                         </ul>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('promotions.index') }}">
-                            <i class="bi bi-gift"></i> Ưu đãi &amp; Sự kiện
+                            <i class="bi bi-gift"></i> Promotions &amp; Events
                         </a>
                     </li>
                     @auth
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('profile.index') }}">
-                            <i class="bi bi-ticket-perforated"></i> Vé của tôi
+                        <a class="nav-link" href="{{ route('profile.tickets') }}">
+                            <i class="bi bi-ticket-perforated"></i> My Tickets
                         </a>
                     </li>
                     
                     
-                    {{-- Dropdown menu cho user --}}
+                    {{-- User dropdown menu --}}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-person-circle"></i> {{ Auth::user()->name }}
@@ -115,13 +115,13 @@
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             <li>
                                 <a class="dropdown-item" href="{{ route('profile.index') }}">
-                                    <i class="bi bi-person"></i> Hồ sơ của tôi
+                                    <i class="bi bi-person"></i> My Profile
                                 </a>
                             </li>
                             @if(Auth::user()->role === 'admin')
                             <li>
                                 <a class="dropdown-item" href="{{ route('admin.movies.index') }}">
-                                    <i class="bi bi-speedometer2"></i> Trang Admin
+                                    <i class="bi bi-speedometer2"></i> Admin Panel
                                 </a>
                             </li>
                             @endif
@@ -130,7 +130,7 @@
                                 <form action="{{ route('logout') }}" method="POST">
                                     @csrf
                                     <button type="submit" class="dropdown-item">
-                                        <i class="bi bi-box-arrow-right"></i> Đăng xuất
+                                        <i class="bi bi-box-arrow-right"></i> Logout
                                     </button>
                                 </form>
                             </li>
@@ -138,10 +138,10 @@
                     </li>
                     @else
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('login') }}">Đăng nhập</a>
+                        <a class="nav-link" href="{{ route('login') }}">Login</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('register') }}">Đăng ký</a>
+                        <a class="nav-link" href="{{ route('register') }}">Register</a>
                     </li>
                     @endauth
                 </ul>
@@ -172,7 +172,7 @@
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="bookingModalLabel">Chọn suất chiếu</h5>
+                    <h5 class="modal-title" id="bookingModalLabel">Select Showtime</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="bookingModalBody">
@@ -395,7 +395,7 @@
                         if (!html) return; // Nếu đã redirect thì không xử lý
                         
                         // Kiểm tra xem response có phải là trang login không (kiểm tra nội dung HTML)
-                        if (html.includes('login') && html.includes('Đăng nhập')) {
+                        if (html.includes('login') && (html.includes('Login') || html.includes('Đăng nhập'))) {
                             window.location.href = '{{ route("login") }}';
                             return;
                         }
@@ -413,7 +413,7 @@
                         });
                     })
                     .catch(error => {
-                        modalBody.innerHTML = '<div class="alert alert-danger">Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại.</div>';
+                        modalBody.innerHTML = '<div class="alert alert-danger">An error occurred while loading data. Please try again.</div>';
                         console.error('Error loading booking modal:', error);
                     });
             }
@@ -424,14 +424,14 @@
     <footer class="bg-dark text-white mt-5">
         <div class="container py-5">
             <div class="row g-4">
-                <!-- Thông tin về CineBook -->
+                <!-- About CineBook -->
                 <div class="col-lg-4 col-md-6">
                     <h5 class="mb-3">
                         <i class="bi bi-film"></i> CineBook
                     </h5>
                     <p class="text-light">
-                        Hệ thống đặt vé xem phim trực tuyến hàng đầu Việt Nam. 
-                        Trải nghiệm điện ảnh tuyệt vời với công nghệ hiện đại và dịch vụ chuyên nghiệp.
+                        Vietnam's leading online movie ticket booking system. 
+                        Experience great cinema with modern technology and professional service.
                     </p>
                     <div class="d-flex gap-3 mt-3">
                         <a href="#" class="text-white" style="font-size: 1.5rem;" title="Facebook">
@@ -447,41 +447,34 @@
                             <i class="bi bi-youtube"></i>
                         </a>
                     </div>
+                    <p class="text-light mt-3 mb-0">
+                        &copy; {{ date('Y') }} CineBook. All Rights Reserved.
+                    </p>
                 </div>
 
-                <!-- Liên kết nhanh -->
+                <!-- Our Team -->
                 <div class="col-lg-2 col-md-6">
                     <h5 class="mb-3">
-                        <i class="bi bi-link-45deg"></i> Liên kết nhanh
+                        <i class="bi bi-people"></i> Our Team
                     </h5>
                     <ul class="list-unstyled">
                         <li class="mb-2">
-                            <a href="{{ route('home') }}" class="text-light text-decoration-none">
-                                <i class="bi bi-chevron-right"></i> Trang chủ
-                            </a>
+                            <span class="text-light">
+                                <i class="bi bi-person"></i> Nguyen Cao Tien
+                            </span>
                         </li>
                         <li class="mb-2">
-                            <a href="{{ route('search', ['status' => 'now_showing']) }}" class="text-light text-decoration-none">
-                                <i class="bi bi-chevron-right"></i> Phim đang chiếu
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a href="{{ route('search', ['status' => 'upcoming']) }}" class="text-light text-decoration-none">
-                                <i class="bi bi-chevron-right"></i> Phim sắp chiếu
-                            </a>
-                        </li>
-                        <li class="mb-2">
-                            <a href="{{ route('promotions.index') }}" class="text-light text-decoration-none">
-                                <i class="bi bi-chevron-right"></i> Ưu đãi &amp; Sự kiện
-                            </a>
+                            <span class="text-light">
+                                <i class="bi bi-person"></i> Nguyen Hoang Sang
+                            </span>
                         </li>
                     </ul>
                 </div>
 
-                <!-- Hỗ trợ -->
+                <!-- Support -->
                 <div class="col-lg-3 col-md-6">
                     <h5 class="mb-3">
-                        <i class="bi bi-headset"></i> Hỗ trợ
+                        <i class="bi bi-headset"></i> Support
                     </h5>
                     <ul class="list-unstyled">
                         <li class="mb-2">
@@ -494,32 +487,32 @@
                         </li>
                         <li class="mb-2">
                             <i class="bi bi-clock"></i> 
-                            <span class="text-light">Giờ làm việc: 8:00 - 22:00</span>
+                            <span class="text-light">Working Hours: 8:00 - 22:00</span>
                         </li>
                         <li class="mb-2">
                             <a href="#" class="text-light text-decoration-none">
-                                <i class="bi bi-question-circle"></i> Câu hỏi thường gặp
+                                <i class="bi bi-question-circle"></i> FAQ
                             </a>
                         </li>
                         <li class="mb-2">
                             <a href="#" class="text-light text-decoration-none">
-                                <i class="bi bi-file-text"></i> Điều khoản sử dụng
+                                <i class="bi bi-file-text"></i> Terms of Service
                             </a>
                         </li>
                     </ul>
                 </div>
 
-                <!-- Đăng ký nhận tin -->
+                <!-- Newsletter -->
                 <div class="col-lg-3 col-md-6">
                     <h5 class="mb-3">
-                        <i class="bi bi-bell"></i> Đăng ký nhận tin
+                        <i class="bi bi-bell"></i> Newsletter
                     </h5>
                     <p class="text-light small">
-                        Nhận thông tin về phim mới, ưu đãi đặc biệt và sự kiện độc quyền.
+                        Receive information about new movies, special offers and exclusive events.
                     </p>
                     <form class="mt-3">
                         <div class="input-group">
-                            <input type="email" class="form-control" placeholder="Email của bạn" required>
+                            <input type="email" class="form-control" placeholder="Your email" required>
                             <button class="btn btn-primary" type="submit">
                                 <i class="bi bi-send"></i>
                             </button>
@@ -527,7 +520,7 @@
                     </form>
                     <div class="mt-3">
                         <h6 class="mb-2">
-                            <i class="bi bi-download"></i> Tải ứng dụng
+                            <i class="bi bi-download"></i> Download App
                         </h6>
                         <div class="d-flex gap-2">
                             <a href="#" class="btn btn-outline-light btn-sm">
@@ -542,20 +535,6 @@
             </div>
 
             <hr class="my-4 bg-secondary">
-
-            <!-- Copyright -->
-            <div class="row">
-                <div class="col-md-6 text-center text-md-start">
-                    <p class="mb-0 text-light">
-                        &copy; {{ date('Y') }} CineBook. All Rights Reserved.
-                    </p>
-                </div>
-                <div class="col-md-6 text-center text-md-end">
-                    <p class="mb-0 text-light">
-                        Made with <i class="bi bi-heart-fill text-danger"></i> in Vietnam
-                    </p>
-                </div>
-            </div>
         </div>
     </footer>
 

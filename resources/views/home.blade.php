@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Trang chủ - CineBook')
+@section('title', 'Home - CineBook')
 
 @push('css')
     <link rel="stylesheet" href="{{ asset('css/home.css') }}">
@@ -60,7 +60,7 @@
 <div class="home-movie-selection my-5">
         <div class="movie-selection-header">
             <div class="header-dots"></div>
-            <h2 class="movie-selection-title">ĐANG CHIẾU</h2>
+            <h2 class="movie-selection-title">NOW SHOWING</h2>
             <div class="header-dots"></div>
         </div>
         @if($nowShowingMovies->isNotEmpty())
@@ -93,14 +93,14 @@
                                 
                                 <div class="feature_film_content">
                                     <h3>{{ $movie->title }}</h3>
-                                    <a title="Xem chi tiết" class="button" href="{{ route('movie.show', $movie->id) }}">Xem chi tiết</a>
+                                    <a title="View Details" class="button" href="{{ route('movie.show', $movie->id) }}">View Details</a>
                                     @guest
-                                        <a title="Đặt vé" class="button btn-booking" href="{{ route('login') }}">Đặt Vé</a>
+                                        <a title="Book Ticket" class="button btn-booking" href="{{ route('login') }}">Book Ticket</a>
                                     @else
                                         @if($movie->showtimes->isNotEmpty())
-                                            <button type="button" title="Đặt vé" class="button btn-booking" data-booking-movie-id="{{ $movie->id }}" data-bs-toggle="modal" data-bs-target="#bookingModal">Đặt Vé</button>
+                                            <button type="button" title="Book Ticket" class="button btn-booking" data-booking-movie-id="{{ $movie->id }}" data-bs-toggle="modal" data-bs-target="#bookingModal">Book Ticket</button>
                                         @else
-                                            <button type="button" title="Đặt vé" class="button btn-booking" disabled>Đặt Vé</button>
+                                            <button type="button" title="Book Ticket" class="button btn-booking" disabled>Book Ticket</button>
                                         @endif
                                     @endguest
                                 </div>
@@ -122,7 +122,7 @@
             </div>
         @else
             <div class="col-12">
-                <p class="text-center">Hiện chưa có phim nào đang chiếu.</p>
+                <p class="text-center">No movies are currently showing.</p>
             </div>
         @endif
     </div>
@@ -131,7 +131,7 @@
     <div class="home-movie-selection my-5">
         <div class="movie-selection-header">
             <div class="header-dots"></div>
-            <h2 class="movie-selection-title">Sắp Chiếu</h2>
+            <h2 class="movie-selection-title">COMING SOON</h2>
             <div class="header-dots"></div>
         </div>
         @if($comingSoonMovies->isNotEmpty())
@@ -164,8 +164,8 @@
                                 
                                 <div class="feature_film_content">
                                     <h3>{{ $movie->title }}</h3>
-                                    <a title="Xem chi tiết" class="button" href="{{ route('movie.show', $movie->id) }}">Xem chi tiết</a>
-                                    <button type="button" title="Sắp chiếu" class="button btn-booking" disabled>Sắp chiếu</button>
+                                    <a title="View Details" class="button" href="{{ route('movie.show', $movie->id) }}">View Details</a>
+                                    <button type="button" title="Coming Soon" class="button btn-booking" disabled>Coming Soon</button>
                                 </div>
                                 
                                 @if($movie->trailer_url)
@@ -185,7 +185,7 @@
             </div>
         @else
             <div class="col-12">
-                <p class="text-center">Chưa có thông tin phim sắp chiếu.</p>
+                <p class="text-center">No upcoming movies information available.</p>
             </div>
         @endif
     </div>

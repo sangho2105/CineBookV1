@@ -24,8 +24,8 @@ class MovieController extends Controller
             $query->where('title', 'like', '%' . $search . '%');
         }
         
-        // Sắp xếp theo ID tăng dần (phim nào thêm trước sẽ có STT nhỏ hơn)
-        $movies = $query->orderBy('id', 'asc')->paginate(8)->withQueryString();
+        // Sắp xếp theo ID giảm dần (phim mới thêm sẽ lên đầu, phim cũ ở dưới)
+        $movies = $query->orderBy('id', 'desc')->paginate(8)->withQueryString();
         return view('admin.movies.index', compact('movies'));
     }
 
@@ -166,7 +166,7 @@ class MovieController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Toggle ẩn/hiện phim thay vì xóa
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response
@@ -175,13 +175,14 @@ class MovieController extends Controller
     {
         $movie = Movie::findOrFail($id);
         
-        // Xóa poster khỏi storage nếu là file (không phải URL)
-        if ($movie->poster_url && !filter_var($movie->poster_url, FILTER_VALIDATE_URL)) {
-            Storage::disk('public')->delete($movie->poster_url);
-        }
+        // Toggle trạng thái ẩn/hiện
+        $movie->is_hidden = !$movie->is_hidden;
+        $movie->save();
 
-        $movie->delete();
+        $message = $movie->is_hidden 
+            ? 'Phim đã được ẩn thành công!' 
+            : 'Phim đã được hiển thị lại thành công!';
 
-        return redirect()->route('admin.movies.index')->with('success', 'Phim đã được xóa thành công!');
+        return redirect()->route('admin.movies.index')->with('success', $message);
     }
 }

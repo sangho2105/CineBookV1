@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Chọn suất chiếu - ' . $movie->title)
+@section('title', 'Select Showtime - ' . $movie->title)
 
 @push('css')
 <style>
@@ -180,13 +180,13 @@
                 @endif
                 <div>
                     <h1 class="movie-title">{{ $movie->title }}</h1>
-                    <p class="text-muted mb-0">{{ $movie->duration_minutes ?? 0 }} phút</p>
+                    <p class="text-muted mb-0">{{ $movie->duration_minutes ?? 0 }} minutes</p>
                 </div>
             </div>
         </div>
 
         <div class="date-selector">
-            <h4 class="mb-3">Chọn ngày</h4>
+            <h4 class="mb-3">Select Date</h4>
             <div class="date-grid">
                 @foreach($availableDates as $date)
                     @php
@@ -204,11 +204,11 @@
         </div>
 
         <div class="showtime-section">
-            <h4 class="mb-3">Chọn suất chiếu - {{ $selectedDateCarbon->format('d/m/Y') }}</h4>
+            <h4 class="mb-3">Select Showtime - {{ $selectedDateCarbon->format('d/m/Y') }}</h4>
             
             @if($showtimesByRoom->isEmpty())
                 <div class="no-showtimes">
-                    Không có suất chiếu nào cho ngày này.
+                    No showtimes available for this date.
                 </div>
             @else
                 @foreach($showtimesByRoom as $roomId => $roomShowtimes)
@@ -216,7 +216,7 @@
                         $room = $roomShowtimes->first()->room;
                     @endphp
                     <div class="room-name">
-                        {{ $room ? $room->name : 'Phòng chiếu' }}
+                        {{ $room ? $room->name : 'Room' }}
                     </div>
                     <div class="showtime-grid">
                         @foreach($roomShowtimes as $showtime)

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Movie;
-use App\Models\Theater;
 use App\Models\Room;
 use App\Models\Showtime;
 use Carbon\Carbon;
@@ -161,12 +160,22 @@ class ShowtimeController extends Controller
                 ]);
             }
 
-            // Kiểm tra: nếu suất chiếu hiện có kết thúc trước thời gian bắt đầu mới, phải cách ít nhất 20 phút
-            if ($existingEndDateTime->lt($newStartDateTime)) {
+            // Kiểm tra: nếu suất chiếu hiện có kết thúc trước hoặc bằng thời gian bắt đầu mới, phải cách ít nhất 20 phút
+            if ($existingEndDateTime->lte($newStartDateTime)) {
                 $requiredStartTime = $existingEndDateTime->copy()->addMinutes(20);
                 if ($newStartDateTime->lt($requiredStartTime)) {
                     throw ValidationException::withMessages([
-                        'show_time' => "Thời gian này quá gần với suất chiếu trước đó. Suất chiếu trước kết thúc lúc {$existingEndDateTime->format('H:i')}. Bạn phải đặt lịch chiếu sau {$requiredStartTime->format('H:i')} (cách ít nhất 20 phút).",
+                        'show_time' => "Thời gian này quá gần với suất chiếu trước đó. Suất chiếu trước kết thúc lúc {$existingEndDateTime->format('H:i')}. Bạn phải đặt lịch chiếu sau {$requiredStartTime->format('H:i')} (cách ít nhất 20 phút để dọn dẹp rạp).",
+                    ]);
+                }
+            }
+
+            // Kiểm tra: nếu suất chiếu mới kết thúc trước hoặc bằng thời gian bắt đầu của suất chiếu hiện có, phải cách ít nhất 20 phút
+            if ($newEndDateTime->lte($existingStartDateTime)) {
+                $requiredEndTime = $existingStartDateTime->copy()->subMinutes(20);
+                if ($newEndDateTime->gt($requiredEndTime)) {
+                    throw ValidationException::withMessages([
+                        'show_time' => "Thời gian này quá gần với suất chiếu tiếp theo. Suất chiếu tiếp theo bắt đầu lúc {$existingStartDateTime->format('H:i')}. Bạn phải đặt lịch chiếu kết thúc trước {$requiredEndTime->format('H:i')} (cách ít nhất 20 phút để dọn dẹp rạp).",
                     ]);
                 }
             }
@@ -177,7 +186,7 @@ class ShowtimeController extends Controller
    
     public function index(Request $request)
     {
-        $query = Showtime::with(['movie', 'room', 'theater', 'bookings.seats', 'bookings.combos']);
+        $query = Showtime::with(['movie', 'room', 'bookings.seats', 'bookings.combos']);
         
         // Lọc theo tên phim
         if ($request->filled('search')) {
@@ -187,8 +196,62 @@ class ShowtimeController extends Controller
             });
         }
         
-        $showtimes = $query->latest()
-            ->paginate(8)
+        // Lọc theo phòng
+        if ($request->filled('room_id')) {
+            $query->where('room_id', $request->room_id);
+        }
+        
+        // Lọc theo trạng thái
+        $now = Carbon::now('Asia/Ho_Chi_Minh');
+        if ($request->filled('status')) {
+            $status = $request->status;
+            if ($status === 'upcoming') {
+                // Chỉ lấy suất chiếu sắp tới
+                $query->where(function($q) use ($now) {
+                    $q->where('show_date', '>', $now->toDateString())
+                      ->orWhere(function($q2) use ($now) {
+                          $q2->whereDate('show_date', $now->toDateString())
+                             ->whereRaw("TIME(show_time) > TIME(?)", [$now->format('H:i:s')]);
+                      });
+                });
+            } elseif ($status === 'past') {
+                // Chỉ lấy suất chiếu đã qua
+                $query->where(function($q) use ($now) {
+                    $q->where('show_date', '<', $now->toDateString())
+                      ->orWhere(function($q2) use ($now) {
+                          $q2->whereDate('show_date', $now->toDateString())
+                             ->whereRaw("TIME(show_time) < TIME(?)", [$now->format('H:i:s')]);
+                      });
+                });
+            } elseif ($status === 'today') {
+                // Chỉ lấy suất chiếu hôm nay
+                $query->whereDate('show_date', $now->toDateString());
+            }
+        }
+        
+        // Sắp xếp: Sắp tới trước (theo ngày tăng dần, giờ tăng dần), sau đó là đã qua (theo ngày giảm dần)
+        $query->orderByRaw("
+            CASE 
+                WHEN show_date > ? OR (show_date = ? AND TIME(show_time) >= TIME(?)) THEN 0
+                ELSE 1
+            END ASC,
+            CASE 
+                WHEN show_date > ? OR (show_date = ? AND TIME(show_time) >= TIME(?)) THEN show_date
+                ELSE '9999-12-31'
+            END ASC,
+            CASE 
+                WHEN show_date > ? OR (show_date = ? AND TIME(show_time) >= TIME(?)) THEN TIME(show_time)
+                ELSE '23:59:59'
+            END ASC,
+            show_date DESC,
+            TIME(show_time) DESC
+        ", [
+            $now->toDateString(), $now->toDateString(), $now->format('H:i:s'),
+            $now->toDateString(), $now->toDateString(), $now->format('H:i:s'),
+            $now->toDateString(), $now->toDateString(), $now->format('H:i:s')
+        ]);
+        
+        $showtimes = $query->paginate(7)
             ->withQueryString();
         
         // Map qua từng item để tính stats
@@ -218,7 +281,10 @@ class ShowtimeController extends Controller
             return $showtime;
         });
         
-        return view('showtimes.index', compact('showtimes'));
+        // Lấy danh sách phòng cho filter
+        $rooms = Room::orderBy('room_number')->get();
+        
+        return view('showtimes.index', compact('showtimes', 'rooms'));
     }
 public function create()
 {
@@ -310,7 +376,7 @@ public function store(Request $request)
 }
 public function show(Showtime $showtime)
 {
-    $showtime->load(['movie', 'room', 'theater']);
+    $showtime->load(['movie', 'room']);
     
     // Lấy thông tin ghế và bookings
     $room = $showtime->room;

@@ -29,6 +29,7 @@ Route::get('/search/autocomplete', [SearchController::class, 'autocomplete'])->n
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'index'])->name('profile.index');
+    Route::get('/profile/tickets', [App\Http\Controllers\ProfileController::class, 'tickets'])->name('profile.tickets');
     Route::get('/profile/edit', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
 
@@ -91,10 +92,12 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
     // Route cho quản lý Vé (Bookings)
     Route::get('bookings', [\App\Http\Controllers\Admin\BookingController::class, 'index'])->name('bookings.index');
+    Route::get('bookings/statistics', [\App\Http\Controllers\Admin\BookingController::class, 'statistics'])->name('bookings.statistics');
     Route::get('bookings/{booking}', [\App\Http\Controllers\Admin\BookingController::class, 'show'])->name('bookings.show');
 
     // Route cho quản lý Combo
-    Route::resource('combos', \App\Http\Controllers\Admin\ComboController::class);
+    Route::resource('combos', \App\Http\Controllers\Admin\ComboController::class)->except(['destroy']);
+    Route::post('combos/{combo}/toggle-hidden', [\App\Http\Controllers\Admin\ComboController::class, 'toggleHidden'])->name('combos.toggleHidden');
     Route::post('combos/update-order', [\App\Http\Controllers\Admin\ComboController::class, 'updateOrder'])->name('combos.update-order');
 
     // Route cho quản lý Bình luận

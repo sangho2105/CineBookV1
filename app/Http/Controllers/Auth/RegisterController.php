@@ -26,6 +26,7 @@ class RegisterController extends Controller
             'phone' => $request->phone,
             'password' => Hash::make($request->password), // Hash the password
             'age' => $request->age,
+            'date_of_birth' => $request->date_of_birth,
             'preferred_language' => $request->preferred_language,
             'preferred_city' => $request->preferred_city,
             'role' => 'user', // Default role is 'user'

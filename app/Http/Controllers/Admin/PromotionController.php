@@ -38,7 +38,7 @@ class PromotionController extends Controller
     public function create()
     {
         $movies = Movie::orderBy('title')->get(['id', 'title']);
-        $combos = Combo::active()->orderBy('sort_order')->orderBy('name')->get(['id', 'name']);
+        $combos = Combo::active()->visible()->orderBy('sort_order')->orderBy('name')->get(['id', 'name']);
 
         return view('admin.promotions.create', compact('movies', 'combos'));
     }
@@ -175,7 +175,7 @@ class PromotionController extends Controller
     public function edit(Promotion $promotion)
     {
         $movies = Movie::orderBy('title')->get(['id', 'title']);
-        $combos = Combo::active()->orderBy('sort_order')->orderBy('name')->get(['id', 'name']);
+        $combos = Combo::active()->visible()->orderBy('sort_order')->orderBy('name')->get(['id', 'name']);
 
         return view('admin.promotions.edit', compact('promotion', 'movies', 'combos'));
     }

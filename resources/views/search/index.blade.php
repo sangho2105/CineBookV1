@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', request('status') == 'now_showing' ? 'Phim Đang Chiếu - CineBook' : (request('status') == 'upcoming' ? 'Phim Sắp Chiếu - CineBook' : 'Danh sách phim - CineBook'))
+@section('title', request('status') == 'now_showing' ? 'Now Showing Movies - CineBook' : (request('status') == 'upcoming' ? 'Coming Soon Movies - CineBook' : 'Movie List - CineBook'))
 
 @push('css')
 <link rel="stylesheet" href="{{ asset('css/search.css') }}">
@@ -22,15 +22,15 @@
                         </a>
                     </li>
                     <li class="breadcrumb-item">
-                        <a href="{{ route('search') }}">Phim</a>
+                        <a href="{{ route('search') }}">Movies</a>
                     </li>
                     <li class="breadcrumb-item active" aria-current="page">
                         @if(request('status') == 'now_showing')
-                            Phim Đang Chiếu
+                            Now Showing
                         @elseif(request('status') == 'upcoming')
-                            Phim Sắp Chiếu
+                            Coming Soon
                         @else
-                            Danh sách phim
+                            Movie List
                         @endif
                     </li>
                 </ol>
@@ -45,22 +45,22 @@
                 <div class="flex-grow-1">
                     <h1 class="page-title mb-0">
                         @if(request('status') == 'now_showing')
-                            Phim Đang Chiếu
+                            Now Showing
                         @elseif(request('status') == 'upcoming')
-                            Phim Sắp Chiếu
+                            Coming Soon
                         @else
-                            Danh sách phim
+                            Movie List
                         @endif
                     </h1>
                 </div>
                 <div class="ms-4">
                     @if(request('status') == 'now_showing')
                         <a href="{{ route('search', ['status' => 'upcoming']) }}" class="text-decoration-none text-dark">
-                            <h2 class="page-title-secondary mb-0">PHIM SẮP CHIẾU</h2>
+                            <h2 class="page-title-secondary mb-0">COMING SOON</h2>
                         </a>
                     @elseif(request('status') == 'upcoming')
                         <a href="{{ route('search', ['status' => 'now_showing']) }}" class="text-decoration-none text-dark">
-                            <h2 class="page-title-secondary mb-0">PHIM ĐANG CHIẾU</h2>
+                            <h2 class="page-title-secondary mb-0">NOW SHOWING</h2>
                         </a>
                     @endif
                 </div>
@@ -125,13 +125,13 @@
                         
                         <div class="movie-details">
                             <p class="detail-item">
-                                <strong>Thể loại:</strong> {{ $movie->genre ?? 'Chưa cập nhật' }}
+                                <strong>Genre:</strong> {{ $movie->genre ?? 'Not updated' }}
                             </p>
                             <p class="detail-item">
-                                <strong>Thời lượng:</strong> {{ $movie->duration_minutes ?? 0 }} phút
+                                <strong>Duration:</strong> {{ $movie->duration_minutes ?? 0 }} minutes
                             </p>
                             <p class="detail-item">
-                                <strong>Khởi chiếu:</strong> {{ \Carbon\Carbon::parse($movie->release_date)->format('d-m-Y') }}
+                                <strong>Release Date:</strong> {{ \Carbon\Carbon::parse($movie->release_date)->format('d-m-Y') }}
                             </p>
                         </div>
                         
@@ -142,28 +142,28 @@
                                         data-movie-id="{{ $movie->id }}" 
                                         data-like-url="{{ route('movie.favorite.toggle', $movie->id) }}">
                                     <i class="bi bi-hand-thumbs-up{{ isset($movie->is_favorited) && $movie->is_favorited ? '-fill' : '' }}"></i> 
-                                    <span class="like-text">{{ isset($movie->is_favorited) && $movie->is_favorited ? 'Đã thích' : 'Thích' }}</span>
+                                    <span class="like-text">{{ isset($movie->is_favorited) && $movie->is_favorited ? 'Liked' : 'Like' }}</span>
                                     <span class="like-count">{{ $movie->favorites_count ?? 0 }}</span>
                                 </button>
                             @else
                                 <a href="{{ route('login', ['redirect' => route('movie.show', $movie->id)]) }}" class="btn-like">
                                     <i class="bi bi-hand-thumbs-up"></i> 
-                                    <span class="like-text">Thích</span>
+                                    <span class="like-text">Like</span>
                                     <span class="like-count">{{ $movie->favorites_count ?? 0 }}</span>
                                 </a>
                             @endauth
                             @if($movie->showtimes->isNotEmpty())
                                 @auth
                                     <button type="button" class="btn-buy-ticket" data-booking-movie-id="{{ $movie->id }}" data-bs-toggle="modal" data-bs-target="#bookingModal">
-                                        MUA VÉ
+                                        BUY TICKET
                                     </button>
                                 @else
                                     <a href="{{ route('login', ['redirect' => route('movie.show', $movie->id)]) }}" class="btn-buy-ticket">
-                                        MUA VÉ
+                                        BUY TICKET
                                     </a>
                                 @endauth
                             @else
-                                <button class="btn-buy-ticket" disabled>MUA VÉ</button>
+                                <button class="btn-buy-ticket" disabled>BUY TICKET</button>
                             @endif
                         </div>
                     </div>
@@ -172,7 +172,7 @@
                 <div class="col-12">
                     <div class="alert alert-warning text-center">
                         <i class="bi bi-exclamation-triangle"></i> 
-                        Không tìm thấy phim nào.
+                        No movies found.
                     </div>
                 </div>
             @endforelse

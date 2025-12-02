@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Ưu đãi & Sự kiện - CineBook')
+@section('title', 'Promotions & Events - CineBook')
 
 @push('css')
 <style>
@@ -22,13 +22,13 @@
 @section('content')
 <div class="container py-4">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
-        <h1 class="h3 mb-3 mb-md-0">Ưu đãi &amp; Sự kiện</h1>
-        <p class="text-muted mb-0">Khám phá những chương trình đang diễn ra tại CineBook.</p>
+        <h1 class="h3 mb-3 mb-md-0">Promotions &amp; Events</h1>
+        <p class="text-muted mb-0">Discover ongoing programs at CineBook.</p>
     </div>
 
     @if($promotions->isEmpty())
         <div class="alert alert-info">
-            Hiện chưa có chương trình khuyến mãi hay sự kiện nào. Vui lòng quay lại sau nhé!
+            There are currently no promotions or events. Please come back later!
         </div>
     @else
         <div class="row g-4">
@@ -55,7 +55,7 @@
                                     @if($promotion->end_date)
                                         &ndash; {{ $promotion->end_date->format('d/m/Y') }}
                                     @else
-                                        &bull; Không giới hạn
+                                        &bull; Unlimited
                                     @endif
                                 </small>
                             </div>

@@ -1,17 +1,17 @@
 @extends('layouts.app')
 
-@section('title', 'Chọn ghế - CineBook')
+@section('title', 'Select Seats - CineBook')
 
 @section('content')
 <div class="row">
     <div class="col-lg-9">
-        <h2 class="mb-2">Chọn ghế - {{ $showtime->movie->title }}</h2>
-        <p class="mb-1"><strong>Phòng chiếu:</strong> {{ $showtime->room ? $showtime->room->name : 'CineBook Center' }}</p>
-        <p class="mb-1"><strong>Ngày:</strong> {{ $showtime->show_date->format('d/m/Y') }}</p>
-        <p class="mb-3"><strong>Giờ:</strong> {{ $showtime->getFormattedShowTime('H:i') }}</p>
+        <h2 class="mb-2">Select Seats - {{ $showtime->movie->title }}</h2>
+        <p class="mb-1"><strong>Room:</strong> {{ $showtime->room ? $showtime->room->name : 'CineBook Center' }}</p>
+        <p class="mb-1"><strong>Date:</strong> {{ $showtime->show_date->format('d/m/Y') }}</p>
+        <p class="mb-3"><strong>Time:</strong> {{ $showtime->getFormattedShowTime('H:i') }}</p>
 
         <div class="screen text-center mb-3">
-            <div class="screen-bar">MÀN HÌNH</div>
+            <div class="screen-bar">SCREEN</div>
         </div>
 
         <form id="seatForm" action="{{ route('bookings.confirm', $showtime) }}" method="POST"
@@ -58,39 +58,39 @@
             </div>
 
             <div class="d-flex align-items-center gap-4 flex-wrap mb-3 legend">
-                <div class="legend-item"><span class="legend-box seat-booked"></span> Đã đặt</div>
-                <div class="legend-item"><span class="legend-box seat-selected"></span> Ghế bạn chọn</div>
-                <div class="legend-item"><span class="legend-box seat-regular"></span> Ghế thường (Gold)</div>
-                <div class="legend-item"><span class="legend-box seat-vip"></span> Ghế VIP (Platinum)</div>
-                <div class="legend-item"><span class="legend-box seat-sweet"></span> Ghế cặp đôi (Box)</div>
+                <div class="legend-item"><span class="legend-box seat-booked"></span> Booked</div>
+                <div class="legend-item"><span class="legend-box seat-selected"></span> Your Selection</div>
+                <div class="legend-item"><span class="legend-box seat-regular"></span> Regular Seat (Gold)</div>
+                <div class="legend-item"><span class="legend-box seat-vip"></span> VIP Seat (Platinum)</div>
+                <div class="legend-item"><span class="legend-box seat-sweet"></span> Couple Seat (Box)</div>
             </div>
 
             <div class="selected-seats mb-3">
-                <h5>Ghế đã chọn:</h5>
-                <div id="selectedSeatsList" class="mb-2 text-muted">Chưa chọn ghế nào</div>
+                <h5>Selected Seats:</h5>
+                <div id="selectedSeatsList" class="mb-2 text-muted">No seats selected</div>
                 <div id="seatError" class="alert alert-danger d-none mb-2"></div>
                 <div class="mb-2">
-                    <strong>Tổng tiền: <span id="totalAmount">$0.00</span></strong>
+                    <strong>Total Amount: <span id="totalAmount">$0.00</span></strong>
                 </div>
             </div>
 
             <input type="hidden" name="selected_seats" id="selectedSeatsInput">
             <input type="hidden" name="combos" id="combosInput">
 
-            <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Xác nhận</button>
-            <a href="{{ route('movie.show', $showtime->movie->id) }}" class="btn btn-secondary">Hủy</a>
+            <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Confirm</button>
+            <a href="{{ route('movie.show', $showtime->movie->id) }}" class="btn btn-secondary">Cancel</a>
         </form>
     </div>
 
     <div class="col-lg-3">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">Giá vé</h5>
+                <h5 class="mb-0">Ticket Prices</h5>
             </div>
             <div class="card-body">
-                <div class="d-flex align-items-center mb-2"><span class="legend-box seat-regular me-2"></span> Ghế thường: {{ format_currency($showtime->gold_price) }}</div>
-                <div class="d-flex align-items-center mb-2"><span class="legend-box seat-vip me-2"></span> Ghế VIP: {{ format_currency($showtime->platinum_price) }}</div>
-                <div class="d-flex align-items-center"><span class="legend-box seat-sweet me-2"></span> Ghế cặp đôi: {{ format_currency($showtime->box_price) }}</div>
+                <div class="d-flex align-items-center mb-2"><span class="legend-box seat-regular me-2"></span> Regular Seat: {{ format_currency($showtime->gold_price) }}</div>
+                <div class="d-flex align-items-center mb-2"><span class="legend-box seat-vip me-2"></span> VIP Seat: {{ format_currency($showtime->platinum_price) }}</div>
+                <div class="d-flex align-items-center"><span class="legend-box seat-sweet me-2"></span> Couple Seat: {{ format_currency($showtime->box_price) }}</div>
             </div>
         </div>
     </div>
@@ -362,7 +362,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateSelectedSeats() {
         // Update selected seats list
         if (selectedSeats.length === 0) {
-            selectedSeatsList.innerHTML = 'Chưa chọn ghế nào';
+            selectedSeatsList.innerHTML = 'No seats selected';
             submitBtn.disabled = true;
         } else {
             const seatsHtml = selectedSeats.map(seat => 
@@ -440,7 +440,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <span class="text-primary fw-bold">$${price.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</span>
                             </div>
                             <div class="d-flex align-items-center gap-2">
-                                <label class="small text-muted mb-0">Số lượng:</label>
+                                <label class="small text-muted mb-0">Quantity:</label>
                                 <input type="number" min="0" value="0" 
                                        class="form-control form-control-sm" 
                                        style="width:80px" 
@@ -463,18 +463,18 @@ document.addEventListener('DOMContentLoaded', function() {
             comboModalBody += `
             <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
                 <button type="button" class="btn btn-sm btn-outline-primary" id="prevComboPage" style="display: none;">
-                    <i class="bi bi-chevron-left"></i> Trước
+                    <i class="bi bi-chevron-left"></i> Previous
                 </button>
                 <div class="text-muted small">
-                    Trang <span id="currentComboPage">1</span> / <span id="totalComboPages">${totalComboPages}</span>
+                    Page <span id="currentComboPage">1</span> / <span id="totalComboPages">${totalComboPages}</span>
                 </div>
                 <button type="button" class="btn btn-sm btn-outline-primary" id="nextComboPage">
-                    Sau <i class="bi bi-chevron-right"></i>
+                    Next <i class="bi bi-chevron-right"></i>
                 </button>
             </div>`;
         }
     } else {
-        comboModalBody = '<p class="text-muted">Hiện tại chưa có combo nào. Vui lòng liên hệ admin để thêm combo.</p>';
+        comboModalBody = '<p class="text-muted">No combos available at the moment. Please contact admin to add combos.</p>';
     }
     
     const comboModalHtml = `
@@ -482,18 +482,18 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Chọn combo bắp nước</h5>
+            <h5 class="modal-title">Select Combo</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <div id="comboListContainer">
               ${comboModalBody}
             </div>
-            <small class="text-muted d-block mt-3">Bạn có thể bỏ qua bước này và thanh toán ngay.</small>
+            <small class="text-muted d-block mt-3">You can skip this step and proceed to payment.</small>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Bỏ qua</button>
-            <button type="button" class="btn btn-primary" id="confirmCombosBtn">Xác nhận</button>
+            <button type="button" class="btn btn-outline-secondary" id="skipComboBtn" data-bs-dismiss="modal">Skip</button>
+            <button type="button" class="btn btn-primary" id="confirmCombosBtn">Confirm</button>
           </div>
         </div>
       </div>
@@ -548,6 +548,53 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const comboModal = new bootstrap.Modal(document.getElementById('comboModal'));
     const confirmCombosBtn = document.getElementById('confirmCombosBtn');
+    const skipComboBtn = document.getElementById('skipComboBtn');
+    
+    // Hàm kiểm tra xem có combo nào được chọn không
+    function hasSelectedCombos() {
+        let hasSelected = false;
+        combosData.forEach(combo => {
+            if (combo.is_hidden) return;
+            const qtyInput = document.getElementById(`combo${combo.id}Qty`);
+            if (qtyInput) {
+                const quantity = parseInt(qtyInput.value || '0', 10);
+                if (quantity > 0) {
+                    hasSelected = true;
+                }
+            }
+        });
+        return hasSelected;
+    }
+    
+    // Hàm cập nhật trạng thái nút Skip
+    function updateSkipButtonState() {
+        if (skipComboBtn) {
+            const hasSelected = hasSelectedCombos();
+            if (hasSelected) {
+                skipComboBtn.disabled = true;
+                skipComboBtn.classList.add('disabled');
+                skipComboBtn.setAttribute('data-bs-dismiss', '');
+            } else {
+                skipComboBtn.disabled = false;
+                skipComboBtn.classList.remove('disabled');
+                skipComboBtn.setAttribute('data-bs-dismiss', 'modal');
+            }
+        }
+    }
+    
+    // Hàm cập nhật trạng thái nút Confirm
+    function updateConfirmButtonState() {
+        if (confirmCombosBtn) {
+            const hasSelected = hasSelectedCombos();
+            if (hasSelected) {
+                confirmCombosBtn.disabled = false;
+                confirmCombosBtn.classList.remove('disabled');
+            } else {
+                confirmCombosBtn.disabled = true;
+                confirmCombosBtn.classList.add('disabled');
+            }
+        }
+    }
     
     // Thêm validation cho tất cả input số lượng combo để ngăn nhập số âm
     function validateComboQuantity() {
@@ -559,6 +606,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (this.value < 0) {
                         this.value = 0;
                     }
+                    // Cập nhật trạng thái nút Skip và Confirm khi thay đổi số lượng
+                    updateSkipButtonState();
+                    updateConfirmButtonState();
                 });
                 
                 // Xử lý khi người dùng paste
@@ -567,6 +617,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (this.value < 0) {
                             this.value = 0;
                         }
+                        // Cập nhật trạng thái nút Skip và Confirm khi thay đổi số lượng
+                        updateSkipButtonState();
+                        updateConfirmButtonState();
                     }, 0);
                 });
                 
@@ -575,6 +628,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (this.value < 0 || this.value === '' || isNaN(this.value)) {
                         this.value = 0;
                     }
+                    // Cập nhật trạng thái nút Skip và Confirm khi thay đổi số lượng
+                    updateSkipButtonState();
+                    updateConfirmButtonState();
                 });
             }
         });
@@ -583,7 +639,24 @@ document.addEventListener('DOMContentLoaded', function() {
     // Gọi hàm validation khi modal được hiển thị
     document.getElementById('comboModal').addEventListener('shown.bs.modal', function() {
         validateComboQuantity();
+        updateSkipButtonState(); // Cập nhật trạng thái nút Skip khi modal mở
+        updateConfirmButtonState(); // Cập nhật trạng thái nút Confirm khi modal mở
     });
+    
+    // Xử lý khi click nút Skip - chỉ cho phép nếu không có combo nào được chọn
+    if (skipComboBtn) {
+        skipComboBtn.addEventListener('click', function(e) {
+            if (hasSelectedCombos()) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            // Nếu không có combo nào được chọn, cho phép đóng modal và submit form
+            combosInput.value = JSON.stringify([]);
+            seatForm.dataset.comboShown = '1';
+            seatForm.submit();
+        });
+    }
 
     seatForm.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -595,27 +668,27 @@ document.addEventListener('DOMContentLoaded', function() {
         // Kiểm tra ghế lẻ bên trái
         if (lonelySeats.left.length > 0) {
             lonelySeats.left.forEach(item => {
-                errorMessages.push(`Không thể để trống ghế "${item.seat}" bên trái ghế "${item.selected}" bạn đã chọn.`);
+                errorMessages.push(`Cannot leave seat "${item.seat}" empty on the left of selected seat "${item.selected}".`);
             });
         }
         
         // Kiểm tra ghế lẻ bên phải
         if (lonelySeats.right.length > 0) {
             lonelySeats.right.forEach(item => {
-                errorMessages.push(`Không thể để trống ghế "${item.seat}" bên phải ghế "${item.selected}" bạn đã chọn.`);
+                errorMessages.push(`Cannot leave seat "${item.seat}" empty on the right of selected seat "${item.selected}".`);
             });
         }
         
         // Kiểm tra ghế lẻ ở giữa
         if (lonelySeats.middle.length > 0) {
             lonelySeats.middle.forEach(item => {
-                errorMessages.push(`Bạn không thể để trống ghế "${item.seat}" ở giữa các ghế bạn đã chọn.`);
+                errorMessages.push(`Cannot leave seat "${item.seat}" empty between your selected seats.`);
             });
         }
         
         if (errorMessages.length > 0) {
             // Có ghế lẻ, hiển thị lỗi
-            seatErrorDiv.innerHTML = '<strong>Lỗi chọn ghế:</strong><br>' + errorMessages.join('<br>');
+            seatErrorDiv.innerHTML = '<strong>Seat Selection Error:</strong><br>' + errorMessages.join('<br>');
             seatErrorDiv.classList.remove('d-none');
             // Scroll đến phần lỗi
             seatErrorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -635,6 +708,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     confirmCombosBtn.addEventListener('click', function() {
+        // Kiểm tra xem có combo nào được chọn không
+        if (!hasSelectedCombos()) {
+            return; // Không cho phép submit nếu không có combo nào được chọn
+        }
+        
         const combos = [];
         
         // Lấy tất cả các input combo từ database (bỏ qua combo bị ẩn)

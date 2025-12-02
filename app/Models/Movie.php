@@ -26,11 +26,13 @@ class Movie extends Model
         'rating_average',
         'rated',
         'status',
+        'is_hidden',
     ];
 
     protected $casts = [ //casts là một phương thức trong Laravel để chuyển đổi kiểu dữ liệu của các cột trong database
         'release_date' => 'date',
         'rating_average' => 'decimal:2',
+        'is_hidden' => 'boolean',
     ];
     public function showtimes()
     {
