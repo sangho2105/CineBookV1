@@ -327,6 +327,20 @@
         <div class="ticket-footer">
             <div class="booking-label">Mã đặt chỗ / Booking Code</div>
             <div class="booking-code">{{ $booking->booking_id_unique }}</div>
+            @if($booking->booking_date)
+                @php
+                    // Laravel lưu datetime ở UTC trong database, cần convert sang timezone VN
+                    $bookingDate = $booking->booking_date instanceof \Carbon\Carbon 
+                        ? $booking->booking_date->copy() 
+                        : \Carbon\Carbon::parse($booking->booking_date);
+                    // Convert từ UTC (hoặc timezone hiện tại) sang Asia/Ho_Chi_Minh
+                    $bookingDate = $bookingDate->setTimezone('Asia/Ho_Chi_Minh');
+                @endphp
+                <div class="booking-label" style="margin-top: 12px;">Ngày đặt vé</div>
+                <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 12px;">
+                    {{ $bookingDate->format('d/m/Y H:i') }}
+                </div>
+            @endif
             
             <!-- Container cho mã vạch -->
             <div class="barcode-container">

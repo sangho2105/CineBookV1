@@ -32,7 +32,20 @@
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <strong>Ngày đặt vé:</strong> {{ $booking->booking_date ? $booking->booking_date->setTimezone('Asia/Ho_Chi_Minh')->format('d/m/Y H:i:s') : 'Chưa thanh toán' }}
+                            <strong>Ngày đặt vé:</strong> 
+                            @if($booking->booking_date)
+                                @php
+                                    // Laravel lưu datetime ở UTC trong database, cần convert sang timezone VN
+                                    $bookingDate = $booking->booking_date instanceof \Carbon\Carbon 
+                                        ? $booking->booking_date->copy() 
+                                        : \Carbon\Carbon::parse($booking->booking_date);
+                                    // Convert từ UTC (hoặc timezone hiện tại) sang Asia/Ho_Chi_Minh
+                                    $bookingDate = $bookingDate->setTimezone('Asia/Ho_Chi_Minh');
+                                @endphp
+                                {{ $bookingDate->format('d/m/Y H:i') }}
+                            @else
+                                Chưa thanh toán
+                            @endif
                         </div>
                         <div class="col-md-6">
                             <strong>Tổng tiền:</strong> <span class="text-success fs-5 fw-bold">{{ format_currency($booking->total_amount) }}</span>

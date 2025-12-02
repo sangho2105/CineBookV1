@@ -155,7 +155,27 @@
                                         @endif
                                     </td>
                                     <td>
-                                        {{ $booking->booking_date ? $booking->booking_date->format('d/m/Y H:i') : $booking->created_at->format('d/m/Y H:i') }}
+                                        @if($booking->booking_date)
+                                            @php
+                                                // Laravel lưu datetime ở UTC trong database, cần convert sang timezone VN
+                                                $bookingDate = $booking->booking_date instanceof \Carbon\Carbon 
+                                                    ? $booking->booking_date->copy() 
+                                                    : \Carbon\Carbon::parse($booking->booking_date);
+                                                // Convert từ UTC (hoặc timezone hiện tại) sang Asia/Ho_Chi_Minh
+                                                $bookingDate = $bookingDate->setTimezone('Asia/Ho_Chi_Minh');
+                                            @endphp
+                                            {{ $bookingDate->format('d/m/Y H:i') }}
+                                        @else
+                                            @php
+                                                // Laravel lưu datetime ở UTC trong database, cần convert sang timezone VN
+                                                $createdAt = $booking->created_at instanceof \Carbon\Carbon 
+                                                    ? $booking->created_at->copy() 
+                                                    : \Carbon\Carbon::parse($booking->created_at);
+                                                // Convert từ UTC (hoặc timezone hiện tại) sang Asia/Ho_Chi_Minh
+                                                $createdAt = $createdAt->setTimezone('Asia/Ho_Chi_Minh');
+                                            @endphp
+                                            {{ $createdAt->format('d/m/Y H:i') }}
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach

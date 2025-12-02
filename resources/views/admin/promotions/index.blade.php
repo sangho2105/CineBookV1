@@ -21,6 +21,9 @@
                 </a>
                 @endif
             </form>
+            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#manageRulesModal">
+                <i class="bi bi-gear"></i> Quản lý quy tắc
+            </button>
             <a href="{{ route('admin.promotions.create') }}" class="btn btn-primary">
                 <i class="bi bi-plus-circle"></i> Thêm mới
             </a>
@@ -121,6 +124,86 @@
             {{ $promotions->links() }}
         </div>
     @endif
+</div>
+
+<!-- Modal Quản lý quy tắc -->
+<div class="modal fade" id="manageRulesModal" tabindex="-1" aria-labelledby="manageRulesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="manageRulesModalLabel">Quản lý quy tắc áp dụng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">
+                    <i class="bi bi-info-circle"></i> Chọn các khuyến mãi/ưu đãi được áp dụng <strong>chung</strong> (có thể kết hợp với nhau) hoặc <strong>riêng</strong> (chỉ áp dụng một quy tắc).
+                </p>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">STT</th>
+                                <th>Tiêu đề</th>
+                                <th>Loại</th>
+                                <th class="text-center" style="width: 150px;">Áp dụng</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rulesTableBody">
+                            @php
+                                $allPromotions = \App\Models\Promotion::whereIn('category', ['promotion', 'discount'])
+                                    ->orderBy('sort_order')
+                                    ->orderBy('created_at', 'desc')
+                                    ->get();
+                            @endphp
+                            @foreach($allPromotions as $idx => $promo)
+                                <tr data-promotion-id="{{ $promo->id }}">
+                                    <td class="text-center">{{ $loop->iteration }}</td>
+                                    <td>
+                                        <strong>{{ $promo->title }}</strong>
+                                        @if($promo->discount_rules)
+                                            @php
+                                                $discountRules = $promo->discount_rules;
+                                                $rule = is_array($discountRules) && !empty($discountRules) ? reset($discountRules) : [];
+                                                $hasDiscount = !empty($rule['discount_percentage'] ?? null);
+                                                $isGiftOnly = !empty($rule['gift_only'] ?? false);
+                                            @endphp
+                                            <div class="text-muted small mt-1">
+                                                @if($hasDiscount)
+                                                    <span class="badge bg-primary">Giảm {{ $rule['discount_percentage'] }}%</span>
+                                                @endif
+                                                @if($isGiftOnly)
+                                                    <span class="badge bg-success">Tặng quà</span>
+                                                @endif
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td>{{ $promo->category_label }}</td>
+                                    <td class="text-center">
+                                        <select class="form-select form-select-sm apply-type-select" 
+                                                data-promotion-id="{{ $promo->id }}"
+                                                name="apply_type[{{ $promo->id }}]">
+                                            <option value="shared" {{ ($promo->apply_type ?? 'shared') === 'shared' ? 'selected' : '' }}>
+                                                Chung
+                                            </option>
+                                            <option value="exclusive" {{ ($promo->apply_type ?? 'shared') === 'exclusive' ? 'selected' : '' }}>
+                                                Riêng
+                                            </option>
+                                        </select>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="saveRulesBtn">
+                    <i class="bi bi-save"></i> Lưu thay đổi
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 @push('styles')
@@ -246,6 +329,45 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 alert('Có lỗi xảy ra khi cập nhật thứ tự. Vui lòng thử lại.');
             }
+        });
+    }
+    
+    // Xử lý lưu quy tắc áp dụng
+    const saveRulesBtn = document.getElementById('saveRulesBtn');
+    if (saveRulesBtn) {
+        saveRulesBtn.addEventListener('click', function() {
+            const selects = document.querySelectorAll('.apply-type-select');
+            const data = {};
+            
+            selects.forEach(select => {
+                const promotionId = select.getAttribute('data-promotion-id');
+                const applyType = select.value;
+                data[promotionId] = applyType;
+            });
+            
+            // Gửi request lưu
+            fetch('{{ route("admin.promotions.save-rules") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ rules: data })
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    alert('Đã lưu quy tắc áp dụng thành công!');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('manageRulesModal'));
+                    modal.hide();
+                } else {
+                    alert('Có lỗi xảy ra: ' + (result.message || 'Vui lòng thử lại.'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi lưu quy tắc. Vui lòng thử lại.');
+            });
         });
     }
 });

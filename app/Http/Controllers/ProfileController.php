@@ -15,11 +15,10 @@ class ProfileController extends Controller
     public function index()
     {
         $user = Auth::user(); // Get the logged-in user
-        // Lấy lịch sử đặt vé của user
+        // Lấy lịch sử đặt vé của user - sắp xếp theo thời gian gần nhất lên đầu
         $bookings = $user->bookings()
             ->with(['showtime.movie', 'showtime.theater', 'showtime.room', 'seats'])
-            ->orderByDesc('booking_date')
-            ->orderByDesc('created_at') // Sắp xếp theo created_at nếu booking_date null
+            ->orderByDesc('created_at') // Sắp xếp theo created_at (thời gian đặt vé) mới nhất lên đầu
             ->get();
         
         // Tính toán thông tin cho mỗi booking

@@ -486,20 +486,8 @@ document.addEventListener('DOMContentLoaded', function() {
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <div class="row">
-              <div class="col-md-3">
-                <div class="form-check mb-3">
-                  <input class="form-check-input" type="checkbox" id="requireComboCheckbox" checked>
-                  <label class="form-check-label" for="requireComboCheckbox">
-                    Yêu cầu có combo
-                  </label>
-                </div>
-              </div>
-              <div class="col-md-9">
-                <div id="comboListContainer">
-                  ${comboModalBody}
-                </div>
-              </div>
+            <div id="comboListContainer">
+              ${comboModalBody}
             </div>
             <small class="text-muted d-block mt-3">Bạn có thể bỏ qua bước này và thanh toán ngay.</small>
           </div>
@@ -560,43 +548,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const comboModal = new bootstrap.Modal(document.getElementById('comboModal'));
     const confirmCombosBtn = document.getElementById('confirmCombosBtn');
-    
-    // Xử lý checkbox "yêu cầu combo" để ẩn/hiện danh sách combo
-    const requireComboCheckbox = document.getElementById('requireComboCheckbox');
-    const comboListContainer = document.getElementById('comboListContainer');
-    
-    if (requireComboCheckbox && comboListContainer) {
-        // Hàm để ẩn/hiện danh sách combo
-        function toggleComboList() {
-            if (requireComboCheckbox.checked) {
-                comboListContainer.style.display = '';
-                comboListContainer.style.visibility = 'visible';
-                comboListContainer.style.opacity = '1';
-            } else {
-                comboListContainer.style.display = 'none';
-                comboListContainer.style.visibility = 'hidden';
-                comboListContainer.style.opacity = '0';
-                // Reset tất cả số lượng combo về 0 khi ẩn
-                combosData.forEach(combo => {
-                    const qtyInput = document.getElementById(`combo${combo.id}Qty`);
-                    if (qtyInput) {
-                        qtyInput.value = 0;
-                    }
-                });
-            }
-        }
-        
-        // Thêm event listener cho checkbox
-        requireComboCheckbox.addEventListener('change', toggleComboList);
-        
-        // Khởi tạo trạng thái ban đầu khi modal được hiển thị
-        document.getElementById('comboModal').addEventListener('shown.bs.modal', function() {
-            toggleComboList();
-        });
-        
-        // Khởi tạo trạng thái ban đầu ngay lập tức
-        toggleComboList();
-    }
     
     // Thêm validation cho tất cả input số lượng combo để ngăn nhập số âm
     function validateComboQuantity() {

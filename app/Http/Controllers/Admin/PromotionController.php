@@ -113,25 +113,38 @@ class PromotionController extends Controller
                         }
                     }
                     
-                    // Validate requires_combo_ids nếu requires_combo = true
-                    if (isset($rule['requires_combo']) && $rule['requires_combo']) {
-                        if (empty($rule['requires_combo_ids']) || !is_array($rule['requires_combo_ids'])) {
-                            return back()
-                                ->withErrors(["discount_rules.{$index}.requires_combo_ids" => 'Vui lòng chọn ít nhất một combo khi chọn "Yêu cầu có combo".'])
-                                ->withInput();
-                        }
-                    }
+                    // Không validate requires_combo_ids nữa vì:
+                    // - Nếu chỉ tặng quà (không giảm giá): có thể không chọn combo (chỉ cần mua vé)
+                    // - Nếu có giảm giá: validation sẽ được xử lý ở phần applies_to
                     
-                    // Xử lý requires_combo_ids - sync với combo_ids nếu applies_to có 'combo'
-                    if (isset($rule['applies_to']) && in_array('combo', $rule['applies_to'])) {
+                    // Xử lý logic tặng quà: nếu không có discount_percentage và có gift_only
+                    $hasDiscount = !empty($rule['discount_percentage']);
+                    $isGiftOnly = isset($rule['gift_only']) && $rule['gift_only'];
+                    
+                    if (!$hasDiscount && $isGiftOnly) {
+                        // Trường hợp chỉ tặng quà (không giảm giá)
+                        // Nếu có combo được chọn → tặng quà cho những combo đó
+                        // Nếu không có combo nào → chỉ cần mua vé là được tặng
                         if (!empty($rule['requires_combo_ids']) && is_array($rule['requires_combo_ids'])) {
-                            $data['discount_rules'][$index]['combo_ids'] = $rule['requires_combo_ids'];
+                            // Có combo được chọn → lưu vào requires_combo_ids
+                            $data['discount_rules'][$index]['requires_combo_ids'] = $rule['requires_combo_ids'];
+                        } else {
+                            // Không có combo nào → set null (chỉ cần mua vé)
+                            $data['discount_rules'][$index]['requires_combo_ids'] = null;
                         }
-                    }
-                    
-                    // Xử lý requires_combo_ids - nếu không có thì set null
-                    if (!isset($rule['requires_combo_ids']) || empty($rule['requires_combo_ids'])) {
-                        $data['discount_rules'][$index]['requires_combo_ids'] = null;
+                    } else {
+                        // Trường hợp có giảm giá hoặc không phải gift_only
+                        // Xử lý requires_combo_ids - sync với combo_ids nếu applies_to có 'combo'
+                        if (isset($rule['applies_to']) && in_array('combo', $rule['applies_to'])) {
+                            if (!empty($rule['requires_combo_ids']) && is_array($rule['requires_combo_ids'])) {
+                                $data['discount_rules'][$index]['combo_ids'] = $rule['requires_combo_ids'];
+                            }
+                        }
+                        
+                        // Xử lý requires_combo_ids - nếu không có thì set null
+                        if (!isset($rule['requires_combo_ids']) || empty($rule['requires_combo_ids'])) {
+                            $data['discount_rules'][$index]['requires_combo_ids'] = null;
+                        }
                     }
                     // Xử lý movie_id - nếu không có thì set null
                     if (!isset($rule['movie_id']) || empty($rule['movie_id'])) {
@@ -229,36 +242,49 @@ class PromotionController extends Controller
                 
                 // Xử lý discount_rules
                 foreach ($data['discount_rules'] as $index => $rule) {
-                    // Validate requires_combo_ids nếu requires_combo = true
-                    if (isset($rule['requires_combo']) && $rule['requires_combo']) {
-                        if (empty($rule['requires_combo_ids']) || !is_array($rule['requires_combo_ids'])) {
-                            return back()
-                                ->withErrors(["discount_rules.{$index}.requires_combo_ids" => 'Vui lòng chọn ít nhất một combo khi chọn "Yêu cầu có combo".'])
-                                ->withInput();
-                        }
-                    }
+                    // Không validate requires_combo_ids nữa vì:
+                    // - Nếu chỉ tặng quà (không giảm giá): có thể không chọn combo (chỉ cần mua vé)
+                    // - Nếu có giảm giá: validation sẽ được xử lý ở phần applies_to
                     
-                    // Sync combo_ids từ requires_combo_ids nếu có
-                    if (!empty($rule['requires_combo_ids']) && is_array($rule['requires_combo_ids'])) {
-                        // Nếu applies_to có 'combo', sync combo_ids từ requires_combo_ids
+                    // Xử lý logic tặng quà: nếu không có discount_percentage và có gift_only
+                    $hasDiscount = !empty($rule['discount_percentage']);
+                    $isGiftOnly = isset($rule['gift_only']) && $rule['gift_only'];
+                    
+                    if (!$hasDiscount && $isGiftOnly) {
+                        // Trường hợp chỉ tặng quà (không giảm giá)
+                        // Nếu có combo được chọn → tặng quà cho những combo đó
+                        // Nếu không có combo nào → chỉ cần mua vé là được tặng
+                        if (!empty($rule['requires_combo_ids']) && is_array($rule['requires_combo_ids'])) {
+                            // Có combo được chọn → lưu vào requires_combo_ids
+                            $data['discount_rules'][$index]['requires_combo_ids'] = $rule['requires_combo_ids'];
+                        } else {
+                            // Không có combo nào → set null (chỉ cần mua vé)
+                            $data['discount_rules'][$index]['requires_combo_ids'] = null;
+                        }
+                    } else {
+                        // Trường hợp có giảm giá hoặc không phải gift_only
+                        // Sync combo_ids từ requires_combo_ids nếu có
+                        if (!empty($rule['requires_combo_ids']) && is_array($rule['requires_combo_ids'])) {
+                            // Nếu applies_to có 'combo', sync combo_ids từ requires_combo_ids
+                            if (isset($rule['applies_to']) && is_array($rule['applies_to']) && in_array('combo', $rule['applies_to'])) {
+                                $data['discount_rules'][$index]['combo_ids'] = $rule['requires_combo_ids'];
+                            }
+                        }
+                        
+                        // Validate combo_ids nếu applies_to có 'combo' và không có requires_combo_ids
                         if (isset($rule['applies_to']) && is_array($rule['applies_to']) && in_array('combo', $rule['applies_to'])) {
-                            $data['discount_rules'][$index]['combo_ids'] = $rule['requires_combo_ids'];
+                            // Nếu không có combo_ids và không có requires_combo_ids, báo lỗi
+                            if (empty($rule['combo_ids']) && empty($rule['requires_combo_ids'])) {
+                                return back()
+                                    ->withErrors(["discount_rules.{$index}.combo_ids" => 'Vui lòng chọn combo trong "Danh sách combo có sẵn" khi áp dụng cho "Giá combo".'])
+                                    ->withInput();
+                            }
                         }
-                    }
-                    
-                    // Validate combo_ids nếu applies_to có 'combo' và không có requires_combo_ids
-                    if (isset($rule['applies_to']) && is_array($rule['applies_to']) && in_array('combo', $rule['applies_to'])) {
-                        // Nếu không có combo_ids và không có requires_combo_ids, báo lỗi
-                        if (empty($rule['combo_ids']) && empty($rule['requires_combo_ids'])) {
-                            return back()
-                                ->withErrors(["discount_rules.{$index}.combo_ids" => 'Vui lòng chọn combo trong "Yêu cầu có combo" khi áp dụng cho "Giá combo".'])
-                                ->withInput();
+                        
+                        // Xử lý requires_combo_ids - nếu không có thì set null
+                        if (!isset($rule['requires_combo_ids']) || empty($rule['requires_combo_ids'])) {
+                            $data['discount_rules'][$index]['requires_combo_ids'] = null;
                         }
-                    }
-                    
-                    // Xử lý requires_combo_ids - nếu không có thì set null
-                    if (!isset($rule['requires_combo_ids']) || empty($rule['requires_combo_ids'])) {
-                        $data['discount_rules'][$index]['requires_combo_ids'] = null;
                     }
                     // Xử lý movie_id - nếu không có thì set null
                     if (!isset($rule['movie_id']) || empty($rule['movie_id'])) {
@@ -314,6 +340,40 @@ class PromotionController extends Controller
 
         return redirect()->route('admin.promotions.index')
             ->with('success', 'Khuyến mãi đã được xóa.');
+    }
+
+    /**
+     * Save apply rules (shared/exclusive) for promotions.
+     */
+    public function saveRules(Request $request)
+    {
+        try {
+            $request->validate([
+                'rules' => 'required|array',
+                'rules.*' => 'required|string|in:shared,exclusive',
+            ]);
+
+            foreach ($request->rules as $promotionId => $applyType) {
+                Promotion::where('id', $promotionId)->update(['apply_type' => $applyType]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Quy tắc áp dụng đã được cập nhật thành công.'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Dữ liệu không hợp lệ.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Lỗi cập nhật quy tắc áp dụng: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi cập nhật quy tắc áp dụng.'
+            ], 500);
+        }
     }
 
     /**

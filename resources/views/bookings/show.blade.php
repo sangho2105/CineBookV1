@@ -69,7 +69,17 @@
                                 <p class="mb-1 text-muted small">Ngày & Giờ</p>
                                 <p class="mb-0 fw-bold">
                                     {{ optional($booking->showtime->show_date)->format('d/m/Y') }} 
-                                    lúc {{ $booking->showtime->getFormattedShowTime('H:i') }}
+                                    @php
+                                        $showTimeStr = $booking->showtime->show_time;
+                                        if ($showTimeStr instanceof \DateTime) {
+                                            $showTimeStr = $showTimeStr->format('H:i:s');
+                                        } elseif (is_string($showTimeStr)) {
+                                            $showTimeStr = date('H:i:s', strtotime($showTimeStr));
+                                        }
+                                        $startTime = \Carbon\Carbon::parse($booking->showtime->show_date->format('Y-m-d') . ' ' . $showTimeStr);
+                                        $endTime = $startTime->copy()->addMinutes($booking->showtime->movie->duration_minutes ?? 0);
+                                    @endphp
+                                    {{ $startTime->format('H:i') }} - {{ $endTime->format('H:i') }}
                                 </p>
                             </div>
                         </div>
@@ -134,7 +144,19 @@
                                 <i class="bi bi-calendar-check"></i> Ngày đặt vé
                             </p>
                             <p class="mb-0 fw-bold">
-                                {{ $booking->booking_date ? $booking->booking_date->setTimezone('Asia/Ho_Chi_Minh')->format('d/m/Y H:i') : 'Chưa thanh toán' }}
+                                @if($booking->booking_date)
+                                    @php
+                                        // Laravel lưu datetime ở UTC trong database, cần convert sang timezone VN
+                                        $bookingDate = $booking->booking_date instanceof \Carbon\Carbon 
+                                            ? $booking->booking_date->copy() 
+                                            : \Carbon\Carbon::parse($booking->booking_date);
+                                        // Convert từ UTC (hoặc timezone hiện tại) sang Asia/Ho_Chi_Minh
+                                        $bookingDate = $bookingDate->setTimezone('Asia/Ho_Chi_Minh');
+                                    @endphp
+                                    {{ $bookingDate->format('d/m/Y H:i') }}
+                                @else
+                                    Chưa thanh toán
+                                @endif
                             </p>
                         </div>
                         <div class="col-md-4 text-md-end">

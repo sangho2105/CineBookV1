@@ -77,7 +77,7 @@
             $discountRules = old('discount_rules', $promotion->discount_rules ?? []);
             // Chỉ tự động tạo rule mặc định nếu category là 'discount' và không có rule nào
             if (($currentCategory === 'discount') && (empty($discountRules) || !is_array($discountRules))) {
-                $discountRules = [['discount_percentage' => null, 'applies_to' => [], 'min_tickets' => 1, 'requires_combo' => false, 'movie_id' => null]];
+                $discountRules = [['discount_percentage' => null, 'applies_to' => [], 'min_tickets' => 1, 'movie_id' => null]];
             }
             // Nếu là 'promotion' và không có rule, để mảng rỗng
             if (empty($discountRules) || !is_array($discountRules)) {
@@ -164,17 +164,6 @@
                         </div>
                         
                         <div class="col-md-6">
-                            <div class="form-check mt-4">
-                                <input class="form-check-input rule-requires-combo" type="checkbox" 
-                                       name="discount_rules[{{ $index }}][requires_combo]" 
-                                       id="requires_combo_{{ $index }}" 
-                                       value="1" 
-                                       data-rule-index="{{ $index }}"
-                                       {{ (isset($rule['requires_combo']) && $rule['requires_combo']) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="requires_combo_{{ $index }}">
-                                    Yêu cầu có combo
-                                </label>
-                            </div>
                             <div class="form-check mt-3">
                                 <input class="form-check-input rule-gift-only" type="checkbox" 
                                        name="discount_rules[{{ $index }}][gift_only]" 
@@ -182,15 +171,13 @@
                                        value="1"
                                        {{ (isset($rule['gift_only']) && $rule['gift_only']) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="gift_only_{{ $index }}">
-                                    Chặn giảm giá khi tặng quà
+                                    Áp dụng tặng quà
                                 </label>
-                                <small class="text-muted d-block mt-1">Nếu chọn, chỉ tặng quà và không áp dụng giảm giá. Nếu không chọn, vừa giảm giá vừa tặng quà (nếu có cả hai).</small>
+                                <small class="text-muted d-block mt-1">Nếu chọn, khách hàng sẽ được tặng quà. Nếu bỏ chọn, khách hàng sẽ không được tặng quà.</small>
                             </div>
-                            {{-- Hiển thị danh sách combo khi chọn "Yêu cầu có combo" --}}
-                            <div class="mt-3 requires-combo-select-wrapper" id="requires-combo-select-wrapper-{{ $index }}" 
-                                 data-initial-display="{{ (isset($rule['requires_combo']) && $rule['requires_combo']) ? 'block' : 'none' }}"
-                                 style="{{ (isset($rule['requires_combo']) && $rule['requires_combo']) ? '' : 'display: none;' }}">
-                                <label class="form-label small">Chọn combo:</label>
+                            {{-- Danh sách combo có sẵn - luôn hiển thị --}}
+                            <div class="mt-3 requires-combo-select-wrapper" id="requires-combo-select-wrapper-{{ $index }}">
+                                <label class="form-label small"><strong>Danh sách combo có sẵn:</strong></label>
                                 <div class="row g-2">
                                     @foreach($combos as $combo)
                                         <div class="col-md-6">
@@ -364,11 +351,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 `;
             });
             
-            // Function để tạo HTML cho combo select (dùng chung cho requires_combo_ids)
+            // Function để tạo HTML cho combo select (luôn hiển thị)
             function createComboSelectHtml(ruleIndex, comboUrl) {
                 let html = '';
                 if (combosData && combosData.length > 0) {
-                    html = `<div class="mt-3 requires-combo-select-wrapper" id="requires-combo-select-wrapper-${ruleIndex}" style="display: none;"><label class="form-label small">Chọn combo:</label><div class="row g-2">`;
+                    html = `<div class="mt-3 requires-combo-select-wrapper" id="requires-combo-select-wrapper-${ruleIndex}"><label class="form-label small"><strong>Danh sách combo có sẵn:</strong></label><div class="row g-2">`;
                     combosData.forEach(combo => {
                         html += `
                             <div class="col-md-6">
@@ -387,7 +374,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                     html += '</div><small class="text-muted d-block mt-2">Chọn combo để yêu cầu và áp dụng giảm giá (nếu có). Nếu không chọn combo nào, sẽ yêu cầu bất kỳ combo nào</small><input type="hidden" name="discount_rules[' + ruleIndex + '][combo_ids_sync]" value="1"></div>';
                 } else {
-                    html = `<div class="mt-3 requires-combo-select-wrapper" id="requires-combo-select-wrapper-${ruleIndex}" style="display: none;"><small class="text-muted">Chưa có combo nào. Vui lòng tạo combo trong <a href="${comboUrl}" target="_blank">Quản lý Combo</a>.</small></div>`;
+                    html = `<div class="mt-3 requires-combo-select-wrapper" id="requires-combo-select-wrapper-${ruleIndex}"><label class="form-label small"><strong>Danh sách combo có sẵn:</strong></label><small class="text-muted">Chưa có combo nào. Vui lòng tạo combo trong <a href="${comboUrl}" target="_blank">Quản lý Combo</a>.</small></div>`;
                 }
                 return html;
             }
@@ -436,25 +423,15 @@ document.addEventListener('DOMContentLoaded', function () {
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="form-check mt-4">
-                                    <input class="form-check-input rule-requires-combo" type="checkbox" 
-                                           name="discount_rules[${ruleIndex}][requires_combo]" 
-                                           id="requires_combo_${ruleIndex}" 
-                                           value="1"
-                                           data-rule-index="${ruleIndex}">
-                                    <label class="form-check-label" for="requires_combo_${ruleIndex}">
-                                        Yêu cầu có combo
-                                    </label>
-                                </div>
                                 <div class="form-check mt-3">
                                     <input class="form-check-input rule-gift-only" type="checkbox" 
                                            name="discount_rules[${ruleIndex}][gift_only]" 
                                            id="gift_only_${ruleIndex}" 
                                            value="1">
                                     <label class="form-check-label" for="gift_only_${ruleIndex}">
-                                        Chặn giảm giá khi tặng quà
+                                        Áp dụng tặng quà
                                     </label>
-                                    <small class="text-muted d-block mt-1">Nếu chọn, chỉ tặng quà và không áp dụng giảm giá. Nếu không chọn, vừa giảm giá vừa tặng quà (nếu có cả hai).</small>
+                                    <small class="text-muted d-block mt-1">Nếu chọn, khách hàng sẽ được tặng quà. Nếu bỏ chọn, khách hàng sẽ không được tặng quà.</small>
                                 </div>
                                 ${requiresComboSelectHtml}
                             </div>
@@ -574,8 +551,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     const appliesToCheckboxes = item.querySelectorAll('.rule-applies-to:checked');
                     const giftOnlyCheckbox = item.querySelector('.rule-gift-only');
                     const isGiftOnly = giftOnlyCheckbox && giftOnlyCheckbox.checked;
-                    const requiresComboCheckbox = item.querySelector('.rule-requires-combo');
-                    const requiresComboCheckboxes = item.querySelectorAll('.requires-combo-checkbox:checked');
                     
                     // Nếu có discount_percentage, thì phải có applies_to
                     // Nếu không có discount_percentage (chỉ tặng quà), thì không cần applies_to
@@ -591,27 +566,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         discountSelect.classList.remove('is-invalid');
                     }
                     
-                    // Validate requires_combo: nếu chọn "Yêu cầu có combo" thì phải chọn ít nhất một combo
-                    if (requiresComboCheckbox && requiresComboCheckbox.checked) {
-                        if (requiresComboCheckboxes.length === 0) {
-                            hasError = true;
-                            alert('Quy tắc #' + (index + 1) + ': Vui lòng chọn ít nhất một combo khi chọn "Yêu cầu có combo".');
-                            // Highlight combo select wrapper
-                            const comboWrapper = item.querySelector('.requires-combo-select-wrapper');
-                            if (comboWrapper) {
-                                comboWrapper.style.border = '2px solid #dc3545';
-                                comboWrapper.style.borderRadius = '4px';
-                                comboWrapper.style.padding = '8px';
-                            }
-                        } else {
-                            // Remove highlight nếu đã chọn combo
-                            const comboWrapper = item.querySelector('.requires-combo-select-wrapper');
-                            if (comboWrapper) {
-                                comboWrapper.style.border = '';
-                                comboWrapper.style.padding = '';
-                            }
-                        }
-                    }
                 }
                 
                 if (hasError) {
@@ -621,68 +575,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             // Nếu category là 'event' hoặc 'movie', cho phép submit bình thường
         });
-    }
-    
-    // Toggle hiển thị combo select khi chọn/bỏ chọn "Yêu cầu có combo"
-    function toggleRequiresComboSelect(ruleIndex, checkbox) {
-        // Đảm bảo ruleIndex là string
-        ruleIndex = String(ruleIndex);
-        console.log('toggleRequiresComboSelect called with ruleIndex:', ruleIndex, 'checked:', checkbox.checked);
-        
-        // Tìm wrapper bằng nhiều cách
-        let requiresComboWrapper = null;
-        
-        // Cách 1: Tìm bằng ID
-        requiresComboWrapper = document.getElementById(`requires-combo-select-wrapper-${ruleIndex}`);
-        
-        // Cách 2: Tìm trong cùng rule item
-        if (!requiresComboWrapper) {
-            const ruleItem = checkbox.closest('.discount-rule-item');
-            if (ruleItem) {
-                requiresComboWrapper = ruleItem.querySelector('.requires-combo-select-wrapper');
-                console.log('Tìm thấy wrapper trong rule item:', !!requiresComboWrapper);
-            }
-        }
-        
-        // Cách 3: Tìm bằng class trong toàn bộ document (fallback)
-        if (!requiresComboWrapper) {
-            const allWrappers = document.querySelectorAll('.requires-combo-select-wrapper');
-            // Tìm wrapper có ID chứa ruleIndex
-            allWrappers.forEach(wrapper => {
-                if (wrapper.id && wrapper.id.includes(ruleIndex)) {
-                    requiresComboWrapper = wrapper;
-                }
-            });
-        }
-        
-        if (requiresComboWrapper) {
-            if (checkbox.checked) {
-                // Xóa tất cả style inline và class ẩn để đảm bảo hiển thị
-                requiresComboWrapper.removeAttribute('style');
-                requiresComboWrapper.classList.remove('d-none');
-                requiresComboWrapper.removeAttribute('hidden');
-                // Set style mới với !important để override mọi style khác
-                requiresComboWrapper.setAttribute('style', 'display: block !important; visibility: visible !important; opacity: 1 !important;');
-                console.log('✓ Combo select hiển thị cho rule:', ruleIndex, 'Wrapper ID:', requiresComboWrapper.id);
-            } else {
-                requiresComboWrapper.setAttribute('style', 'display: none !important;');
-                console.log('✗ Combo select ẩn cho rule:', ruleIndex);
-            }
-        } else {
-            console.error('Không tìm thấy requires-combo-select-wrapper cho rule:', ruleIndex);
-            // Debug: liệt kê tất cả wrappers có sẵn
-            const allWrappers = document.querySelectorAll('.requires-combo-select-wrapper');
-            console.log('Tất cả combo select wrappers:', allWrappers.length);
-            allWrappers.forEach((wrapper, idx) => {
-                console.log(`Wrapper ${idx}:`, wrapper.id, wrapper.className, wrapper.style.display);
-            });
-            // Debug: liệt kê tất cả rule items
-            const allRuleItems = document.querySelectorAll('.discount-rule-item');
-            console.log('Tất cả rule items:', allRuleItems.length);
-            allRuleItems.forEach((item, idx) => {
-                console.log(`Rule item ${idx}:`, item.getAttribute('data-index'), item.querySelector('.requires-combo-select-wrapper') ? 'có wrapper' : 'không có wrapper');
-            });
-        }
     }
     
     // Sync combo_ids từ requires_combo_ids khi submit form
@@ -714,134 +606,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
     
-    // Sử dụng event delegation cho tất cả "Yêu cầu có combo" checkboxes (bao gồm cả rule mới)
+    // Xử lý combo checkboxes để sync combo_ids
     if (discountRulesContainer) {
         discountRulesContainer.addEventListener('change', function(e) {
-            // Xử lý checkbox "Yêu cầu có combo"
-            if (e.target && e.target.classList.contains('rule-requires-combo')) {
-                const checkbox = e.target;
-                // Lấy ruleIndex từ data-rule-index hoặc từ parent element
-                let ruleIndex = checkbox.getAttribute('data-rule-index');
-                if (!ruleIndex && ruleIndex !== '0') {
-                    const ruleItem = checkbox.closest('.discount-rule-item');
-                    if (ruleItem) {
-                        ruleIndex = ruleItem.getAttribute('data-index');
-                    }
-                }
-                if (ruleIndex !== null && ruleIndex !== undefined) {
-                    console.log('Event delegation: Toggle combo select for rule:', ruleIndex, 'checked:', checkbox.checked);
-                    // Gọi ngay lập tức
-                    toggleRequiresComboSelect(ruleIndex, checkbox);
-                    // Gọi lại sau một chút để đảm bảo
-                    setTimeout(() => {
-                        toggleRequiresComboSelect(ruleIndex, checkbox);
-                    }, 50);
-                } else {
-                    console.warn('Không tìm thấy ruleIndex cho checkbox requires-combo', checkbox);
-                }
-            }
-            
             // Xử lý combo checkboxes để sync combo_ids
             if (e.target && e.target.classList.contains('requires-combo-checkbox')) {
                 syncComboIds();
             }
         });
     }
-    
-    // Thêm event listener trực tiếp cho tất cả "Yêu cầu có combo" checkboxes hiện có
-    function attachRequiresComboListeners() {
-        const checkboxes = document.querySelectorAll('.rule-requires-combo');
-        console.log('Tìm thấy', checkboxes.length, 'checkbox "Yêu cầu có combo"');
-        
-        checkboxes.forEach((checkbox, idx) => {
-            // Kiểm tra xem đã có event listener chưa
-            if (checkbox.hasAttribute('data-listener-attached')) {
-                console.log('Checkbox', idx, 'đã có listener, bỏ qua');
-                return; // Đã có listener rồi, bỏ qua
-            }
-            
-            // Đánh dấu đã có listener
-            checkbox.setAttribute('data-listener-attached', 'true');
-            
-            // Lấy ruleIndex
-            let ruleIndex = checkbox.getAttribute('data-rule-index');
-            if (!ruleIndex) {
-                const ruleItem = checkbox.closest('.discount-rule-item');
-                if (ruleItem) {
-                    ruleIndex = ruleItem.getAttribute('data-index');
-                }
-            }
-            console.log('Checkbox', idx, 'ruleIndex:', ruleIndex, 'checked:', checkbox.checked);
-            
-            // Thêm event listener trực tiếp
-            checkbox.addEventListener('change', function() {
-                let ruleIndex = this.getAttribute('data-rule-index');
-                if (!ruleIndex && ruleIndex !== '0') {
-                    const ruleItem = this.closest('.discount-rule-item');
-                    if (ruleItem) {
-                        ruleIndex = ruleItem.getAttribute('data-index');
-                    }
-                }
-                console.log('Checkbox changed, ruleIndex:', ruleIndex, 'checked:', this.checked);
-                if (ruleIndex !== null && ruleIndex !== undefined) {
-                    // Gọi ngay lập tức
-                    toggleRequiresComboSelect(ruleIndex, this);
-                    // Gọi lại sau một chút để đảm bảo
-                    setTimeout(() => {
-                        toggleRequiresComboSelect(ruleIndex, this);
-                    }, 50);
-                } else {
-                    console.error('Không tìm thấy ruleIndex cho checkbox', this);
-                }
-            });
-            
-            // Khởi tạo trạng thái ban đầu (cho cả checked và unchecked)
-            if (ruleIndex !== null) {
-                console.log('Initializing combo select for rule:', ruleIndex, 'checked:', checkbox.checked);
-                // Đợi một chút để đảm bảo DOM đã render xong
-                setTimeout(() => {
-                    toggleRequiresComboSelect(ruleIndex, checkbox);
-                }, 50);
-            }
-        });
-    }
-    
-    // Hàm để khởi tạo hiển thị combo selection cho các checkbox đã checked
-    function initializeComboSelections() {
-        document.querySelectorAll('.rule-requires-combo').forEach(checkbox => {
-            let ruleIndex = checkbox.getAttribute('data-rule-index');
-            if (!ruleIndex && ruleIndex !== '0') {
-                const ruleItem = checkbox.closest('.discount-rule-item');
-                if (ruleItem) {
-                    ruleIndex = ruleItem.getAttribute('data-index');
-                }
-            }
-            if (ruleIndex !== null && ruleIndex !== undefined) {
-                console.log('Initializing combo select for rule:', ruleIndex, 'checked:', checkbox.checked);
-                toggleRequiresComboSelect(ruleIndex, checkbox);
-            }
-        });
-    }
-    
-    // Gọi ngay khi DOM ready
-    attachRequiresComboListeners();
-    
-    // Gọi lại sau 100ms để đảm bảo tất cả element đã được render
-    setTimeout(() => {
-        attachRequiresComboListeners();
-        initializeComboSelections();
-    }, 100);
-    
-    // Gọi lại sau 500ms để đảm bảo
-    setTimeout(() => {
-        attachRequiresComboListeners();
-        initializeComboSelections();
-    }, 500);
-    
-    // Gọi lại sau 1s để đảm bảo chắc chắn
-    setTimeout(() => {
-        initializeComboSelections();
-    }, 1000);
     
     // Khởi tạo
     updateRemoveButtons();

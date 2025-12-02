@@ -493,7 +493,8 @@ class BookingController extends Controller
             'discountAmount',
             'hasGiftPromotion',
             'finalTotal',
-            'selectedSeatIds'
+            'selectedSeatIds',
+            'promotionInfo'
         ));
     }
 
@@ -513,39 +514,52 @@ class BookingController extends Controller
             })
             ->get();
         
+        // Tách promotions thành 2 nhóm: exclusive và shared
+        $exclusivePromotions = [];
+        $sharedPromotions = [];
+        
+        foreach ($promotions as $promotion) {
+            $applyType = $promotion->apply_type ?? 'shared'; // Mặc định là shared
+            if ($applyType === 'exclusive') {
+                $exclusivePromotions[] = $promotion;
+            } else {
+                $sharedPromotions[] = $promotion;
+            }
+        }
+        
         $bestDiscount = 0;
         $bestPromotion = null;
         $promotionDetails = [];
         $hasGiftPromotion = false;
         
-        foreach ($promotions as $promotion) {
+        // Hàm helper để kiểm tra và tính discount cho một promotion
+        $processPromotion = function($promotion) use ($booking, $movie, $ticketPrice, $comboPrice, $ticketCount) {
             $rules = $promotion->discount_rules ?? [];
             if (empty($rules) || !is_array($rules)) {
-                continue;
+                return null;
             }
             
-            // Chỉ lấy rule đầu tiên (theo yêu cầu mỗi promotion chỉ có 1 rule)
-            $rule = reset($rules);
+            // Chỉ lấy rule đầu tiên
+            $discountRules = $promotion->discount_rules;
+            $rule = is_array($discountRules) && !empty($discountRules) ? reset($discountRules) : [];
             if (empty($rule)) {
-                continue;
+                return null;
             }
             
-            // Kiểm tra phim - nếu có movie_id trong rule thì phải khớp với phim đang đặt
-            if (!empty($rule['movie_id'])) {
-                if ($rule['movie_id'] != $movie->id) {
-                    continue; // Bỏ qua nếu không khớp phim
-                }
+            // Kiểm tra phim
+            if (!empty($rule['movie_id']) && $rule['movie_id'] != $movie->id) {
+                return null;
             }
             
             // Kiểm tra số vé
             if (!empty($rule['min_tickets']) && $ticketCount < $rule['min_tickets']) {
-                continue;
+                return null;
             }
             
             // Kiểm tra yêu cầu combo
             if (!empty($rule['requires_combo'])) {
                 if ($comboPrice <= 0) {
-                    continue;
+                    return null;
                 }
                 
                 if (!empty($rule['requires_combo_ids']) && is_array($rule['requires_combo_ids'])) {
@@ -555,31 +569,17 @@ class BookingController extends Controller
                         ->toArray();
                     
                     if (empty(array_intersect($bookingComboNames, $requiredComboNames))) {
-                        continue;
+                        return null;
                     }
                 }
             }
             
-            // Kiểm tra gift only
+            // Kiểm tra áp dụng tặng quà
             $discountPercentage = $rule['discount_percentage'] ?? 0;
             $appliesTo = $rule['applies_to'] ?? [];
-            $giftOnly = !empty($rule['gift_only']);
+            $hasGift = !empty($rule['gift_only']);
             
-            if ($giftOnly) {
-                // Nếu là gift only, chỉ đánh dấu có gift, không tính discount
-                $hasGiftPromotion = true;
-                if (!$bestPromotion) {
-                    $bestPromotion = $promotion;
-                }
-                $promotionDetails[] = [
-                    'name' => $promotion->title,
-                    'type' => 'gift',
-                    'discount' => 0,
-                ];
-                continue;
-            }
-            
-            // Tính discount
+            // Tính discount (có thể có discount ngay cả khi có gift)
             $ruleDiscount = 0;
             if (in_array('ticket', $appliesTo)) {
                 $ruleDiscount += ($ticketPrice * $discountPercentage / 100);
@@ -592,20 +592,163 @@ class BookingController extends Controller
                 $ruleDiscount += ($totalBeforeDiscount * $discountPercentage / 100);
             }
             
-            if ($ruleDiscount > $bestDiscount) {
-                $bestDiscount = $ruleDiscount;
-                $bestPromotion = $promotion;
+            // Nếu có gift và không có discount → chỉ tặng quà
+            if ($hasGift && $ruleDiscount == 0) {
+                return [
+                    'promotion' => $promotion,
+                    'type' => 'gift',
+                    'discount' => 0,
+                    'percentage' => 0,
+                    'has_gift' => true,
+                ];
             }
             
+            // Nếu có discount (có thể kèm gift hoặc không)
             if ($ruleDiscount > 0) {
-                $promotionDetails[] = [
-                    'name' => $promotion->title,
-                    'type' => 'discount',
+                return [
+                    'promotion' => $promotion,
+                    'type' => $hasGift ? 'discount_gift' : 'discount',
                     'discount' => $ruleDiscount,
                     'percentage' => $discountPercentage,
+                    'has_gift' => $hasGift,
+                ];
+            }
+            
+            // Nếu chỉ có gift mà không có discount
+            if ($hasGift) {
+                return [
+                    'promotion' => $promotion,
+                    'type' => 'gift',
+                    'discount' => 0,
+                    'percentage' => 0,
+                    'has_gift' => true,
+                ];
+            }
+            
+            return null;
+        };
+        
+        // Xử lý exclusive promotions trước (nếu có)
+        if (!empty($exclusivePromotions)) {
+            foreach ($exclusivePromotions as $promotion) {
+                $result = $processPromotion($promotion);
+                if ($result === null) {
+                    continue;
+                }
+                
+                // Xử lý gift
+                if (!empty($result['has_gift'])) {
+                    $hasGiftPromotion = true;
+                }
+                
+                // Xử lý discount
+                if ($result['type'] === 'gift') {
+                    // Chỉ có gift, không có discount
+                    if (!$bestPromotion) {
+                        $bestPromotion = $promotion;
+                    }
+                    $promotionDetails = [[
+                        'name' => $promotion->title,
+                        'type' => 'gift',
+                        'discount' => 0,
+                    ]];
+                } elseif ($result['type'] === 'discount_gift') {
+                    // Vừa có discount vừa có gift
+                    if ($result['discount'] > $bestDiscount) {
+                        $bestDiscount = $result['discount'];
+                        $bestPromotion = $promotion;
+                        $promotionDetails = [[
+                            'name' => $promotion->title,
+                            'type' => 'discount_gift',
+                            'discount' => $result['discount'],
+                            'percentage' => $result['percentage'],
+                        ]];
+                    }
+                } else {
+                    // Chỉ có discount
+                    if ($result['discount'] > $bestDiscount) {
+                        $bestDiscount = $result['discount'];
+                        $bestPromotion = $promotion;
+                        $promotionDetails = [[
+                            'name' => $promotion->title,
+                            'type' => 'discount',
+                            'discount' => $result['discount'],
+                            'percentage' => $result['percentage'],
+                        ]];
+                    }
+                }
+            }
+            
+            // Nếu đã tìm thấy exclusive promotion hợp lệ, dừng lại
+            if ($bestPromotion) {
+                return [
+                    'discount_amount' => $bestDiscount,
+                    'promotion_details' => $promotionDetails,
+                    'has_gift_promotion' => $hasGiftPromotion,
+                    'best_promotion' => $bestPromotion,
                 ];
             }
         }
+        
+        // Xử lý shared promotions (có thể kết hợp nhiều promotion)
+        $totalSharedDiscount = 0;
+        $sharedPromotionDetails = [];
+        foreach ($sharedPromotions as $promotion) {
+            $result = $processPromotion($promotion);
+            if ($result === null) {
+                continue;
+            }
+            
+            // Xử lý gift
+            if (!empty($result['has_gift'])) {
+                $hasGiftPromotion = true;
+            }
+            
+            // Xử lý discount và gift
+            if ($result['type'] === 'gift') {
+                // Chỉ có gift, không có discount
+                $sharedPromotionDetails[] = [
+                    'name' => $promotion->title,
+                    'type' => 'gift',
+                    'discount' => 0,
+                ];
+            } elseif ($result['type'] === 'discount_gift') {
+                // Vừa có discount vừa có gift
+                $totalSharedDiscount += $result['discount'];
+                $sharedPromotionDetails[] = [
+                    'name' => $promotion->title,
+                    'type' => 'discount_gift',
+                    'discount' => $result['discount'],
+                    'percentage' => $result['percentage'],
+                ];
+                
+                if ($result['discount'] > $bestDiscount) {
+                    $bestDiscount = $result['discount'];
+                    $bestPromotion = $promotion;
+                }
+            } else {
+                // Chỉ có discount
+                $totalSharedDiscount += $result['discount'];
+                $sharedPromotionDetails[] = [
+                    'name' => $promotion->title,
+                    'type' => 'discount',
+                    'discount' => $result['discount'],
+                    'percentage' => $result['percentage'],
+                ];
+                
+                if ($result['discount'] > $bestDiscount) {
+                    $bestDiscount = $result['discount'];
+                    $bestPromotion = $promotion;
+                }
+            }
+        }
+        
+        // Nếu có shared promotions, sử dụng tổng discount
+        if ($totalSharedDiscount > 0) {
+            $bestDiscount = $totalSharedDiscount;
+        }
+        
+        $promotionDetails = $sharedPromotionDetails;
         
         return [
             'discount_amount' => $bestDiscount,
@@ -717,15 +860,32 @@ class BookingController extends Controller
             }
         }
         
+        // Lấy promotion info từ request (nếu có)
+        $appliedPromotionId = null;
+        $hasGiftPromotion = false;
+        if ($request->filled('promotion_info')) {
+            $promoInfo = json_decode($request->promotion_info, true);
+            if (is_array($promoInfo)) {
+                $appliedPromotionId = $promoInfo['applied_promotion_id'] ?? null;
+                $hasGiftPromotion = !empty($promoInfo['has_gift_promotion']);
+            }
+        }
+        
         // Tạo booking
         DB::beginTransaction();
         try {
+            // Lấy thời gian hiện tại ở timezone VN và convert về UTC để lưu vào database
+            // Laravel sẽ tự động lưu UTC, nhưng chúng ta cần đảm bảo thời gian đúng
+            $nowVN = Carbon::now('Asia/Ho_Chi_Minh');
+            
             $booking = Booking::create([
                 'user_id' => auth()->id(),
                 'showtime_id' => $showtime->id,
-                'booking_date' => now(),
+                'booking_date' => $nowVN->utc(), // Convert về UTC để lưu vào database
                 'total_amount' => $totalAmount,
                 'payment_status' => 'pending',
+                'applied_promotion_id' => $appliedPromotionId,
+                'has_gift_promotion' => $hasGiftPromotion,
             ]);
             
             // Gắn ghế vào booking
@@ -782,6 +942,40 @@ class BookingController extends Controller
             return redirect()->route('bookings.ticket', $booking)->with('success', 'Đơn hàng đã thanh toán trước đó.');
         }
         $booking->update(['payment_status' => 'completed']);
+        
+        // Gửi email xác nhận đặt vé
+        try {
+            $booking->load(['showtime.movie', 'showtime.room', 'showtime.theater', 'seats', 'combos']);
+            $ticketInfo = $this->calculateTicketInfo($booking);
+            
+            // Tạo PDF ticket để gửi kèm email
+            $pdfPath = null;
+            try {
+                $pdf = Pdf::loadView('bookings.ticket-pdf', [
+                    'booking' => $booking,
+                    'ticketInfo' => $ticketInfo,
+                    'barcodeBase64' => $this->generateBarcode($booking->booking_id_unique),
+                    'barcodeHtml' => $this->generateBarcodeHtml($booking->booking_id_unique),
+                ]);
+                $pdfPath = storage_path('app/temp/ticket-' . $booking->booking_id_unique . '.pdf');
+                if (!file_exists(storage_path('app/temp'))) {
+                    mkdir(storage_path('app/temp'), 0755, true);
+                }
+                $pdf->save($pdfPath);
+            } catch (\Exception $e) {
+                \Log::error('Lỗi tạo PDF ticket: ' . $e->getMessage());
+            }
+            
+            Mail::to($booking->user->email)->send(new BookingConfirmationMail($booking, $ticketInfo, $pdfPath));
+            
+            // Xóa file PDF tạm sau khi gửi email
+            if ($pdfPath && file_exists($pdfPath)) {
+                @unlink($pdfPath);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Lỗi gửi email xác nhận đặt vé: ' . $e->getMessage());
+        }
+        
         return redirect()->route('bookings.ticket', $booking)->with('success', 'Thanh toán thành công!');
     }
 
@@ -919,6 +1113,39 @@ class BookingController extends Controller
 
         if ($status === 'COMPLETED') {
             $booking->update(['payment_status' => 'completed']);
+            
+            // Gửi email xác nhận đặt vé
+            try {
+                $booking->load(['showtime.movie', 'showtime.room', 'showtime.theater', 'seats', 'combos']);
+                $ticketInfo = $this->calculateTicketInfo($booking);
+                
+                // Tạo PDF ticket để gửi kèm email
+                $pdfPath = null;
+                try {
+                    $pdf = Pdf::loadView('bookings.ticket-pdf', [
+                        'booking' => $booking,
+                        'ticketInfo' => $ticketInfo,
+                        'barcodeBase64' => $this->generateBarcode($booking->booking_id_unique),
+                        'barcodeHtml' => $this->generateBarcodeHtml($booking->booking_id_unique),
+                    ]);
+                    $pdfPath = storage_path('app/temp/ticket-' . $booking->booking_id_unique . '.pdf');
+                    if (!file_exists(storage_path('app/temp'))) {
+                        mkdir(storage_path('app/temp'), 0755, true);
+                    }
+                    $pdf->save($pdfPath);
+                } catch (\Exception $e) {
+                    \Log::error('Lỗi tạo PDF ticket: ' . $e->getMessage());
+                }
+                
+                Mail::to($booking->user->email)->send(new BookingConfirmationMail($booking, $ticketInfo, $pdfPath));
+                
+                // Xóa file PDF tạm sau khi gửi email
+                if ($pdfPath && file_exists($pdfPath)) {
+                    @unlink($pdfPath);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Lỗi gửi email xác nhận đặt vé: ' . $e->getMessage());
+            }
         }
 
         return response()->json(['status' => $status]);
@@ -1147,6 +1374,7 @@ class BookingController extends Controller
             'combo_details' => $comboDetails,
             'discount_amount' => $discountAmount,
             'total' => $total,
+            'has_gift_promotion' => $booking->has_gift_promotion ?? false,
         ];
     }
 

@@ -25,6 +25,7 @@ class Promotion extends Model
         'is_active',
         'discount_rules',
         'sort_order',
+        'apply_type',
     ];
 
     protected $casts = [

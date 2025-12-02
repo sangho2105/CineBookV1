@@ -112,12 +112,15 @@
                                                 <strong>{{ $promo['name'] }}</strong>
                                                 @if($promo['type'] == 'gift')
                                                     <span class="badge bg-success ms-2">Tặng quà</span>
+                                                @elseif($promo['type'] == 'discount_gift')
+                                                    <span class="badge bg-primary ms-2">Giảm {{ $promo['percentage'] }}%</span>
+                                                    <span class="badge bg-success ms-2">Tặng quà</span>
                                                 @else
                                                     <span class="badge bg-primary ms-2">Giảm {{ $promo['percentage'] }}%</span>
                                                 @endif
                                             </td>
                                             <td class="text-end">
-                                                @if($promo['type'] == 'discount')
+                                                @if($promo['type'] == 'discount' || $promo['type'] == 'discount_gift')
                                                     -${{ number_format($promo['discount'], 2) }}
                                                 @else
                                                     Miễn phí
@@ -159,6 +162,14 @@
                                     'unit_price' => $c['unit_price']
                                 ];
                             }, $comboDetails)) }}">
+                        @endif
+                        @if(!empty($promotionInfo))
+                            <input type="hidden" name="promotion_info" value="{{ json_encode([
+                                'applied_promotion_id' => $promotionInfo['best_promotion']->id ?? null,
+                                'has_gift_promotion' => $promotionInfo['has_gift_promotion'] ?? false,
+                                'discount_amount' => $promotionInfo['discount_amount'] ?? 0,
+                                'promotion_details' => $promotionInfo['promotion_details'] ?? []
+                            ]) }}">
                         @endif
                         
                         <div class="d-flex gap-2 justify-content-end">

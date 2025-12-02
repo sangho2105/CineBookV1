@@ -84,6 +84,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // Route cho quản lý Khuyến mãi & Sự kiện
     Route::resource('promotions', PromotionController::class)->except(['show']);
     Route::post('promotions/update-order', [PromotionController::class, 'updateOrder'])->name('promotions.update-order');
+    Route::post('promotions/save-rules', [PromotionController::class, 'saveRules'])->name('promotions.save-rules');
 
     // Route cho quản lý Suất chiếu (Showtimes)
     Route::resource('showtimes', \App\Http\Controllers\ShowtimeController::class);
