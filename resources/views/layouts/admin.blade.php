@@ -421,10 +421,15 @@
         }
     </style>
     @stack('styles')
+    <link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
 </head>
 <body>
 
-    <div class="sidebar">
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <div class="sidebar" id="adminSidebar">
         <h3>Admin Panel</h3>
         <ul class="nav flex-column">
             <li class="nav-item">
@@ -487,6 +492,28 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Toggle sidebar cho mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('adminSidebar');
+            
+            if (sidebarToggle && sidebar) {
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('show');
+                });
+                
+                // Đóng sidebar khi click bên ngoài
+                document.addEventListener('click', function(event) {
+                    if (window.innerWidth <= 992) {
+                        if (!sidebar.contains(event.target) && !sidebarToggle.contains(event.target)) {
+                            sidebar.classList.remove('show');
+                        }
+                    }
+                });
+            }
+        });
+    </script>
     @stack('scripts')
 </body>
 </html>

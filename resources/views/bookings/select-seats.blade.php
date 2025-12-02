@@ -172,6 +172,8 @@
     background-color: #F5F5DC;
     border-top: 1px solid #e0e0e0;
 }
+
+/* Responsive fixes - đã được xử lý trong responsive.css */
 </style>
 
 <script>

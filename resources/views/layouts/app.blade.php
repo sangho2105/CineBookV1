@@ -8,6 +8,7 @@
     <title>@yield('title', 'CineBook')</title> <!-- @yied là một directive trong Laravel để hiển thị nội dung của view con -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
     @stack('css')
     <style>
         /* Màu nền beige/ivory nhạt cho toàn bộ trang web */

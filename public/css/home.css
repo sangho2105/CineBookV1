@@ -581,3 +581,24 @@
     }
 }
 
+/* Quick search responsive - bổ sung */
+@media (max-width: 480px) {
+    .quick-search-wrapper {
+        max-width: 100%;
+    }
+    
+    .quick-search-group {
+        padding: 6px 10px;
+        border-radius: 50px;
+    }
+    
+    .quick-search-input {
+        font-size: 0.9rem;
+    }
+    
+    .quick-search-btn {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+    }
+}
+

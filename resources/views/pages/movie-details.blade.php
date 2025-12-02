@@ -135,12 +135,7 @@
         justify-content: flex-start;
     }
     
-    /* Responsive cho mobile */
-    @media (max-width: 768px) {
-        .movie-content-wrapper {
-            padding: 20px 15px;
-        }
-    }
+    /* Responsive cho mobile - đã được xử lý trong responsive.css */
 </style>
 @endpush
 
