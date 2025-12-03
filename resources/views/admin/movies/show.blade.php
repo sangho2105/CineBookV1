@@ -117,11 +117,11 @@
 
                     <hr>
 
-                    {{-- Synopsis --}}
+                    {{-- Description --}}
                     <div class="mb-3">
-                        <h5 class="mb-2">Synopsis</h5>
+                        <h5 class="mb-2">Description</h5>
                         <p class="text-muted">
-                            {{ $movie->synopsis ?? 'No synopsis available.' }}
+                            {{ $movie->description ?? 'No description available.' }}
                         </p>
                     </div>
 

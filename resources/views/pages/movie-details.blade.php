@@ -272,7 +272,7 @@
             <div class="d-flex justify-content-center my-2">
                 <div class="movie-detail-tabs">
                     <button class="tab-btn active" data-tab="details">
-                        <i class="bi bi-hand-index"></i>Details
+                        <i class="bi bi-hand-index"></i>Description
                     </button>
                     <span class="tab-separator">|</span>
                     <button class="tab-btn" data-tab="trailer">
@@ -285,9 +285,9 @@
             <div id="details-content" class="tab-content active">
                 <hr class="my-4">
 
-                <h4 class="mt-4 mb-3" style="font-size: 1.1rem;">Synopsis</h4>
+                <h4 class="mt-4 mb-3" style="font-size: 1.1rem;">Description</h4>
                 <p style="font-size: 0.95rem; line-height: 1.6; color: #333;">
-                    {{ $movie->synopsis ?? 'No synopsis available.' }}
+                    {{ $movie->description ?? 'No description available.' }}
                 </p>
             </div>
 

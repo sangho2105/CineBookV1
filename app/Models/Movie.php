@@ -21,7 +21,7 @@ class Movie extends Model
         'language',
         'duration_minutes',
         'trailer_url',
-        'synopsis',
+        'description',
         'release_date',
         'rating_average',
         'rated',

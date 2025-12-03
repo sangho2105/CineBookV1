@@ -66,10 +66,10 @@
                             @endif
                         </table>
                         
-                        @if($movie->synopsis)
+                        @if($movie->description)
                         <div class="mt-3">
-                            <h5>{{ __('common.synopsis') }}</h5>
-                            <p class="text-muted">{{ $movie->synopsis }}</p>
+                            <h5>{{ __('common.description') }}</h5>
+                            <p class="text-muted">{{ $movie->description }}</p>
                         </div>
                         @endif
                     </div>

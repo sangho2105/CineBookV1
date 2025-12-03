@@ -113,7 +113,7 @@ return [
     'release_date' => 'Ngày phát hành',
     'status' => 'Trạng thái',
     'watch_trailer' => 'Xem Trailer',
-    'synopsis' => 'Tóm tắt',
+    'description' => 'Mô tả',
     'no_poster' => 'Không có poster',
     'edit' => 'Sửa',
     'back_to_list' => 'Quay lại danh sách',

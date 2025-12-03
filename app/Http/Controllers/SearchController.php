@@ -74,7 +74,7 @@ class SearchController extends Controller
             $keyword = $request->keyword;
             $query->where(function ($q) use ($keyword) {
                 $q->where('title', 'like', "%{$keyword}%")
-                  ->orWhere('synopsis', 'like', "%{$keyword}%");
+                  ->orWhere('description', 'like', "%{$keyword}%");
             });
         }
 

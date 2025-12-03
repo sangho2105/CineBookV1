@@ -21,25 +21,30 @@ class BookingController extends Controller
     // Hiển thị modal chọn ngày và giờ chiếu (AJAX)
     public function selectShowtimeModal(Movie $movie, Request $request)
     {
-        $movie->load(['showtimes.room']);
-        
         // Lấy các ngày có suất chiếu (30 ngày tới)
         $startDate = Carbon::today();
         $endDate = Carbon::today()->addDays(30);
         
-        // Lấy tất cả showtimes của phim trong khoảng thời gian này
+        // Lấy tất cả showtimes của phim trong khoảng thời gian này, load cả movie relationship
         $showtimes = $movie->showtimes()
+            ->with('movie')
+            ->with('room')
             ->whereBetween('show_date', [$startDate, $endDate])
             ->where('show_date', '>=', $startDate)
             ->orderBy('show_date')
             ->orderBy('show_time')
             ->get()
             ->filter(function($showtime) {
-                // Lọc bỏ những suất chiếu đã qua
-                $now = Carbon::now();
+                // Lọc bỏ những suất chiếu đã kết thúc
+                $now = Carbon::now('Asia/Ho_Chi_Minh');
                 $showDate = $showtime->show_date instanceof Carbon 
                     ? $showtime->show_date 
                     : Carbon::parse($showtime->show_date);
+                
+                // Chỉ hiển thị ngày hôm nay và tương lai
+                if ($showDate->lt(Carbon::today('Asia/Ho_Chi_Minh'))) {
+                    return false;
+                }
                 
                 // Parse show_time - có thể là string hoặc Carbon instance
                 $timeStr = '';
@@ -73,17 +78,26 @@ class BookingController extends Controller
                     return false;
                 }
                 
-                // Tạo datetime từ các thành phần riêng biệt
-                $showDateTime = Carbon::create(
+                // Tạo datetime bắt đầu từ các thành phần riêng biệt (set timezone)
+                $showStartDateTime = Carbon::create(
                     $showDate->year,
                     $showDate->month,
                     $showDate->day,
                     $hour,
                     $minute,
-                    0
+                    0,
+                    'Asia/Ho_Chi_Minh'
                 );
                 
-                return $showDateTime->gt($now);
+                // Tính thời gian kết thúc = thời gian bắt đầu + thời lượng phim
+                if (!$showtime->relationLoaded('movie')) {
+                    $showtime->load('movie');
+                }
+                $duration = $showtime->movie ? ($showtime->movie->duration_minutes ?? 0) : 0;
+                $showEndDateTime = $showStartDateTime->copy()->addMinutes($duration);
+                
+                // Chỉ hiển thị nếu suất chiếu chưa kết thúc (sử dụng lte để bao gồm cả trường hợp vừa kết thúc)
+                return $showEndDateTime->gt($now);
             });
         
         // Nhóm showtimes theo ngày
@@ -91,17 +105,81 @@ class BookingController extends Controller
             return $showtime->show_date->format('Y-m-d');
         });
         
-        // Tạo danh sách các ngày có suất chiếu
-        $availableDates = $showtimesByDate->keys()->map(function($date) {
-            return Carbon::parse($date);
-        })->sort();
+        // Tạo danh sách các ngày có suất chiếu (chỉ ngày hôm nay và tương lai)
+        $today = Carbon::today();
+        $availableDates = $showtimesByDate->keys()
+            ->map(function($date) {
+                return Carbon::parse($date);
+            })
+            ->filter(function($date) use ($today) {
+                // Chỉ lấy ngày hôm nay và tương lai
+                return $date->gte($today);
+            })
+            ->sort()
+            ->values();
         
         // Ngày được chọn (mặc định là hôm nay hoặc ngày đầu tiên có suất chiếu)
         $selectedDate = $request->get('date', $availableDates->first()?->format('Y-m-d') ?? $startDate->format('Y-m-d'));
         $selectedDateCarbon = Carbon::parse($selectedDate);
         
-        // Lấy showtimes của ngày được chọn
-        $selectedDateShowtimes = $showtimesByDate->get($selectedDate, collect());
+        // Lấy showtimes của ngày được chọn và filter lại một lần nữa để đảm bảo
+        $selectedDateShowtimes = $showtimesByDate->get($selectedDate, collect())
+            ->filter(function($showtime) {
+                // Filter lại để đảm bảo suất chiếu chưa kết thúc
+                $now = Carbon::now('Asia/Ho_Chi_Minh');
+                $showDate = $showtime->show_date instanceof Carbon 
+                    ? $showtime->show_date 
+                    : Carbon::parse($showtime->show_date);
+                
+                // Parse show_time
+                $timeStr = '';
+                if ($showtime->show_time instanceof Carbon) {
+                    $timeStr = $showtime->show_time->format('H:i');
+                } else {
+                    $timeStr = is_string($showtime->show_time) ? $showtime->show_time : (string)$showtime->show_time;
+                    $timeStr = trim($timeStr);
+                    if (strlen($timeStr) > 5) {
+                        $timeStr = substr($timeStr, 0, 5);
+                    }
+                }
+                
+                if (empty($timeStr)) {
+                    return false;
+                }
+                
+                $timeParts = explode(':', $timeStr);
+                if (count($timeParts) < 2) {
+                    return false;
+                }
+                
+                $hour = (int)($timeParts[0] ?? 0);
+                $minute = (int)($timeParts[1] ?? 0);
+                
+                if ($hour < 0 || $hour > 23 || $minute < 0 || $minute > 59) {
+                    return false;
+                }
+                
+                // Tạo datetime với timezone
+                $showStartDateTime = Carbon::create(
+                    $showDate->year,
+                    $showDate->month,
+                    $showDate->day,
+                    $hour,
+                    $minute,
+                    0,
+                    'Asia/Ho_Chi_Minh'
+                );
+                
+                if (!$showtime->relationLoaded('movie')) {
+                    $showtime->load('movie');
+                }
+                
+                $duration = $showtime->movie ? ($showtime->movie->duration_minutes ?? 0) : 0;
+                $showEndDateTime = $showStartDateTime->copy()->addMinutes($duration);
+                
+                // Chỉ hiển thị nếu suất chiếu chưa kết thúc
+                return $showEndDateTime->gt($now);
+            });
         
         // Nhóm theo phòng
         $showtimesByRoom = $selectedDateShowtimes->groupBy('room_id');
@@ -119,25 +197,30 @@ class BookingController extends Controller
     // Hiển thị trang chọn ngày và giờ chiếu
     public function selectShowtime(Movie $movie)
     {
-        $movie->load(['showtimes.room']);
-        
         // Lấy các ngày có suất chiếu (30 ngày tới)
         $startDate = Carbon::today();
         $endDate = Carbon::today()->addDays(30);
         
-        // Lấy tất cả showtimes của phim trong khoảng thời gian này
+        // Lấy tất cả showtimes của phim trong khoảng thời gian này, load cả movie relationship
         $showtimes = $movie->showtimes()
+            ->with('movie')
+            ->with('room')
             ->whereBetween('show_date', [$startDate, $endDate])
             ->where('show_date', '>=', $startDate)
             ->orderBy('show_date')
             ->orderBy('show_time')
             ->get()
             ->filter(function($showtime) {
-                // Lọc bỏ những suất chiếu đã qua
-                $now = Carbon::now();
+                // Lọc bỏ những suất chiếu đã kết thúc
+                $now = Carbon::now('Asia/Ho_Chi_Minh');
                 $showDate = $showtime->show_date instanceof Carbon 
                     ? $showtime->show_date 
                     : Carbon::parse($showtime->show_date);
+                
+                // Chỉ hiển thị ngày hôm nay và tương lai
+                if ($showDate->lt(Carbon::today('Asia/Ho_Chi_Minh'))) {
+                    return false;
+                }
                 
                 // Parse show_time - có thể là string hoặc Carbon instance
                 $timeStr = '';
@@ -171,17 +254,28 @@ class BookingController extends Controller
                     return false;
                 }
                 
-                // Tạo datetime từ các thành phần riêng biệt
-                $showDateTime = Carbon::create(
+                // Tạo datetime bắt đầu từ các thành phần riêng biệt (set timezone)
+                $showStartDateTime = Carbon::create(
                     $showDate->year,
                     $showDate->month,
                     $showDate->day,
                     $hour,
                     $minute,
-                    0
+                    0,
+                    'Asia/Ho_Chi_Minh'
                 );
                 
-                return $showDateTime->gt($now);
+                // Tính thời gian kết thúc = thời gian bắt đầu + thời lượng phim
+                // Đảm bảo movie đã được load
+                if (!$showtime->relationLoaded('movie')) {
+                    $showtime->load('movie');
+                }
+                
+                $duration = $showtime->movie ? ($showtime->movie->duration_minutes ?? 0) : 0;
+                $showEndDateTime = $showStartDateTime->copy()->addMinutes($duration);
+                
+                // Chỉ hiển thị nếu suất chiếu chưa kết thúc
+                return $showEndDateTime->gt($now);
             });
         
         // Nhóm showtimes theo ngày
@@ -189,17 +283,81 @@ class BookingController extends Controller
             return $showtime->show_date->format('Y-m-d');
         });
         
-        // Tạo danh sách các ngày có suất chiếu
-        $availableDates = $showtimesByDate->keys()->map(function($date) {
-            return Carbon::parse($date);
-        })->sort();
+        // Tạo danh sách các ngày có suất chiếu (chỉ ngày hôm nay và tương lai)
+        $today = Carbon::today('Asia/Ho_Chi_Minh');
+        $availableDates = $showtimesByDate->keys()
+            ->map(function($date) {
+                return Carbon::parse($date);
+            })
+            ->filter(function($date) use ($today) {
+                // Chỉ lấy ngày hôm nay và tương lai
+                return $date->gte($today);
+            })
+            ->sort()
+            ->values();
         
         // Ngày được chọn (mặc định là hôm nay hoặc ngày đầu tiên có suất chiếu)
         $selectedDate = request('date', $availableDates->first()?->format('Y-m-d') ?? $startDate->format('Y-m-d'));
         $selectedDateCarbon = Carbon::parse($selectedDate);
         
-        // Lấy showtimes của ngày được chọn
-        $selectedDateShowtimes = $showtimesByDate->get($selectedDate, collect());
+        // Lấy showtimes của ngày được chọn và filter lại một lần nữa để đảm bảo
+        $selectedDateShowtimes = $showtimesByDate->get($selectedDate, collect())
+            ->filter(function($showtime) {
+                // Filter lại để đảm bảo suất chiếu chưa kết thúc
+                $now = Carbon::now('Asia/Ho_Chi_Minh');
+                $showDate = $showtime->show_date instanceof Carbon 
+                    ? $showtime->show_date 
+                    : Carbon::parse($showtime->show_date);
+                
+                // Parse show_time
+                $timeStr = '';
+                if ($showtime->show_time instanceof Carbon) {
+                    $timeStr = $showtime->show_time->format('H:i');
+                } else {
+                    $timeStr = is_string($showtime->show_time) ? $showtime->show_time : (string)$showtime->show_time;
+                    $timeStr = trim($timeStr);
+                    if (strlen($timeStr) > 5) {
+                        $timeStr = substr($timeStr, 0, 5);
+                    }
+                }
+                
+                if (empty($timeStr)) {
+                    return false;
+                }
+                
+                $timeParts = explode(':', $timeStr);
+                if (count($timeParts) < 2) {
+                    return false;
+                }
+                
+                $hour = (int)($timeParts[0] ?? 0);
+                $minute = (int)($timeParts[1] ?? 0);
+                
+                if ($hour < 0 || $hour > 23 || $minute < 0 || $minute > 59) {
+                    return false;
+                }
+                
+                // Tạo datetime với timezone
+                $showStartDateTime = Carbon::create(
+                    $showDate->year,
+                    $showDate->month,
+                    $showDate->day,
+                    $hour,
+                    $minute,
+                    0,
+                    'Asia/Ho_Chi_Minh'
+                );
+                
+                if (!$showtime->relationLoaded('movie')) {
+                    $showtime->load('movie');
+                }
+                
+                $duration = $showtime->movie ? ($showtime->movie->duration_minutes ?? 0) : 0;
+                $showEndDateTime = $showStartDateTime->copy()->addMinutes($duration);
+                
+                // Chỉ hiển thị nếu suất chiếu chưa kết thúc
+                return $showEndDateTime->gt($now);
+            });
         
         // Nhóm theo phòng
         $showtimesByRoom = $selectedDateShowtimes->groupBy('room_id');

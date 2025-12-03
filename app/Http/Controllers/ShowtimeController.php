@@ -206,7 +206,7 @@ class ShowtimeController extends Controller
         if ($request->filled('status')) {
             $status = $request->status;
             if ($status === 'upcoming') {
-                // Chỉ lấy suất chiếu sắp tới
+                // Chỉ lấy suất chiếu sắp tới (chưa bắt đầu)
                 $query->where(function($q) use ($now) {
                     $q->where('show_date', '>', $now->toDateString())
                       ->orWhere(function($q2) use ($now) {
@@ -215,17 +215,34 @@ class ShowtimeController extends Controller
                       });
                 });
             } elseif ($status === 'past') {
-                // Chỉ lấy suất chiếu đã qua
+                // Chỉ lấy suất chiếu đã qua (bao gồm cả suất chiếu hôm nay đã kết thúc)
                 $query->where(function($q) use ($now) {
+                    // Ngày đã qua
                     $q->where('show_date', '<', $now->toDateString())
+                      // Hoặc ngày hôm nay nhưng đã kết thúc (show_time + duration < now)
                       ->orWhere(function($q2) use ($now) {
                           $q2->whereDate('show_date', $now->toDateString())
-                             ->whereRaw("TIME(show_time) < TIME(?)", [$now->format('H:i:s')]);
+                             ->whereRaw("
+                                 ADDTIME(
+                                     TIME(showtimes.show_time),
+                                     SEC_TO_TIME((SELECT duration_minutes FROM movies WHERE movies.id = showtimes.movie_id) * 60)
+                                 ) <= TIME(?)
+                             ", [$now->format('H:i:s')]);
                       });
                 });
-            } elseif ($status === 'today') {
-                // Chỉ lấy suất chiếu hôm nay
-                $query->whereDate('show_date', $now->toDateString());
+            } elseif ($status === 'now_showing') {
+                // Chỉ lấy suất chiếu đang chiếu (đã bắt đầu nhưng chưa kết thúc)
+                $query->where(function($q) use ($now) {
+                    // Ngày hôm nay: đã bắt đầu (show_time <= now) nhưng chưa kết thúc (show_time + duration > now)
+                    $q->whereDate('show_date', $now->toDateString())
+                      ->whereRaw("TIME(showtimes.show_time) <= TIME(?)", [$now->format('H:i:s')])
+                      ->whereRaw("
+                          ADDTIME(
+                              TIME(showtimes.show_time),
+                              SEC_TO_TIME((SELECT duration_minutes FROM movies WHERE movies.id = showtimes.movie_id) * 60)
+                          ) > TIME(?)
+                      ", [$now->format('H:i:s')]);
+                });
             }
         }
         

@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('language');
             $table->integer('duration_minutes'); // minutes
             $table->string('trailer_url')->nullable();
-            $table->text('synopsis')->nullable();
+            $table->text('description')->nullable();
             $table->date('release_date');
             $table->decimal('rating_average', 3, 2)->default(0); // 0.00 to 5.00
             $table->enum('status', ['upcoming', 'now_showing', 'ended'])->default('upcoming');

@@ -30,7 +30,7 @@
                     <select class="form-select" id="status" name="status">
                         <option value="">All</option>
                         <option value="upcoming" {{ request('status') == 'upcoming' ? 'selected' : '' }}>Upcoming</option>
-                        <option value="today" {{ request('status') == 'today' ? 'selected' : '' }}>Today</option>
+                        <option value="now_showing" {{ request('status') == 'now_showing' ? 'selected' : '' }}>Now Showing</option>
                         <option value="past" {{ request('status') == 'past' ? 'selected' : '' }}>Past</option>
                     </select>
                 </div>
@@ -86,14 +86,15 @@
                 $startHour = (int)($startTimeParts[0] ?? 0);
                 $startMinute = (int)($startTimeParts[1] ?? 0);
                 
-                // Tạo Carbon instance từ show_date và show_time
+                // Tạo Carbon instance từ show_date và show_time (set timezone)
                 $startDateTime = \Carbon\Carbon::create(
                     $showtime->show_date->year,
                     $showtime->show_date->month,
                     $showtime->show_date->day,
                     $startHour,
                     $startMinute,
-                    0
+                    0,
+                    'Asia/Ho_Chi_Minh'
                 );
                 
                 // Cộng thêm duration để có giờ kết thúc
@@ -102,25 +103,37 @@
                 
                 // Xác định trạng thái
                 $now = \Carbon\Carbon::now('Asia/Ho_Chi_Minh');
-                $isPast = $startDateTime->lt($now);
-                $isToday = $showtime->show_date->isToday();
-                $isUpcoming = $startDateTime->gt($now);
                 
-                if ($isPast) {
+                // Kiểm tra các trạng thái
+                $isEnded = $endDateTime->lte($now); // Đã kết thúc
+                $isStarted = $startDateTime->lte($now); // Đã bắt đầu
+                $isUpcoming = $startDateTime->gt($now); // Chưa bắt đầu
+                $isNowShowing = $isStarted && !$isEnded; // Đang chiếu (đã bắt đầu nhưng chưa kết thúc)
+                
+                // Logic xác định status: 3 trạng thái
+                if ($isEnded) {
+                    // Đã kết thúc
                     $status = 'past';
                     $statusText = 'Past';
                     $statusClass = 'bg-secondary';
-                } elseif ($isToday) {
-                    $status = 'today';
-                    $statusText = 'Today';
+                } elseif ($isNowShowing) {
+                    // Đang chiếu (đã bắt đầu nhưng chưa kết thúc)
+                    $status = 'now_showing';
+                    $statusText = 'Now Showing';
                     $statusClass = 'bg-info';
-                } else {
+                } elseif ($isUpcoming) {
+                    // Sắp chiếu (chưa bắt đầu)
                     $status = 'upcoming';
                     $statusText = 'Upcoming';
                     $statusClass = 'bg-success';
+                } else {
+                    // Trường hợp còn lại (fallback)
+                    $status = 'past';
+                    $statusText = 'Past';
+                    $statusClass = 'bg-secondary';
                 }
             @endphp
-            <tr class="{{ $isPast ? 'table-secondary opacity-75' : '' }}">
+            <tr class="{{ $isEnded ? 'table-secondary opacity-75' : '' }}">
                 <td>{{ ($showtimes->currentPage() - 1) * $showtimes->perPage() + $loop->iteration }}</td>
                 <td>{{ $showtime->movie->title }}</td>
                 <td>{{ $showtime->room ? $showtime->room->name . ' (' . $showtime->room->total_seats . ' ghế)' : 'CineBook Center' }}</td>
