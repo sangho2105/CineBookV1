@@ -24,9 +24,9 @@ class PasswordResetController extends Controller
         $validator = Validator::make($request->all(), [
             'email' => 'required|email|exists:users,email',
         ], [
-            'email.required' => 'Vui lòng nhập email.',
-            'email.email' => 'Email không hợp lệ.',
-            'email.exists' => 'Email này chưa được đăng ký trong hệ thống.',
+            'email.required' => 'Please enter your email.',
+            'email.email' => 'Invalid email format.',
+            'email.exists' => 'This email is not registered in the system.',
         ]);
 
         if ($validator->fails()) {
@@ -36,7 +36,7 @@ class PasswordResetController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (!$user) {
-            return back()->withErrors(['email' => 'Email này chưa được đăng ký trong hệ thống.'])->withInput();
+            return back()->withErrors(['email' => 'This email is not registered in the system.'])->withInput();
         }
 
         // Tạo mật khẩu mới ngẫu nhiên
@@ -53,12 +53,12 @@ class PasswordResetController extends Controller
                 'newPassword' => $newPassword,
             ], function ($message) use ($user) {
                 $message->to($user->email, $user->name)
-                        ->subject('Đặt lại mật khẩu - CineBook');
+                        ->subject('Password Reset - CineBook');
             });
 
-            return redirect()->route('login')->with('success', 'Mật khẩu mới đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư.');
+            return redirect()->route('login')->with('success', 'A new password has been sent to your email. Please check your inbox.');
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Có lỗi xảy ra khi gửi email. Vui lòng thử lại sau.'])->withInput();
+            return back()->withErrors(['error' => 'An error occurred while sending email. Please try again later.'])->withInput();
         }
     }
 }

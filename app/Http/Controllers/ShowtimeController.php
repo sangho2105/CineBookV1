@@ -21,7 +21,7 @@ class ShowtimeController extends Controller
         // Kiểm tra chuỗi rỗng
         if (empty($timeStr) || trim($timeStr) === '') {
             throw ValidationException::withMessages([
-                'show_time' => 'Thời gian suất chiếu không hợp lệ.',
+                'show_time' => 'Showtime is invalid.',
             ]);
         }
         
@@ -36,7 +36,7 @@ class ShowtimeController extends Controller
         // Kiểm tra format hợp lệ
         if (count($timeParts) < 2) {
             throw ValidationException::withMessages([
-                'show_time' => 'Định dạng thời gian không hợp lệ. Vui lòng nhập theo định dạng HH:mm.',
+                'show_time' => 'Invalid time format. Please enter in HH:mm format.',
             ]);
         }
         
@@ -46,7 +46,7 @@ class ShowtimeController extends Controller
         // Validate range
         if ($hour < 0 || $hour > 23 || $minute < 0 || $minute > 59) {
             throw ValidationException::withMessages([
-                'show_time' => 'Thời gian không hợp lệ. Giờ phải từ 0-23, phút phải từ 0-59.',
+                'show_time' => 'Invalid time. Hour must be 0-23, minute must be 0-59.',
             ]);
         }
         
@@ -116,7 +116,7 @@ class ShowtimeController extends Controller
             // Kiểm tra trùng giờ bắt đầu chính xác (cùng giờ:phút)
             if ($hour === $existingHour && $minute === $existingMinute) {
                 throw ValidationException::withMessages([
-                    'show_time' => "Đã có suất chiếu khác bắt đầu lúc {$timeStr} trong phòng này. Không thể tạo nhiều suất chiếu cùng giờ bắt đầu cho một phòng.",
+                    'show_time' => "Another showtime already starts at {$timeStr} in this room. Cannot create multiple showtimes with the same start time for one room.",
                 ]);
             }
             
@@ -135,28 +135,28 @@ class ShowtimeController extends Controller
             // Kiểm tra xung đột: thời gian bắt đầu mới nằm trong khoảng thời gian phim cũ đang chiếu
             if ($newStartDateTime->between($existingStartDateTime, $existingEndDateTime, false)) {
                 throw ValidationException::withMessages([
-                    'show_time' => "Thời gian này xung đột với suất chiếu khác đang diễn ra trong phòng. Suất chiếu hiện có: {$existingStartDateTime->format('H:i')} - {$existingEndDateTime->format('H:i')}",
+                    'show_time' => "This time conflicts with another showtime in progress in this room. Existing showtime: {$existingStartDateTime->format('H:i')} - {$existingEndDateTime->format('H:i')}",
                 ]);
             }
 
             // Kiểm tra xung đột: thời gian kết thúc mới nằm trong khoảng thời gian phim cũ đang chiếu
             if ($newEndDateTime->between($existingStartDateTime, $existingEndDateTime, false)) {
                 throw ValidationException::withMessages([
-                    'show_time' => "Thời gian này xung đột với suất chiếu khác đang diễn ra trong phòng. Suất chiếu hiện có: {$existingStartDateTime->format('H:i')} - {$existingEndDateTime->format('H:i')}",
+                    'show_time' => "This time conflicts with another showtime in progress in this room. Existing showtime: {$existingStartDateTime->format('H:i')} - {$existingEndDateTime->format('H:i')}",
                 ]);
             }
 
             // Kiểm tra xung đột: phim cũ bao trùm phim mới
             if ($newStartDateTime->lt($existingStartDateTime) && $newEndDateTime->gt($existingEndDateTime)) {
                 throw ValidationException::withMessages([
-                    'show_time' => "Thời gian này xung đột với suất chiếu khác đang diễn ra trong phòng. Suất chiếu hiện có: {$existingStartDateTime->format('H:i')} - {$existingEndDateTime->format('H:i')}",
+                    'show_time' => "This time conflicts with another showtime in progress in this room. Existing showtime: {$existingStartDateTime->format('H:i')} - {$existingEndDateTime->format('H:i')}",
                 ]);
             }
 
             // Kiểm tra xung đột: phim cũ bắt đầu trong khoảng thời gian phim mới đang chiếu
             if ($existingStartDateTime->between($newStartDateTime, $newEndDateTime, false)) {
                 throw ValidationException::withMessages([
-                    'show_time' => "Thời gian này xung đột với suất chiếu khác đang diễn ra trong phòng. Suất chiếu hiện có: {$existingStartDateTime->format('H:i')} - {$existingEndDateTime->format('H:i')}",
+                    'show_time' => "This time conflicts with another showtime in progress in this room. Existing showtime: {$existingStartDateTime->format('H:i')} - {$existingEndDateTime->format('H:i')}",
                 ]);
             }
 
@@ -165,7 +165,7 @@ class ShowtimeController extends Controller
                 $requiredStartTime = $existingEndDateTime->copy()->addMinutes(20);
                 if ($newStartDateTime->lt($requiredStartTime)) {
                     throw ValidationException::withMessages([
-                        'show_time' => "Thời gian này quá gần với suất chiếu trước đó. Suất chiếu trước kết thúc lúc {$existingEndDateTime->format('H:i')}. Bạn phải đặt lịch chiếu sau {$requiredStartTime->format('H:i')} (cách ít nhất 20 phút để dọn dẹp rạp).",
+                        'show_time' => "This time is too close to the previous showtime. Previous showtime ends at {$existingEndDateTime->format('H:i')}. You must schedule after {$requiredStartTime->format('H:i')} (at least 20 minutes apart for theater cleanup).",
                     ]);
                 }
             }
@@ -175,7 +175,7 @@ class ShowtimeController extends Controller
                 $requiredEndTime = $existingStartDateTime->copy()->subMinutes(20);
                 if ($newEndDateTime->gt($requiredEndTime)) {
                     throw ValidationException::withMessages([
-                        'show_time' => "Thời gian này quá gần với suất chiếu tiếp theo. Suất chiếu tiếp theo bắt đầu lúc {$existingStartDateTime->format('H:i')}. Bạn phải đặt lịch chiếu kết thúc trước {$requiredEndTime->format('H:i')} (cách ít nhất 20 phút để dọn dẹp rạp).",
+                        'show_time' => "This time is too close to the next showtime. Next showtime starts at {$existingStartDateTime->format('H:i')}. You must schedule to end before {$requiredEndTime->format('H:i')} (at least 20 minutes apart for theater cleanup).",
                     ]);
                 }
             }
@@ -343,7 +343,7 @@ public function store(Request $request)
     $minimumDateTime = $now->copy()->addHour();
     if ($showDateTime->lte($minimumDateTime)) {
         throw ValidationException::withMessages([
-            'show_time' => 'Thời gian suất chiếu phải lớn hơn thời gian hiện tại ít nhất 1 giờ để khách hàng có thời gian mua vé.',
+            'show_time' => 'Showtime must be at least 1 hour after the current time to allow customers time to purchase tickets.',
         ]);
     }
 
@@ -480,7 +480,7 @@ public function update(Request $request, Showtime $showtime)
         $minimumDateTime = $now->copy()->addHour();
         if ($showDateTime->lte($minimumDateTime)) {
             throw ValidationException::withMessages([
-                'show_time' => 'Thời gian suất chiếu phải lớn hơn thời gian hiện tại ít nhất 1 giờ để khách hàng có thời gian mua vé.',
+                'show_time' => 'Showtime must be at least 1 hour after the current time to allow customers time to purchase tickets.',
             ]);
         }
     }

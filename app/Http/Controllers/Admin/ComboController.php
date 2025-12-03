@@ -48,10 +48,10 @@ class ComboController extends Controller
             'is_active' => 'nullable|boolean',
             'sort_order' => 'nullable|integer|min:0',
         ], [
-            'price.required' => 'Vui lòng nhập giá combo.',
-            'price.numeric' => 'Giá phải là số.',
-            'price.min' => 'Giá phải lớn hơn 0.',
-            'price.regex' => 'Giá không hợp lệ. Vui lòng nhập số thập phân với tối đa 2 chữ số sau dấu phẩy (ví dụ: 5.00, 10.50).',
+            'price.required' => 'Please enter the combo price.',
+            'price.numeric' => 'Price must be a number.',
+            'price.min' => 'Price must be greater than 0.',
+            'price.regex' => 'Invalid price format. Please enter a decimal number with up to 2 decimal places (e.g., 5.00, 10.50).',
         ]);
 
         // Xử lý upload ảnh
@@ -68,7 +68,7 @@ class ComboController extends Controller
         Combo::create($validatedData);
 
         return redirect()->route('admin.combos.index')
-            ->with('success', 'Combo đã được tạo thành công!');
+            ->with('success', 'Combo has been created successfully!');
     }
 
     /**
@@ -100,10 +100,10 @@ class ComboController extends Controller
             'is_active' => 'nullable|boolean',
             'sort_order' => 'nullable|integer|min:0',
         ], [
-            'price.required' => 'Vui lòng nhập giá combo.',
-            'price.numeric' => 'Giá phải là số.',
-            'price.min' => 'Giá phải lớn hơn 0.',
-            'price.regex' => 'Giá không hợp lệ. Vui lòng nhập số thập phân với tối đa 2 chữ số sau dấu phẩy (ví dụ: 5.00, 10.50).',
+            'price.required' => 'Please enter the combo price.',
+            'price.numeric' => 'Price must be a number.',
+            'price.min' => 'Price must be greater than 0.',
+            'price.regex' => 'Invalid price format. Please enter a decimal number with up to 2 decimal places (e.g., 5.00, 10.50).',
         ]);
 
         // Xử lý upload ảnh mới
@@ -125,7 +125,35 @@ class ComboController extends Controller
         $combo->update($validatedData);
 
         return redirect()->route('admin.combos.index')
-            ->with('success', 'Combo đã được cập nhật thành công!');
+            ->with('success', 'Combo has been updated successfully!');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     * If combo has bookings, only allow hiding instead of deleting.
+     */
+    public function destroy(Combo $combo)
+    {
+        // Kiểm tra xem combo có khách hàng đặt hay chưa
+        if ($combo->hasBookings()) {
+            // Nếu có bookings, chỉ cho phép ẩn
+            $combo->is_hidden = true;
+            $combo->save();
+            
+            return redirect()->route('admin.combos.index')
+                ->with('error', "Combo '{$combo->name}' has been ordered by customers. It cannot be deleted, but has been hidden instead.");
+        }
+        
+        // Nếu chưa có bookings, cho phép xóa
+        // Xóa ảnh nếu có
+        if ($combo->image_path) {
+            Storage::disk('public')->delete($combo->image_path);
+        }
+        
+        $combo->delete();
+        
+        return redirect()->route('admin.combos.index')
+            ->with('success', "Combo '{$combo->name}' has been deleted successfully!");
     }
 
     /**
@@ -160,18 +188,18 @@ class ComboController extends Controller
                 Combo::where('id', $comboId)->update(['sort_order' => $index + 1]);
             }
 
-            return response()->json(['success' => true, 'message' => 'Thứ tự đã được cập nhật thành công.']);
+            return response()->json(['success' => true, 'message' => 'Order has been updated successfully.']);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Dữ liệu không hợp lệ.',
+                'message' => 'Invalid data.',
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
-            \Log::error('Lỗi cập nhật thứ tự combos: ' . $e->getMessage());
+            \Log::error('Error updating combo order: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Có lỗi xảy ra khi cập nhật thứ tự.'
+                'message' => 'An error occurred while updating the order.'
             ], 500);
         }
     }

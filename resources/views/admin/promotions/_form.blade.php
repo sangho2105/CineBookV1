@@ -132,7 +132,7 @@
                                     </option>
                                 @endforeach
                             </select>
-                            <small class="text-muted">Có thể để trống nếu chỉ là ưu đãi (tặng quà, v.v.)</small>
+                            <small class="text-muted">Can be left blank if it's just a promotion (gift, etc.)</small>
                         </div>
                         
                         <div class="col-md-6">
@@ -143,7 +143,7 @@
                         </div>
                         
                         <div class="col-md-6">
-                            <label class="form-label">Áp dụng cho</label>
+                            <label class="form-label">Applies To</label>
                             <div class="row g-2">
                                 @foreach($appliesToOptions as $key => $label)
                                     <div class="col-md-4">

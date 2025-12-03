@@ -113,14 +113,28 @@
                                 <a href="{{ route('admin.combos.edit', $combo) }}" class="btn btn-sm btn-warning" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <form action="{{ route('admin.combos.toggleHidden', $combo->id) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm {{ $combo->is_hidden ? 'btn-success' : 'btn-warning' }}" 
-                                            onclick="return confirm('Are you sure you want to {{ $combo->is_hidden ? 'show' : 'hide' }} this combo?')" 
-                                            title="{{ $combo->is_hidden ? 'Show Combo' : 'Hide Combo' }}">
-                                        <i class="bi {{ $combo->is_hidden ? 'bi-eye' : 'bi-eye-slash' }}"></i>
-                                    </button>
-                                </form>
+                                @if($combo->hasBookings())
+                                    {{-- Nếu có bookings, chỉ cho phép ẩn --}}
+                                    <form action="{{ route('admin.combos.toggleHidden', $combo->id) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm {{ $combo->is_hidden ? 'btn-success' : 'btn-warning' }}" 
+                                                onclick="return confirm('Are you sure you want to {{ $combo->is_hidden ? 'show' : 'hide' }} this combo?')" 
+                                                title="{{ $combo->is_hidden ? 'Show Combo' : 'Hide Combo' }}">
+                                            <i class="bi {{ $combo->is_hidden ? 'bi-eye' : 'bi-eye-slash' }}"></i>
+                                        </button>
+                                    </form>
+                                @else
+                                    {{-- Nếu chưa có bookings, cho phép xóa --}}
+                                    <form action="{{ route('admin.combos.destroy', $combo) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-danger" 
+                                                onclick="return confirm('Are you sure you want to delete this combo? This action cannot be undone.')" 
+                                                title="Delete Combo">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                     @endforeach

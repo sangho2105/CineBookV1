@@ -68,7 +68,7 @@ class MovieController extends Controller
             $validatedData['poster_url'] = $request->file('poster')->store('movies', 'public');
         } elseif (empty($validatedData['poster_url'])) {
             return back()
-                ->withErrors(['poster' => 'Vui lòng chọn ảnh poster hoặc nhập URL ảnh poster.'])
+                ->withErrors(['poster' => 'Please select a poster image or enter a poster URL.'])
                 ->withInput();
         }
 
@@ -82,7 +82,7 @@ class MovieController extends Controller
 
         Movie::create($validatedData);
 
-        return redirect()->route('admin.movies.index')->with('success', 'Phim đã được thêm thành công!');
+        return redirect()->route('admin.movies.index')->with('success', 'Movie has been added successfully!');
     }
 
     /**
@@ -150,7 +150,7 @@ class MovieController extends Controller
             $validatedData['poster_url'] = $request->file('poster')->store('movies', 'public');
         } elseif (empty($validatedData['poster_url']) && empty($movie->poster_url)) {
             return back()
-                ->withErrors(['poster' => 'Vui lòng chọn ảnh poster hoặc nhập URL ảnh poster.'])
+                ->withErrors(['poster' => 'Please select a poster image or enter a poster URL.'])
                 ->withInput();
         } elseif (empty($validatedData['poster_url'])) {
             // Giữ nguyên poster_url hiện tại nếu không upload file mới và không nhập URL mới
@@ -162,7 +162,7 @@ class MovieController extends Controller
 
         $movie->update($validatedData);
 
-        return redirect()->route('admin.movies.index')->with('success', 'Phim đã được cập nhật thành công!');
+        return redirect()->route('admin.movies.index')->with('success', 'Movie has been updated successfully!');
     }
 
     /**
@@ -180,8 +180,8 @@ class MovieController extends Controller
         $movie->save();
 
         $message = $movie->is_hidden 
-            ? 'Phim đã được ẩn thành công!' 
-            : 'Phim đã được hiển thị lại thành công!';
+            ? 'Movie has been hidden successfully!' 
+            : 'Movie has been shown successfully!';
 
         return redirect()->route('admin.movies.index')->with('success', $message);
     }

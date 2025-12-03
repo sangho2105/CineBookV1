@@ -90,7 +90,7 @@ class PromotionController extends Controller
 
         if ($data['category'] === 'movie' && blank($data['movie_id'])) {
             return back()
-                ->withErrors(['movie_id' => 'Vui lòng chọn phim khi loại chiến dịch là Phim.'])
+                ->withErrors(['movie_id' => 'Please select a movie when category is Movie.'])
                 ->withInput();
         }
 
@@ -108,7 +108,7 @@ class PromotionController extends Controller
                     if (isset($rule['applies_to']) && in_array('combo', $rule['applies_to'])) {
                         if (empty($rule['combo_ids']) || !is_array($rule['combo_ids'])) {
                             return back()
-                                ->withErrors(["discount_rules.{$index}.combo_ids" => 'Vui lòng chọn ít nhất một combo khi áp dụng cho "Giá combo".'])
+                                ->withErrors(["discount_rules.{$index}.combo_ids" => 'Please select at least one combo when applying to "Combo Price".'])
                                 ->withInput();
                         }
                     }
@@ -166,7 +166,7 @@ class PromotionController extends Controller
         Promotion::create($data);
 
         return redirect()->route('admin.promotions.index')
-            ->with('success', 'Khuyến mãi đã được tạo thành công.');
+            ->with('success', 'Promotion has been created successfully.');
     }
 
     /**
@@ -227,7 +227,7 @@ class PromotionController extends Controller
 
         if ($data['category'] === 'movie' && blank($data['movie_id'])) {
             return back()
-                ->withErrors(['movie_id' => 'Vui lòng chọn phim khi loại chiến dịch là Phim.'])
+                ->withErrors(['movie_id' => 'Please select a movie when category is Movie.'])
                 ->withInput();
         }
 
@@ -276,7 +276,7 @@ class PromotionController extends Controller
                             // Nếu không có combo_ids và không có requires_combo_ids, báo lỗi
                             if (empty($rule['combo_ids']) && empty($rule['requires_combo_ids'])) {
                                 return back()
-                                    ->withErrors(["discount_rules.{$index}.combo_ids" => 'Vui lòng chọn combo trong "Danh sách combo có sẵn" khi áp dụng cho "Giá combo".'])
+                                    ->withErrors(["discount_rules.{$index}.combo_ids" => 'Please select a combo from "Available Combos" when applying to "Combo Price".'])
                                     ->withInput();
                             }
                         }
@@ -312,7 +312,7 @@ class PromotionController extends Controller
         $promotion->update($data);
 
         return redirect()->route('admin.promotions.index')
-            ->with('success', 'Khuyến mãi đã được cập nhật.');
+            ->with('success', 'Promotion has been updated successfully.');
     }
 
     /**
@@ -327,7 +327,7 @@ class PromotionController extends Controller
             $promotion->update(['is_active' => false]);
             
             return redirect()->route('admin.promotions.index')
-                ->with('error', 'Sự kiện đang trong thời gian hoạt động. Không thể xóa, chỉ có thể ẩn. Sự kiện đã được ẩn.');
+                ->with('error', 'The event is currently active. It cannot be deleted, only hidden. The event has been hidden.');
         }
         
         // Nếu không đang hoạt động, cho phép xóa
@@ -339,7 +339,7 @@ class PromotionController extends Controller
         $promotion->delete();
 
         return redirect()->route('admin.promotions.index')
-            ->with('success', 'Khuyến mãi đã được xóa.');
+            ->with('success', 'Promotion has been deleted successfully.');
     }
 
     /**
@@ -359,19 +359,19 @@ class PromotionController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Quy tắc áp dụng đã được cập nhật thành công.'
+                'message' => 'Apply rules have been updated successfully.'
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Dữ liệu không hợp lệ.',
+                'message' => 'Invalid data.',
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
-            \Log::error('Lỗi cập nhật quy tắc áp dụng: ' . $e->getMessage());
+            \Log::error('Error updating apply rules: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Có lỗi xảy ra khi cập nhật quy tắc áp dụng.'
+                'message' => 'An error occurred while updating apply rules.'
             ], 500);
         }
     }
@@ -391,18 +391,18 @@ class PromotionController extends Controller
                 Promotion::where('id', $promotionId)->update(['sort_order' => $index + 1]);
             }
 
-            return response()->json(['success' => true, 'message' => 'Thứ tự đã được cập nhật thành công.']);
+            return response()->json(['success' => true, 'message' => 'Order has been updated successfully.']);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Dữ liệu không hợp lệ.',
+                'message' => 'Invalid data.',
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
-            \Log::error('Lỗi cập nhật thứ tự promotions: ' . $e->getMessage());
+            \Log::error('Error updating promotion order: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Có lỗi xảy ra khi cập nhật thứ tự.'
+                'message' => 'An error occurred while updating the order.'
             ], 500);
         }
     }

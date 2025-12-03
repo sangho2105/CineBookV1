@@ -494,7 +494,7 @@
                         </li>
                         <li class="mb-2">
                             <span class="text-light">
-                                <i class="bi bi-person"></i> Nguyen Hoang Sang
+                                <i class="bi bi-person"></i> Ho Hoang Sang
                             </span>
                         </li>
                     </ul>

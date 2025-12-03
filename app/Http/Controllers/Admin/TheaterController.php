@@ -31,7 +31,7 @@ class TheaterController extends Controller
         Theater::create($request->all());
 
         return redirect()->route('admin.theaters.index')
-            ->with('success', 'Rạp chiếu phim đã được thêm thành công!');
+            ->with('success', 'Theater has been added successfully!');
     }
 
     public function show(Theater $theater)
@@ -56,7 +56,7 @@ class TheaterController extends Controller
         $theater->update($request->all());
 
         return redirect()->route('admin.theaters.index')
-            ->with('success', 'Rạp chiếu phim đã được cập nhật thành công!');
+            ->with('success', 'Theater has been updated successfully!');
     }
 
     public function destroy(Theater $theater)
@@ -64,6 +64,6 @@ class TheaterController extends Controller
         $theater->delete();
 
         return redirect()->route('admin.theaters.index')
-            ->with('success', 'Rạp chiếu phim đã được xóa thành công!');
+            ->with('success', 'Theater has been deleted successfully!');
     }
 }

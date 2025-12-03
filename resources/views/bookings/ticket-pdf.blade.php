@@ -307,7 +307,7 @@
                         <span class="price-value discount-amount">-${{ number_format($ticketInfo['discount_amount'], 2, '.', ',') }}</span>
                     </div>
                 @endif
-                @if(isset($ticketInfo['has_gift_promotion']) && $ticketInfo['has_gift_promotion'] === true)
+                @if(!empty($ticketInfo['has_gift_promotion']))
                     <div class="price-row" style="color: #e74c3c; font-weight: bold; font-size: 8px; margin-top: 2mm;">
                         *Gift Applied
                     </div>

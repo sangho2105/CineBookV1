@@ -554,20 +554,29 @@ class BookingController extends Controller
             }
             
             // Kiểm tra yêu cầu combo
-            if (!empty($rule['requires_combo'])) {
+            // Nếu có requires_combo_ids (combo bắt buộc), phải kiểm tra xem booking có combo đó không
+            if (!empty($rule['requires_combo_ids']) && is_array($rule['requires_combo_ids']) && count($rule['requires_combo_ids']) > 0) {
+                // Có combo bắt buộc được chỉ định
                 if ($comboPrice <= 0) {
+                    // Không có combo nào trong booking → không đủ điều kiện
                     return null;
                 }
                 
-                if (!empty($rule['requires_combo_ids']) && is_array($rule['requires_combo_ids'])) {
-                    $bookingComboNames = $booking->combos->pluck('combo_name')->toArray();
-                    $requiredComboNames = \App\Models\Combo::whereIn('id', $rule['requires_combo_ids'])
-                        ->pluck('name')
-                        ->toArray();
-                    
-                    if (empty(array_intersect($bookingComboNames, $requiredComboNames))) {
-                        return null;
-                    }
+                // Kiểm tra xem booking có chứa ít nhất một combo trong danh sách bắt buộc không
+                $bookingComboNames = $booking->combos->pluck('combo_name')->toArray();
+                $requiredComboNames = \App\Models\Combo::whereIn('id', $rule['requires_combo_ids'])
+                    ->pluck('name')
+                    ->toArray();
+                
+                if (empty(array_intersect($bookingComboNames, $requiredComboNames))) {
+                    // Booking không có combo nào trong danh sách bắt buộc → không đủ điều kiện
+                    return null;
+                }
+            } elseif (!empty($rule['requires_combo'])) {
+                // Nếu chỉ có checkbox requires_combo (không có requires_combo_ids cụ thể)
+                // Chỉ cần kiểm tra có combo hay không
+                if ($comboPrice <= 0) {
+                    return null;
                 }
             }
             
@@ -790,7 +799,7 @@ class BookingController extends Controller
         );
         
         if ($showDateTime->lte($now)) {
-            return back()->withErrors(['error' => 'Suất chiếu này đã qua, không thể đặt vé.']);
+            return back()->withErrors(['error' => 'This showtime has passed, cannot book tickets.']);
         }
         
         $request->validate([
@@ -864,7 +873,9 @@ class BookingController extends Controller
             $promoInfo = json_decode($request->promotion_info, true);
             if (is_array($promoInfo)) {
                 $appliedPromotionId = $promoInfo['applied_promotion_id'] ?? null;
-                $hasGiftPromotion = !empty($promoInfo['has_gift_promotion']);
+                // Đảm bảo xử lý đúng giá trị boolean
+                $hasGiftPromotion = isset($promoInfo['has_gift_promotion']) 
+                    && ($promoInfo['has_gift_promotion'] === true || $promoInfo['has_gift_promotion'] === 'true' || $promoInfo['has_gift_promotion'] === 1);
             }
         }
         

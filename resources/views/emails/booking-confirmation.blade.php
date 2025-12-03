@@ -185,7 +185,7 @@
             @if(!empty($ticketInfo['has_gift_promotion']))
             <div class="info-row" style="background-color: #fff3cd; border-left-color: #ffc107;">
                 <span class="info-value" style="color: #e74c3c; font-weight: bold; font-size: 16px;">
-                    ***Áp dụng tặng quà
+                    ***Gift Applied
                 </span>
             </div>
             @endif

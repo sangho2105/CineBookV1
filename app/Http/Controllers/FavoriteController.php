@@ -20,7 +20,7 @@ class FavoriteController extends Controller
         if (!$user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Vui lòng đăng nhập để thích phim.',
+                'message' => 'Please login to like the movie.',
                 'redirect' => route('login')
             ], 401);
         }
@@ -33,7 +33,7 @@ class FavoriteController extends Controller
             // Unlike
             $favorite->delete();
             $isLiked = false;
-            $message = 'Đã bỏ thích phim.';
+            $message = 'Movie has been unliked.';
         } else {
             // Like
             Favorite::create([
@@ -41,7 +41,7 @@ class FavoriteController extends Controller
                 'user_id' => $user->id,
             ]);
             $isLiked = true;
-            $message = 'Đã thêm vào danh sách yêu thích.';
+            $message = 'Movie has been added to favorites.';
         }
 
         // Lấy số lượt like mới

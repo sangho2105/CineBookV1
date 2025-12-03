@@ -96,7 +96,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get('bookings/{booking}', [\App\Http\Controllers\Admin\BookingController::class, 'show'])->name('bookings.show');
 
     // Route cho quản lý Combo
-    Route::resource('combos', \App\Http\Controllers\Admin\ComboController::class)->except(['destroy']);
+    Route::resource('combos', \App\Http\Controllers\Admin\ComboController::class);
     Route::post('combos/{combo}/toggle-hidden', [\App\Http\Controllers\Admin\ComboController::class, 'toggleHidden'])->name('combos.toggleHidden');
     Route::post('combos/update-order', [\App\Http\Controllers\Admin\ComboController::class, 'updateOrder'])->name('combos.update-order');
 

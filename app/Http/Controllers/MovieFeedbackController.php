@@ -29,7 +29,7 @@ class MovieFeedbackController extends Controller
             'content' => $validated['content'],
         ]);
 
-        return back()->with('success', 'Đã đăng bình luận.');
+        return back()->with('success', 'Comment has been posted.');
     }
 
     public function updateComment(Request $request, Movie $movie, Comment $comment)
@@ -40,13 +40,13 @@ class MovieFeedbackController extends Controller
         }
         // Chỉ chủ sở hữu được sửa
         if ($comment->user_id !== Auth::id()) {
-            abort(403, 'Bạn không có quyền sửa bình luận này.');
+            abort(403, 'You do not have permission to edit this comment.');
         }
         $validated = $request->validate([
             'content' => 'required|string|min:2|max:2000',
         ]);
         $comment->update(['content' => $validated['content']]);
-        return back()->with('success', 'Đã cập nhật bình luận.');
+        return back()->with('success', 'Comment has been updated.');
     }
 
     public function deleteComment(Movie $movie, Comment $comment)
@@ -57,10 +57,10 @@ class MovieFeedbackController extends Controller
         // Chỉ cho phép user xóa comment của chính họ
         // Admin xóa comment thông qua trang quản lý admin
         if ($comment->user_id !== Auth::id()) {
-            abort(403, 'Bạn không có quyền xóa bình luận này.');
+            abort(403, 'You do not have permission to delete this comment.');
         }
         $comment->delete();
-        return back()->with('success', 'Đã xóa bình luận.');
+        return back()->with('success', 'Comment has been deleted.');
     }
 
     public function storeRating(Request $request, Movie $movie)
@@ -84,7 +84,7 @@ class MovieFeedbackController extends Controller
             });
 
         if (!$eligibleBooking) {
-            return back()->withErrors(['score' => 'Bạn chỉ có thể đánh giá phim sau khi suất chiếu đã kết thúc.']);
+            return back()->withErrors(['score' => 'You can only rate the movie after the showtime has ended.']);
         }
 
         DB::transaction(function () use ($movie, $validated) {
@@ -98,7 +98,7 @@ class MovieFeedbackController extends Controller
             $movie->update(['rating_average' => $avg]);
         });
 
-        return back()->with('success', 'Đã ghi nhận đánh giá của bạn.');
+        return back()->with('success', 'Your rating has been recorded.');
     }
 }
 

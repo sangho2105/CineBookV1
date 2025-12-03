@@ -16,7 +16,7 @@ class UserController extends Controller
     {
         $this->middleware(function ($request, $next) {
             if (Auth::check() && Auth::user()->role !== 'admin') {
-                abort(403, 'Bạn không có quyền truy cập trang này.');
+                abort(403, 'You do not have permission to access this page.');
             }
             return $next($request);
         });
