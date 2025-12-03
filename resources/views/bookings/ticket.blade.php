@@ -380,7 +380,6 @@
                         lineColor: "#000000"
                     });
                 } catch (error) {
-                    console.error('Error creating barcode:', error);
                     // Nếu JsBarcode lỗi, hiển thị fallback
                     if (barcodeElement) barcodeElement.style.display = 'none';
                     if (fallbackElement) fallbackElement.style.display = 'block';

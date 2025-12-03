@@ -402,8 +402,6 @@ document.addEventListener('DOMContentLoaded', function() {
     @endphp
     const combosData = @json($combosForJs ?? []);
     
-    console.log('Combos data:', combosData); // Debug
-    
     // Xóa modal cũ nếu có (để tránh duplicate)
     const oldModal = document.getElementById('comboModal');
     if (oldModal) {

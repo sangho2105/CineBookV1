@@ -334,9 +334,6 @@ class BookingController extends Controller
         // Lấy các combo đang hoạt động từ database
         $combos = \App\Models\Combo::active()->visible()->orderBy('id')->get();
         
-        // Debug: Log số lượng combo (có thể xóa sau)
-        \Log::info('Combos loaded: ' . $combos->count());
-        
         return view('bookings.select-seats', compact('showtime', 'seats', 'bookedSeatIds', 'coupleRows', 'combos'));
     }
 

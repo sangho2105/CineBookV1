@@ -69,26 +69,46 @@
                     <div class="cycle-carousel-wrap">
                         @foreach($nowShowingMovies as $movie)
                             @php
-                                // Xác định rating badge
-                                $rating = $movie->rating_average ?? 0;
-                                $ratingClass = 'nmovie-rating-p';
-                                $ratingText = 'P';
-                                if ($rating >= 18) {
-                                    $ratingClass = 'nmovie-rating-t18';
-                                    $ratingText = 'T18';
-                                } elseif ($rating >= 16) {
-                                    $ratingClass = 'nmovie-rating-t16';
-                                    $ratingText = 'T16';
-                                } elseif ($rating >= 13) {
-                                    $ratingClass = 'nmovie-rating-t13';
-                                    $ratingText = 'T13';
-                                } elseif ($rating > 0) {
-                                    $ratingClass = 'nmovie-rating-k';
-                                    $ratingText = 'K';
+                                // Xác định rating badge từ field 'rated' (K, T13, T16, T18, P)
+                                $rated = $movie->rated ?? null;
+                                $ratingClass = '';
+                                $ratingText = '';
+                                if ($rated) {
+                                    switch (strtoupper($rated)) {
+                                        case 'T18':
+                                            $ratingClass = 'nmovie-rating-t18';
+                                            $ratingText = 'T18';
+                                            break;
+                                        case 'T16':
+                                            $ratingClass = 'nmovie-rating-t16';
+                                            $ratingText = 'T16';
+                                            break;
+                                        case 'T13':
+                                            $ratingClass = 'nmovie-rating-t13';
+                                            $ratingText = 'T13';
+                                            break;
+                                        case 'K':
+                                            $ratingClass = 'nmovie-rating-k';
+                                            $ratingText = 'K';
+                                            break;
+                                        case 'P':
+                                            $ratingClass = 'nmovie-rating-p';
+                                            $ratingText = 'P';
+                                            break;
+                                        default:
+                                            $ratingClass = '';
+                                            $ratingText = '';
+                                    }
                                 }
                             @endphp
                             <li class="poster-film film-lists item cycle-slide">
+                                {{-- Ribbon ranking chỉ hiển thị ở trang search, không hiển thị ở home --}}
                                 <img class="product-img" src="{{ $movie->poster_image_url ?? 'https://placehold.co/240x388?text=No+Poster' }}" alt="{{ $movie->title }}">
+                                
+                                {{-- Rating Badge --}}
+                                @if($rated && !empty($ratingText))
+                                    <div class="nmovie-rating {{ $ratingClass }}">{{ $ratingText }}</div>
+                                @endif
                                 <input type="hidden" value="{{ $movie->trailer_url ?? '' }}">
                                 
                                 <div class="feature_film_content">
@@ -140,26 +160,45 @@
                     <div class="cycle-carousel-wrap">
                         @foreach($comingSoonMovies as $movie)
                             @php
-                                // Xác định rating badge
-                                $rating = $movie->rating_average ?? 0;
-                                $ratingClass = 'nmovie-rating-p';
-                                $ratingText = 'P';
-                                if ($rating >= 18) {
-                                    $ratingClass = 'nmovie-rating-t18';
-                                    $ratingText = 'T18';
-                                } elseif ($rating >= 16) {
-                                    $ratingClass = 'nmovie-rating-t16';
-                                    $ratingText = 'T16';
-                                } elseif ($rating >= 13) {
-                                    $ratingClass = 'nmovie-rating-t13';
-                                    $ratingText = 'T13';
-                                } elseif ($rating > 0) {
-                                    $ratingClass = 'nmovie-rating-k';
-                                    $ratingText = 'K';
+                                // Xác định rating badge từ field 'rated' (K, T13, T16, T18, P)
+                                $rated = $movie->rated ?? null;
+                                $ratingClass = '';
+                                $ratingText = '';
+                                if ($rated) {
+                                    switch (strtoupper($rated)) {
+                                        case 'T18':
+                                            $ratingClass = 'nmovie-rating-t18';
+                                            $ratingText = 'T18';
+                                            break;
+                                        case 'T16':
+                                            $ratingClass = 'nmovie-rating-t16';
+                                            $ratingText = 'T16';
+                                            break;
+                                        case 'T13':
+                                            $ratingClass = 'nmovie-rating-t13';
+                                            $ratingText = 'T13';
+                                            break;
+                                        case 'K':
+                                            $ratingClass = 'nmovie-rating-k';
+                                            $ratingText = 'K';
+                                            break;
+                                        case 'P':
+                                            $ratingClass = 'nmovie-rating-p';
+                                            $ratingText = 'P';
+                                            break;
+                                        default:
+                                            $ratingClass = '';
+                                            $ratingText = '';
+                                    }
                                 }
                             @endphp
                             <li class="poster-film film-lists item cycle-slide">
                                 <img class="product-img" src="{{ $movie->poster_image_url ?? 'https://placehold.co/240x388?text=No+Poster' }}" alt="{{ $movie->title }}">
+                                
+                                {{-- Rating Badge --}}
+                                @if($rated && !empty($ratingText))
+                                    <div class="nmovie-rating {{ $ratingClass }}">{{ $ratingText }}</div>
+                                @endif
                                 <input type="hidden" value="{{ $movie->trailer_url ?? '' }}">
                                 
                                 <div class="feature_film_content">
@@ -256,7 +295,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const posters = container.querySelectorAll('.poster-film');
         
         if (!carouselWrap || !prevBtn || !nextBtn || posters.length === 0) {
-            console.log('Carousel elements not found', { carouselWrap, prevBtn, nextBtn, posters: posters.length });
             return;
         }
 

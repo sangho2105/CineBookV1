@@ -4,6 +4,7 @@
 
 @push('css')
 <link rel="stylesheet" href="{{ asset('css/search.css') }}">
+<link rel="stylesheet" href="{{ asset('css/home.css') }}">
 @endpush
 
 @section('content')
@@ -72,26 +73,57 @@
         <div class="movies-row">
             @forelse($movies as $movie)
                 @php
-                    // Xác định rating badge
-                    $rating = $movie->rating_average ?? 0;
+                    // Xác định rating badge từ field 'rated' (K, T13, T16, T18, P)
+                    $rated = $movie->rated ?? null;
                     $ratingClass = '';
                     $ratingText = '';
-                    if ($rating >= 18) {
-                        $ratingClass = 'rating-t18';
-                        $ratingText = 'T18';
-                    } elseif ($rating >= 16) {
-                        $ratingClass = 'rating-t16';
-                        $ratingText = 'T16';
-                    } elseif ($rating >= 13) {
-                        $ratingClass = 'rating-t13';
-                        $ratingText = 'T13';
-                    } elseif ($rating > 0) {
-                        $ratingClass = 'rating-k';
-                        $ratingText = 'K';
+                    if ($rated) {
+                        switch (strtoupper($rated)) {
+                            case 'T18':
+                                $ratingClass = 'rating-t18';
+                                $ratingText = 'T18';
+                                break;
+                            case 'T16':
+                                $ratingClass = 'rating-t16';
+                                $ratingText = 'T16';
+                                break;
+                            case 'T13':
+                                $ratingClass = 'rating-t13';
+                                $ratingText = 'T13';
+                                break;
+                            case 'K':
+                                $ratingClass = 'rating-k';
+                                $ratingText = 'K';
+                                break;
+                            case 'P':
+                                $ratingClass = 'rating-p'; // P - Phim dành cho mọi đối tượng
+                                $ratingText = 'P';
+                                break;
+                            default:
+                                $ratingClass = '';
+                                $ratingText = '';
+                        }
                     }
                 @endphp
                 <div class="movie-card">
                     <div class="movie-poster-wrapper">
+                        @php
+                            // Xác định ranking ribbon cho top 3 phim bán chạy nhất (chỉ khi status = now_showing)
+                            $ranking = null;
+                            $rankingClass = '';
+                            if (request('status') == 'now_showing' && isset($top3MovieIds) && in_array($movie->id, $top3MovieIds)) {
+                                $position = array_search($movie->id, $top3MovieIds) + 1; // 1, 2, hoặc 3
+                                $ranking = $position;
+                                // Màu sắc theo hình: đỏ (1), cam (2), xanh (3)
+                                if ($position == 1) {
+                                    $rankingClass = 'ranking-ribbon-1'; // Đỏ
+                                } elseif ($position == 2) {
+                                    $rankingClass = 'ranking-ribbon-2'; // Cam
+                                } else {
+                                    $rankingClass = 'ranking-ribbon-3'; // Xanh
+                                }
+                            }
+                        @endphp
                         <a href="{{ route('movie.show', $movie->id) }}">
                             <img 
                                 src="{{ $movie->poster_image_url ?? 'https://placehold.co/240x360?text=No+Poster' }}" 
@@ -100,8 +132,15 @@
                             >
                         </a>
                         
+                        {{-- Ranking Ribbon cho top 3 phim bán chạy nhất --}}
+                        @if($ranking)
+                            <div class="ranking-ribbon {{ $rankingClass }}">
+                                <span>{{ $ranking }}</span>
+                            </div>
+                        @endif
+                        
                         {{-- Rating Badge --}}
-                        @if($rating > 0)
+                        @if($rated && !empty($ratingText))
                             <span class="rating-badge {{ $ratingClass }}">{{ $ratingText }}</span>
                         @endif
                         
@@ -233,7 +272,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
                 alert('Có lỗi xảy ra khi xử lý yêu cầu');
             })
             .finally(() => {

@@ -114,7 +114,6 @@
     document.addEventListener('DOMContentLoaded', function() {
         const ctx = document.getElementById('revenueChart');
         if (!ctx) {
-            console.error('Canvas element not found');
             return;
         }
 
@@ -122,7 +121,6 @@
         const data = @json($revenueData['data'] ?? []);
 
         if (labels.length === 0 || data.length === 0) {
-            console.warn('No data for chart');
             ctx.parentElement.innerHTML = '<p class="text-muted text-center py-4">No revenue data available to display chart.</p>';
             return;
         }
@@ -197,9 +195,7 @@
                     }
                 }
             });
-            console.log('Chart created successfully');
         } catch (error) {
-            console.error('Error creating chart:', error);
             ctx.parentElement.innerHTML = '<p class="text-danger text-center py-4">Error creating chart: ' + error.message + '</p>';
         }
     });

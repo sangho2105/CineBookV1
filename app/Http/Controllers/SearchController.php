@@ -129,23 +129,48 @@ class SearchController extends Controller
             }]);
         }
 
-        // Thêm subquery để đếm số vé bán được (booking đã thanh toán completed)
+        // Thêm subquery để đếm số vé bán được (seats) - booking đã thanh toán completed
         $query->addSelect([
-            'tickets_sold' => DB::table('bookings')
+            'tickets_sold' => DB::table('booking_seats')
+                ->join('bookings', 'booking_seats.booking_id', '=', 'bookings.id')
                 ->join('showtimes', 'bookings.showtime_id', '=', 'showtimes.id')
                 ->whereColumn('showtimes.movie_id', 'movies.id')
                 ->where('bookings.payment_status', 'completed')
                 ->selectRaw('COUNT(*)')
         ]);
 
-        // Sắp xếp phim theo số vé bán được (DESC), nếu bằng nhau thì sắp xếp theo tên
-        $query->orderByRaw('COALESCE(tickets_sold, 0) DESC')
-              ->orderBy('movies.title');
+        // Sắp xếp theo status
+        if ($request->filled('status') && $request->status == 'now_showing') {
+            // Nếu là "now_showing", sắp xếp theo số vé bán được
+            // 1. Phim có vé bán (tickets_sold > 0) hiển thị trước, sắp xếp theo số vé bán DESC
+            // 2. Phim chưa có vé bán (tickets_sold = 0) hiển thị sau, sắp xếp theo ngày phát hành mới nhất (DESC)
+            $query->orderByRaw('CASE WHEN COALESCE(tickets_sold, 0) > 0 THEN 0 ELSE 1 END') // Phim có vé bán trước
+                  ->orderByRaw('COALESCE(tickets_sold, 0) DESC') // Trong nhóm có vé, sắp xếp theo số vé
+                  ->orderBy('release_date', 'desc'); // Trong nhóm không có vé hoặc cùng số vé, mới nhất trước
+        } elseif ($request->filled('status') && $request->status == 'coming_soon') {
+            // Nếu là "coming_soon", sắp xếp theo ngày phát hành gần ngày hiện tại nhất
+            // Phim có release_date gần nhất (nhỏ nhất trong tương lai) lên đầu
+            $query->orderBy('release_date', 'asc');
+        } else {
+            // Các trường hợp khác, sắp xếp theo số vé bán và tên
+            $query->orderByRaw('COALESCE(tickets_sold, 0) DESC')
+                  ->orderBy('movies.title');
+        }
 
         // Get results with pagination
         $movies = $query->with(['showtimes.theater'])
             ->paginate(12)
             ->appends($request->all());
+
+        // Xác định top 3 phim bán chạy nhất khi status = 'now_showing'
+        $top3MovieIds = [];
+        if ($request->filled('status') && $request->status == 'now_showing') {
+            // Lấy top 3 phim có vé bán được từ kết quả hiện tại
+            $top3Movies = collect($movies->items())->filter(function($movie) {
+                return ($movie->tickets_sold ?? 0) > 0;
+            })->take(3);
+            $top3MovieIds = $top3Movies->pluck('id')->toArray();
+        }
 
         // Get theaters filtered by city if city is selected
         $filteredTheaters = $theaters;
@@ -161,7 +186,8 @@ class SearchController extends Controller
             'genres',
             'languageOptions',
             'theaters',
-            'filteredTheaters'
+            'filteredTheaters',
+            'top3MovieIds'
         ));
     }
 

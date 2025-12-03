@@ -12,9 +12,13 @@ use Illuminate\Support\Facades\DB;
 
 class MovieFeedbackController extends Controller
 {
-    public function storeComment(Request $request, Movie $movie)
+    public function __construct()
     {
         $this->middleware('auth');
+    }
+
+    public function storeComment(Request $request, Movie $movie)
+    {
         $validated = $request->validate([
             'content' => 'required|string|min:2|max:2000',
         ]);
@@ -30,7 +34,6 @@ class MovieFeedbackController extends Controller
 
     public function updateComment(Request $request, Movie $movie, Comment $comment)
     {
-        $this->middleware('auth');
         // Đảm bảo comment thuộc về movie hiện tại
         if ($comment->movie_id !== $movie->id) {
             abort(404);
@@ -48,7 +51,6 @@ class MovieFeedbackController extends Controller
 
     public function deleteComment(Movie $movie, Comment $comment)
     {
-        $this->middleware('auth');
         if ($comment->movie_id !== $movie->id) {
             abort(404);
         }
@@ -63,7 +65,6 @@ class MovieFeedbackController extends Controller
 
     public function storeRating(Request $request, Movie $movie)
     {
-        $this->middleware('auth');
         $validated = $request->validate([
             'score' => 'required|integer|min:1|max:5',
         ]);
@@ -100,5 +101,4 @@ class MovieFeedbackController extends Controller
         return back()->with('success', 'Đã ghi nhận đánh giá của bạn.');
     }
 }
-
 

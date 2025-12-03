@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'CineBook')</title> <!-- @yied là một directive trong Laravel để hiển thị nội dung của view con -->
+    <title>@yield('title', 'CineBook')</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
@@ -40,6 +40,20 @@
             margin-right: 8px;
         }
         
+        /* Navbar sticky/fixed */
+        .navbar.sticky-top {
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar.scrolled {
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            background-color: rgba(33, 37, 41, 0.98) !important;
+            backdrop-filter: blur(10px);
+        }
+        
         /* Dropdown hiển thị khi hover */
         .navbar-nav .nav-item.dropdown:hover .dropdown-menu {
             display: block;
@@ -65,7 +79,7 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top" id="mainNavbar">
         <div class="container">
             <a class="navbar-brand" href="{{ route('home') }}">CineBook</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -357,6 +371,21 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Xử lý navbar sticky khi scroll
+        document.addEventListener('DOMContentLoaded', function() {
+            const navbar = document.getElementById('mainNavbar');
+            
+            if (navbar) {
+                window.addEventListener('scroll', function() {
+                    if (window.scrollY > 50) {
+                        navbar.classList.add('scrolled');
+                    } else {
+                        navbar.classList.remove('scrolled');
+                    }
+                });
+            }
+        });
+        
         // Xử lý mở modal đặt vé
         document.addEventListener('DOMContentLoaded', function() {
             const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
@@ -415,7 +444,6 @@
                     })
                     .catch(error => {
                         modalBody.innerHTML = '<div class="alert alert-danger">An error occurred while loading data. Please try again.</div>';
-                        console.error('Error loading booking modal:', error);
                     });
             }
         });

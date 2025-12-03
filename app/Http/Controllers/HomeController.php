@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use App\Models\Movie; // Import model Movie
 use App\Models\Promotion;
 use Carbon\Carbon;     // Import Carbon để xử lý ngày tháng
+use Illuminate\Support\Facades\DB;
 
 
 class HomeController extends Controller
@@ -23,17 +24,35 @@ class HomeController extends Controller
                                 ->get();
                                 
         // 2. Lấy 12 phim "Đang chiếu" - chỉ lấy phim chưa bị ẩn
+        // Sắp xếp theo số vé bán được (nhiều vé hơn = ưu tiên hiển thị trước)
         $nowShowingMovies = Movie::where('release_date', '<=', $today)
                                   ->where('is_hidden', false)
                                   ->with('showtimes')
-                                  ->orderBy('release_date', 'desc')
+                                  // Thêm subquery để đếm số vé đã bán (seats) cho mỗi phim
+                                  ->addSelect([
+                                      'tickets_sold' => DB::table('booking_seats')
+                                          ->join('bookings', 'booking_seats.booking_id', '=', 'bookings.id')
+                                          ->join('showtimes', 'bookings.showtime_id', '=', 'showtimes.id')
+                                          ->whereColumn('showtimes.movie_id', 'movies.id')
+                                          ->where('bookings.payment_status', 'completed')
+                                          ->selectRaw('COUNT(*)')
+                                  ])
+                                  // Sắp xếp: 
+                                  // 1. Phim có vé bán (tickets_sold > 0) hiển thị trước, sắp xếp theo số vé bán DESC
+                                  // 2. Phim chưa có vé bán (tickets_sold = 0) hiển thị sau, sắp xếp theo ngày phát hành mới nhất (DESC)
+                                  ->orderByRaw('CASE WHEN COALESCE(tickets_sold, 0) > 0 THEN 0 ELSE 1 END') // Phim có vé bán trước
+                                  ->orderByRaw('COALESCE(tickets_sold, 0) DESC') // Trong nhóm có vé, sắp xếp theo số vé
+                                  ->orderBy('release_date', 'desc') // Trong nhóm không có vé hoặc cùng số vé, mới nhất trước
                                   ->take(12)
                                   ->get();
+        
+        // Không cần xác định top3MovieIds cho home vì không hiển thị ribbon ranking
 
         // 3. Lấy 12 phim "Sắp chiếu" - chỉ lấy phim chưa bị ẩn
+        // Sắp xếp: Phim có ngày phát hành gần ngày hiện tại nhất thì ưu tiên lên đầu
         $comingSoonMovies = Movie::where('release_date', '>', $today)
                                   ->where('is_hidden', false)
-                                  ->orderBy('release_date', 'asc')
+                                  ->orderBy('release_date', 'asc') // Phim có release_date gần nhất (nhỏ nhất trong tương lai) lên đầu
                                   ->take(12)
                                   ->get();
 

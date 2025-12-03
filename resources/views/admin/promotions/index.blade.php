@@ -322,7 +322,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            console.error('Error updating order:', error);
             // Only show alert if there's a real error
             if (error.message) {
                 alert('An error occurred while updating order: ' + error.message);
@@ -365,7 +364,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
                 alert('An error occurred while saving rules. Please try again.');
             });
         });
